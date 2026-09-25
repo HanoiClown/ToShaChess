@@ -445,6 +445,9 @@ button:active:not(:disabled) {
   overflow: auto;
 }
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   height: 74px;
   padding: 0 32px;
   display: flex;
@@ -454,6 +457,7 @@ button:active:not(:disabled) {
   background: var(--tone-302e2b, #302e2b);
 }
 .profile-chip {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 10px;

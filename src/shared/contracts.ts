@@ -132,6 +132,9 @@ export type Snapshot = {
 };
 export type CoachReply = { source: "local" | "openai"; text: string };
 export interface DesktopApi {
+  getFullscreen(): Promise<boolean>;
+  toggleFullscreen(): Promise<void>;
+  onFullscreen(callback: (enabled: boolean) => void): () => void;
   libraryStatus(): Promise<import("./library").LibraryStatus>;
   libraryPuzzles(
     filter: import("./library").LibraryFilter,

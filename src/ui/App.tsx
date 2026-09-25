@@ -38,6 +38,7 @@ import { HistoryScreen } from "../screens/History";
 import { SettingsScreen } from "../screens/Settings";
 import { Vision } from "../screens/Vision";
 import { ProfileCreator } from "./ProfileCreator";
+import { FullscreenButton } from "./FullscreenButton";
 import { configureSound, disposeSound, unlockSound } from "../audio/sounds";
 const Openings = lazy(() =>
   import("../screens/Openings").then((m) => ({ default: m.Openings })),
@@ -196,7 +197,10 @@ export default function App() {
             <img src="./pieces/wP.svg" alt="" />
             ToSha<span>Chess</span>
           </div>
-          {languageSwitch}
+          <div className="window-actions">
+            <FullscreenButton locale={locale} onError={fail} />
+            {languageSwitch}
+          </div>
         </header>
         <main className="profile-main">
           <h1>
@@ -344,6 +348,8 @@ export default function App() {
             {routes.map(({ id, icon: Icon }) => (
               <button
                 key={id}
+                aria-label={translate(locale, id)}
+                title={translate(locale, id)}
                 className={
                   route === id ||
                   (id === "learn" && ["openings", "endgames"].includes(route))
@@ -364,6 +370,8 @@ export default function App() {
             </div>
             <button
               className={`nav-link ${route === "settings" ? "active" : ""}`}
+              aria-label={translate(locale, "settings")}
+              title={translate(locale, "settings")}
               onClick={() => nav("settings")}
             >
               <Settings size={21} />
@@ -371,6 +379,8 @@ export default function App() {
             </button>
             <button
               className="nav-link"
+              aria-label={translate(locale, "switch")}
+              title={translate(locale, "switch")}
               onClick={() => void switchProfile().catch(fail)}
             >
               <Users size={21} />
@@ -394,7 +404,10 @@ export default function App() {
                   : l("Личная тренировка", "Personal training")}
               </small>
             </div>
-            {languageSwitch}
+            <div className="window-actions">
+              <FullscreenButton locale={locale} onError={fail} />
+              {languageSwitch}
+            </div>
           </header>
           {banner && (
             <div className="notice" role="status">

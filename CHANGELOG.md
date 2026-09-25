@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.2 — Adaptive full screen
+
+- Add native full screen from the header button or F11, including profile selection; Escape exits and restores the previous window bounds.
+- Keep the active game intact when switching window modes, with synchronized RU/EN controls.
+- Scale the board to screen height, use wider layouts on large full-screen displays and stack panels in narrow windows.
+- Keep header controls accessible while scrolling and label compact sidebar icons.
+
 ## 1.3.1 — Sound, motion and gentler hints
 
 - Shared offline sounds for moves, captures, check and training feedback across boards; separate completion and error cues.

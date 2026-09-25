@@ -1,6 +1,14 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { DesktopApi } from "../src/shared/contracts";
 const api: DesktopApi = {
+  getFullscreen: () => ipcRenderer.invoke("fullscreen-get"),
+  toggleFullscreen: () => ipcRenderer.invoke("fullscreen-toggle"),
+  onFullscreen: (callback) => {
+    const listener = (_event: Electron.IpcRendererEvent, enabled: boolean) =>
+      callback(enabled);
+    ipcRenderer.on("fullscreen-changed", listener);
+    return () => ipcRenderer.removeListener("fullscreen-changed", listener);
+  },
   libraryStatus: () => ipcRenderer.invoke("library-status"),
   libraryPuzzles: (f) => ipcRenderer.invoke("library-puzzles", f),
   libraryLookup: (ids) => ipcRenderer.invoke("library-lookup", ids),

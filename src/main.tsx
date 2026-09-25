@@ -7,6 +7,7 @@ import "@fontsource/nunito-sans/800.css";
 import App from "./ui/App";
 import "./ui/styles.css";
 import "./ui/themes.css";
+import "./ui/fullscreen.css";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

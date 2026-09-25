@@ -1,0 +1,71 @@
+.window-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.fullscreen-toggle {
+  flex-shrink: 0;
+}
+.sidebar {
+  overflow-y: auto;
+}
+.profile-chip strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-chip > span {
+  flex-shrink: 0;
+}
+html[data-fullscreen="true"] .main-content {
+  max-width: 1900px;
+}
+@media (min-width: 1201px) {
+  html[data-fullscreen="true"] .game-layout {
+    grid-template-columns:
+      minmax(300px, min(900px, calc(100dvh - 330px), 52vw))
+      minmax(280px, 1fr);
+  }
+  html[data-fullscreen="true"] .review-layout {
+    grid-template-columns:
+      minmax(300px, min(900px, calc(100dvh - 370px), 52vw))
+      minmax(280px, 1fr);
+  }
+}
+@media (max-height: 740px) {
+  .workspace .topbar {
+    height: 58px;
+  }
+  .main-content {
+    padding-top: 16px;
+    padding-bottom: 20px;
+  }
+  .page-heading {
+    margin-bottom: 16px;
+  }
+  .sidebar .brand {
+    margin-bottom: 18px;
+  }
+  .sidebar .nav-link {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
+@media (max-width: 800px) {
+  .game-layout .board-column {
+    max-width: clamp(240px, calc(100dvh - 300px), 580px);
+  }
+  .window-actions {
+    gap: 6px;
+  }
+  .topbar {
+    gap: 12px;
+  }
+  .profile-chip {
+    flex: 1;
+  }
+  .game-layout > .side-panel {
+    min-width: 0;
+  }
+}

@@ -84,6 +84,10 @@ if (!app.requestSingleInstanceLock()) {
           }
         });
       handle("snapshot", () => service.snapshot());
+      handle("fullscreen-get", () => win!.isFullScreen());
+      handle("fullscreen-toggle", () => {
+        win!.setFullScreen(!win!.isFullScreen());
+      });
       handle("library-status", () => libraryWorker.call("status"));
       handle("library-puzzles", (f) => libraryWorker.call("puzzles", f));
       handle("library-games", (f) => libraryWorker.call("games", f));
@@ -235,8 +239,9 @@ if (!app.requestSingleInstanceLock()) {
       win = new BrowserWindow({
         width: 1440,
         height: 950,
-        minWidth: 940,
-        minHeight: 700,
+        minWidth: 720,
+        minHeight: 540,
+        fullscreenable: true,
         backgroundColor: "#302e2b",
         title: "ToShaChess",
         show: false,
@@ -248,6 +253,30 @@ if (!app.requestSingleInstanceLock()) {
         },
       });
       win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+      const fullscreenChanged = (enabled: boolean) => {
+        if (win && !win.isDestroyed())
+          win.webContents.send("fullscreen-changed", enabled);
+      };
+      // On Windows isFullScreen() can still report the old state inside the event.
+      win.on("enter-full-screen", () => fullscreenChanged(true));
+      win.on("leave-full-screen", () => fullscreenChanged(false));
+      win.webContents.on("before-input-event", (event, input) => {
+        if (
+          input.type !== "keyDown" ||
+          input.control ||
+          input.alt ||
+          input.meta ||
+          input.shift
+        )
+          return;
+        if (input.key === "F11") {
+          event.preventDefault();
+          if (!input.isAutoRepeat) win?.setFullScreen(!win.isFullScreen());
+        } else if (input.key === "Escape" && win?.isFullScreen()) {
+          event.preventDefault();
+          win.setFullScreen(false);
+        }
+      });
       win.webContents.on("will-navigate", (event) => event.preventDefault());
       win.once("ready-to-show", () => win?.show());
       await win.loadFile(join(app.getAppPath(), "dist", "index.html"));
