@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useLayoutEffect, useRef } from "react";
 import { Chess, type Square } from "chess.js";
 import type { Color, Locale, Score } from "../shared/contracts";
 import { scoreText } from "../analysis/evaluate";
+import { boardTransition, travelOffset } from "../chess/board-transition";
+import { playSound } from "../audio/sounds";
 type Props = {
   fen: string;
   orientation?: Color;
@@ -9,6 +11,7 @@ type Props = {
   disabled?: boolean;
   lastMove?: string;
   arrow?: string;
+  hintSquare?: string;
   locale?: Locale;
   small?: boolean;
   coordinates?: boolean;
@@ -22,12 +25,15 @@ export function Board({
   disabled = false,
   lastMove,
   arrow,
+  hintSquare,
   locale = "ru",
   small = false,
   coordinates = true,
   showPieces = true,
   onSquare,
 }: Props) {
+  const boardRef = useRef<HTMLDivElement>(null);
+  const previous = useRef({ fen, orientation, showPieces });
   const [selected, setSelected] = useState<Square | null>(null),
     [promotion, setPromotion] = useState<{ from: Square; to: Square } | null>(
       null,
@@ -35,10 +41,56 @@ export function Board({
   const c = new Chess(fen),
     files = orientation === "w" ? "abcdefgh" : "hgfedcba",
     ranks = orientation === "w" ? "87654321" : "12345678";
-  useEffect(() => {
+  useLayoutEffect(() => {
     setSelected(null);
     setPromotion(null);
-  }, [fen]);
+  }, [fen, orientation, showPieces, disabled, hintSquare]);
+  useLayoutEffect(() => {
+    const before = previous.current;
+    previous.current = { fen, orientation, showPieces };
+    if (!showPieces || !before.showPieces || orientation !== before.orientation)
+      return;
+    const transition = boardTransition(before.fen, fen);
+    const board = boardRef.current;
+    if (!transition || !board) return;
+    const size = board.getBoundingClientRect().width / 8;
+    if (!size) return;
+    playSound(transition.sound);
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reducedMotion.matches) return;
+    const moving: { animation: Animation; square: Element }[] = [];
+    for (const { from, to } of transition.pieces) {
+      const square = board.querySelector(`[data-square="${to}"]`);
+      const piece = square?.querySelector("img");
+      if (!square || !piece || typeof piece.animate !== "function") continue;
+      const { x, y } = travelOffset(from, to, orientation);
+      square.classList.add("piece-moving-square");
+      const animation = piece.animate(
+        [
+          { transform: `translate(${x * size}px, ${y * size}px)` },
+          { transform: "translate(0, 0)" },
+        ],
+        { duration: 210, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+      );
+      animation.onfinish = () => square.classList.remove("piece-moving-square");
+      moving.push({ animation, square });
+    }
+    const cancel = () => {
+      for (const { animation, square } of moving) {
+        animation.onfinish = null;
+        animation.cancel();
+        square.classList.remove("piece-moving-square");
+      }
+    };
+    const onMotionPreference = () => {
+      if (reducedMotion.matches) cancel();
+    };
+    reducedMotion.addEventListener("change", onMotionPreference);
+    return () => {
+      reducedMotion.removeEventListener("change", onMotionPreference);
+      cancel();
+    };
+  }, [fen, orientation, showPieces]);
   const targets = selected
     ? c.moves({ square: selected, verbose: true }).map((m) => m.to)
     : [];
@@ -91,9 +143,11 @@ export function Board({
   return (
     <div className={`board-frame ${small ? "board-small" : ""}`}>
       <div
+        ref={boardRef}
         className="chessboard"
         role="group"
         aria-label={locale === "ru" ? "Шахматная доска" : "Chessboard"}
+        aria-disabled={disabled}
       >
         {[...ranks].flatMap((rank, row) =>
           [...files].map((file, col) => {
@@ -105,8 +159,16 @@ export function Board({
                 type="button"
                 key={square}
                 data-square={square}
-                className={`square ${isLight ? "light" : "dark"} ${selected === square ? "selected" : ""} ${lastMove?.slice(0, 2) === square || lastMove?.slice(2, 4) === square ? "last" : ""}`}
+                data-hint={hintSquare === square ? "true" : undefined}
+                className={`square ${isLight ? "light" : "dark"} ${selected === square ? "selected" : ""} ${lastMove?.slice(0, 2) === square || lastMove?.slice(2, 4) === square ? "last" : ""} ${hintSquare === square ? "hint-source" : ""}`}
                 aria-label={`${square}${p ? " " + (p.color === "w" ? (locale === "ru" ? "белые" : "white") : locale === "ru" ? "чёрные" : "black") + " " + names[p.type] : ""}`}
+                aria-description={
+                  hintSquare === square
+                    ? locale === "ru"
+                      ? "Подсказка: сходи этой фигурой"
+                      : "Hint: move this piece"
+                    : undefined
+                }
                 onClick={() => select(square)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -126,6 +188,13 @@ export function Board({
                       setSelected(square);
                       e.dataTransfer.setData("text/plain", square);
                     }}
+                  />
+                )}
+                {hintSquare === square && (
+                  <span
+                    className="hint-source-ring"
+                    data-testid="piece-hint"
+                    aria-hidden="true"
                   />
                 )}
                 {coordinates && col === 0 && (

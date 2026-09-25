@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Settings,
   KeyRound,
@@ -8,9 +8,13 @@ import {
   HardDrive,
   ShieldCheck,
   UserRound,
+  Volume2,
 } from "lucide-react";
 import { useApp } from "../ui/context";
-import type { SkillLevel } from "../shared/contracts";
+import type { Database, SkillLevel } from "../shared/contracts";
+import { playSound, previewSoundSettings } from "../audio/sounds";
+import { saveSettingsPatch } from "../audio/settings";
+import "./settings-audio.css";
 export function SettingsScreen() {
   const { snapshot, profile, locale, l, refresh, fail } = useApp();
   const [name, setName] = useState(profile.name),
@@ -24,8 +28,50 @@ export function SettingsScreen() {
     [key, setKey] = useState(""),
     [status, setStatus] = useState(""),
     [saving, setSaving] = useState(false);
-  const settings = snapshot.database.settings,
-    now = new Date(),
+  const [settings, setSettings] = useState(snapshot.database.settings);
+  const settingsRef = useRef(settings),
+    pendingWrites = useRef(0),
+    volumeDirty = useRef(false),
+    volumeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
+    lastPreview = useRef(0);
+  function savePreference(patch: Partial<Database["settings"]>) {
+    pendingWrites.current++;
+    void saveSettingsPatch(patch)
+      .then(refresh)
+      .catch(fail)
+      .finally(() => {
+        pendingWrites.current--;
+      });
+  }
+  function changePreference(patch: Partial<Database["settings"]>) {
+    settingsRef.current = { ...settingsRef.current, ...patch };
+    setSettings(settingsRef.current);
+    previewSoundSettings(settingsRef.current);
+    savePreference(patch);
+  }
+  function commitVolume() {
+    clearTimeout(volumeTimer.current);
+    if (!volumeDirty.current) return;
+    volumeDirty.current = false;
+    savePreference({ volume: settingsRef.current.volume });
+  }
+  const commitVolumeRef = useRef(commitVolume);
+  commitVolumeRef.current = commitVolume;
+  useEffect(() => {
+    if (!pendingWrites.current && !volumeDirty.current) {
+      settingsRef.current = snapshot.database.settings;
+      setSettings(snapshot.database.settings);
+      previewSoundSettings(snapshot.database.settings);
+    }
+  }, [snapshot.database.settings]);
+  useEffect(() => {
+    previewSoundSettings(settingsRef.current);
+    return () => {
+      commitVolumeRef.current();
+      previewSoundSettings();
+    };
+  }, []);
+  const now = new Date(),
     month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
     usage = snapshot.database.usage.filter((x) => x.month === month),
     spent = usage.reduce((s, x) => s + (x.actual ?? 0), 0),
@@ -229,12 +275,7 @@ export function SettingsScreen() {
             {l("Подробность локального анализа", "Local analysis detail")}
             <select
               value={settings.engineMs}
-              onChange={(e) =>
-                void window.chessApp
-                  .updateSettings({ ...settings, engineMs: +e.target.value })
-                  .then(refresh)
-                  .catch(fail)
-              }
+              onChange={(e) => changePreference({ engineMs: +e.target.value })}
             >
               <option value={100}>
                 {l("Быстро — первый обзор", "Fast — first overview")}
@@ -264,15 +305,63 @@ export function SettingsScreen() {
             <input
               type="checkbox"
               checked={settings.sound}
-              onChange={(e) =>
-                void window.chessApp
-                  .updateSettings({ ...settings, sound: e.target.checked })
-                  .then(refresh)
-                  .catch(fail)
-              }
+              onChange={(e) => changePreference({ sound: e.target.checked })}
             />
-            {l("Звук ходов", "Move sounds")}
+            {l("Звуки игры", "Game sounds")}
           </label>
+          <div className="sound-settings">
+            <div className="volume-heading">
+              <label htmlFor="game-volume">{l("Громкость", "Volume")}</label>
+              <output htmlFor="game-volume">{settings.volume}%</output>
+            </div>
+            <input
+              id="game-volume"
+              className="volume-slider"
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={settings.volume}
+              aria-valuetext={`${settings.volume}%`}
+              onChange={(event) => {
+                settingsRef.current = {
+                  ...settingsRef.current,
+                  volume: Number(event.target.value),
+                };
+                setSettings(settingsRef.current);
+                previewSoundSettings(settingsRef.current);
+                volumeDirty.current = true;
+                clearTimeout(volumeTimer.current);
+                volumeTimer.current = setTimeout(
+                  () => commitVolumeRef.current(),
+                  250,
+                );
+                if (Date.now() - lastPreview.current >= 100) {
+                  lastPreview.current = Date.now();
+                  playSound("move");
+                }
+              }}
+              onPointerUp={commitVolume}
+              onPointerCancel={commitVolume}
+              onKeyUp={commitVolume}
+              onBlur={commitVolume}
+            />
+            <button
+              type="button"
+              className="secondary sound-preview"
+              disabled={!settings.sound || settings.volume === 0}
+              onClick={() => playSound("move")}
+            >
+              <Volume2 size={17} />
+              {l("Проверить звук", "Preview sound")}
+            </button>
+            <p className="field-help">
+              {l(
+                "Ходы, взятия и сигналы тренировок. 0% — без звука. Настройка общая для всех профилей.",
+                "Moves, captures and training cues. 0% is silent. This setting is shared by all profiles.",
+              )}
+            </p>
+          </div>
         </section>
         <section className="settings-section coach-settings">
           <div className="section-title">
@@ -356,12 +445,7 @@ export function SettingsScreen() {
             {l("Лимит в месяц, USD (до $5)", "Monthly limit, USD (up to $5)")}
             <select
               value={settings.budget}
-              onChange={(e) =>
-                void window.chessApp
-                  .updateSettings({ ...settings, budget: +e.target.value })
-                  .then(refresh)
-                  .catch(fail)
-              }
+              onChange={(e) => changePreference({ budget: +e.target.value })}
             >
               {[0, 1000000, 2000000, 3000000, 5000000].map((v) => (
                 <option key={v} value={v}>

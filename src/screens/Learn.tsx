@@ -12,6 +12,8 @@ import { useApp } from "../ui/context";
 import { lessons, type Lesson } from "../content/lessons";
 import { Board } from "../ui/Board";
 import { playUci } from "../chess/game";
+import { usePlySequence } from "../ui/usePlySequence";
+import { playSound } from "../audio/sounds";
 export function Learn() {
   const { profile, locale, l, t, snapshot, fail, refresh, nav } = useApp();
   const [group, setGroup] = useState<Lesson["group"]>(
@@ -22,6 +24,7 @@ export function Learn() {
     [index, setIndex] = useState(0),
     [hint, setHint] = useState(false),
     [feedback, setFeedback] = useState("");
+  const sequence = usePlySequence(`${selected ?? "library"}:${chapter}`);
   const lesson = lessons.find((x) => x.id === selected),
     completed = snapshot.database.progress[profile.id].completed;
   function open(id: string) {
@@ -150,9 +153,10 @@ export function Learn() {
     expectedUci = expected
       ? expected.from + expected.to + (expected.promotion ?? "")
       : "";
-  function move(uci: string) {
-    if (solved) return;
+  async function move(uci: string) {
+    if (solved || sequence.playing) return;
     if (uci !== expectedUci) {
+      playSound("error");
       setFeedback(
         l(
           "Ход легальный, но задача просит другое продолжение. Попробуй ещё раз или открой намёк.",
@@ -163,8 +167,10 @@ export function Learn() {
     }
     let next = index + 1;
     if (next < ch.line.length) next++;
-    setIndex(next);
     setHint(false);
+    setFeedback("");
+    if (!(await sequence.play(index, next, setIndex))) return;
+    if (next >= ch.line.length) playSound("success");
     setFeedback(
       l(
         "Верно. Посмотри, как ответил соперник.",
@@ -204,9 +210,9 @@ export function Learn() {
             fen={c.fen()}
             orientation={new Chess(ch.fen).turn()}
             locale={locale}
-            onMove={move}
-            disabled={solved}
-            arrow={hint ? expectedUci : undefined}
+            onMove={(uci) => void move(uci)}
+            disabled={solved || sequence.playing}
+            hintSquare={hint ? expectedUci.slice(0, 2) : undefined}
           />
           <div className="lesson-moves">
             {ch.line.slice(0, index).join("  ") ||
@@ -243,13 +249,18 @@ export function Learn() {
             </p>
           )}
           {!solved ? (
-            <button className="secondary full" onClick={() => setHint(true)}>
+            <button
+              className="secondary full"
+              disabled={sequence.playing}
+              onClick={() => setHint(true)}
+            >
               <Lightbulb size={18} />
-              {hint ? expected?.san : l("Показать намёк", "Show a hint")}
+              {l("Показать намёк", "Show a hint")}
             </button>
           ) : (
             <button
               className="primary full"
+              disabled={sequence.playing}
               onClick={() => void next().catch(fail)}
             >
               {chapter === lesson.chapters.length - 1
@@ -260,6 +271,7 @@ export function Learn() {
           )}
           <button
             className="text-button"
+            disabled={sequence.playing}
             onClick={() => {
               setIndex(0);
               setFeedback("");

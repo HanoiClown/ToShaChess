@@ -25,25 +25,7 @@ import {
 } from "../chess/game";
 import { pvSan } from "../analysis/evaluate";
 import type { Color, GameRecord, EngineLine } from "../shared/contracts";
-function moveSound() {
-  try {
-    const context = new AudioContext(),
-      osc = context.createOscillator(),
-      gain = context.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(620, context.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(250, context.currentTime + 0.06);
-    gain.gain.setValueAtTime(0.06, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.07);
-    osc.connect(gain);
-    gain.connect(context.destination);
-    osc.start();
-    osc.stop(context.currentTime + 0.08);
-    osc.onended = () => void context.close();
-  } catch {
-    /* Audio may be disabled by the OS. */
-  }
-}
+import { playSound } from "../audio/sounds";
 export function Play() {
   const { snapshot, profile, locale, l, t, nav, fail } = useApp();
   const saved = snapshot.database.games
@@ -84,6 +66,7 @@ export function Play() {
   async function finish(g: GameRecord, result: GameRecord["result"]) {
     const ended = { ...g, result, updatedAt: new Date().toISOString() };
     sync(ended);
+    playSound("end");
     setBusy(false);
     setConfirm(false);
     await window.chessApp.cancelEngine();
@@ -117,7 +100,6 @@ export function Play() {
     setView(next.moves.length);
     setHint(null);
     tick.current = Date.now();
-    if (snapshot.database.settings.sound) moveSound();
     const result = terminalResult(c);
     if (result !== "*") void finish(next, result).catch(fail);
     else void save(next);

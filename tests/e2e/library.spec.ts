@@ -30,6 +30,10 @@ test("library filters, complete multi-move puzzle and coordinate results stay pr
     await expect(page.locator(".library-row")).toHaveCount(1);
     await page.locator(".library-row").click();
     for (const u of [puzzle.line[0], puzzle.line[2]]) {
+      await expect(page.locator(".chessboard:visible")).toHaveAttribute(
+        "aria-disabled",
+        "false",
+      );
       await page
         .locator(`[data-square="${u.slice(0, 2)}"]`)
         .last()
@@ -142,6 +146,10 @@ test("opening atlas filters gambits and saves a completed short line", async () 
       .getByRole("button", { name: "Тренировать по памяти", exact: true })
       .click();
     for (const u of ["e2e4", "d2d4", "c2c3"]) {
+      await expect(page.locator(".chessboard:visible")).toHaveAttribute(
+        "aria-disabled",
+        "false",
+      );
       await page
         .locator(`[data-square="${u.slice(0, 2)}"]`)
         .last()

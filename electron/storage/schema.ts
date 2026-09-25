@@ -161,6 +161,7 @@ export const gameSchema = z.object({
 export const settingsSchema = z.object({
   budget: z.number().int().min(0).max(5000000),
   sound: z.boolean(),
+  volume: z.number().int().min(0).max(100).default(65),
   engineMs: z.number().int().min(100).max(1500),
 });
 const databaseSchema = z.object({
@@ -197,7 +198,7 @@ export function freshDatabase(): Database {
     games: [],
     progress: {},
     usage: [],
-    settings: { budget: 5000000, sound: true, engineMs: 300 },
+    settings: { budget: 5000000, sound: true, volume: 65, engineMs: 300 },
     archiveImported: false,
   };
 }

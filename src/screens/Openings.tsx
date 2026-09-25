@@ -11,6 +11,8 @@ import {
 import { useApp } from "../ui/context";
 import { Board } from "../ui/Board";
 import { START, playUci } from "../chess/game";
+import { usePlySequence } from "../ui/usePlySequence";
+import { playSound } from "../audio/sounds";
 import {
   openings,
   openingName,
@@ -258,12 +260,14 @@ function OpeningPlayer({
     [hint, setHint] = useState(false),
     [feedback, setFeedback] = useState(""),
     [saving, setSaving] = useState(false);
+  const sequence = usePlySequence(o.id);
   const board = new Chess();
   for (const u of o.line.slice(0, ply)) playUci(board, u);
   const done = ply >= o.line.length;
   async function move(uci: string) {
-    if (!practice || done || saving) return;
+    if (!practice || done || saving || sequence.playing) return;
     if (uci !== o.line[ply]) {
+      playSound("error");
       setFeedback(
         l(
           "Легальный ход, но в этом упражнении нужно воспроизвести выбранный вариант.",
@@ -274,8 +278,9 @@ function OpeningPlayer({
     }
     let next = ply + 1;
     if (next < o.line.length) next++;
-    setPly(next);
     setHint(false);
+    setFeedback("");
+    if (!(await sequence.play(ply, next, setPly))) return;
     setFeedback(
       l(
         "Верно. Обрати внимание на ответ соперника.",
@@ -283,6 +288,7 @@ function OpeningPlayer({
       ),
     );
     if (next >= o.line.length) {
+      playSound("success");
       setSaving(true);
       try {
         await window.chessApp.completeLesson(o.id);
@@ -320,10 +326,10 @@ function OpeningPlayer({
             fen={board.fen()}
             locale={locale}
             orientation={color}
-            disabled={!practice || done || saving}
+            disabled={!practice || done || saving || sequence.playing}
             onMove={(u) => void move(u)}
             lastMove={o.line[ply - 1]}
-            arrow={hint && !done ? o.line[ply] : undefined}
+            hintSquare={hint && !done ? o.line[ply]?.slice(0, 2) : undefined}
           />
           {!practice && (
             <div className="review-controls">
@@ -371,7 +377,7 @@ function OpeningPlayer({
           <label className="opening-side">
             {l("Твой цвет", "Your colour")}
             <select
-              disabled={practice && !done}
+              disabled={(practice && !done) || sequence.playing || saving}
               value={color}
               onChange={(e) => setColor(e.target.value as "w" | "b")}
             >
@@ -384,6 +390,7 @@ function OpeningPlayer({
           {!practice || done ? (
             <button
               className="primary full"
+              disabled={sequence.playing || saving}
               onClick={() => {
                 setPractice(true);
                 setPly(color === "w" ? 0 : 1);
@@ -394,7 +401,11 @@ function OpeningPlayer({
               {l("Тренировать по памяти", "Practise from memory")}
             </button>
           ) : (
-            <button className="secondary full" onClick={() => setHint(true)}>
+            <button
+              className="secondary full"
+              disabled={sequence.playing || saving}
+              onClick={() => setHint(true)}
+            >
               <Lightbulb size={18} />
               {l("Показать намёк", "Show a hint")}
             </button>
@@ -412,6 +423,7 @@ function OpeningPlayer({
           )}
           <button
             className="text-button"
+            disabled={sequence.playing || saving}
             onClick={() => {
               setPractice(false);
               setHint(false);

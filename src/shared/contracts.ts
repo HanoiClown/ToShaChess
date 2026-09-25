@@ -113,7 +113,12 @@ export type Database = {
   games: GameRecord[];
   progress: Record<string, Progress>;
   usage: Usage[];
-  settings: { budget: number; sound: boolean; engineMs: number };
+  settings: {
+    budget: number;
+    sound: boolean;
+    volume: number;
+    engineMs: number;
+  };
   archiveImported: boolean;
 };
 export type Snapshot = {

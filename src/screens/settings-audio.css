@@ -1,0 +1,29 @@
+.sound-settings {
+  margin-top: 18px;
+}
+.volume-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.volume-heading label {
+  margin: 0;
+}
+.volume-heading output {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+input.volume-slider {
+  width: 100%;
+  min-height: 40px;
+  padding: 0;
+  margin: 4px 0 10px;
+  accent-color: var(--green);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.sound-preview {
+  margin-bottom: 4px;
+}

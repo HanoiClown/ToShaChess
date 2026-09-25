@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.1 — Sound, motion and gentler hints
+
+- Shared offline sounds for moves, captures, check and training feedback across boards; separate completion and error cues.
+- Add a 0–100% volume slider and preview in Russian and English. Preserve mute and migrate existing saves to 65% volume.
+- Animate adjacent moves, including castling, promotion and reverse replay; respect reduced-motion preferences.
+- Show the player's move and automatic reply separately in puzzles, lessons and opening practice; cancel pending replies when leaving a screen.
+- Hints in training exercises highlight only the piece to move, without revealing its destination.
+
 ## 1.3.0 — Profiles, practice progress and large offline library
 
 - Empty first-run registration: name, unique nickname, four experience levels and optional rating; add and switch up to 20 local profiles.

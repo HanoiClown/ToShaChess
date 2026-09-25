@@ -38,6 +38,7 @@ import { HistoryScreen } from "../screens/History";
 import { SettingsScreen } from "../screens/Settings";
 import { Vision } from "../screens/Vision";
 import { ProfileCreator } from "./ProfileCreator";
+import { configureSound, disposeSound, unlockSound } from "../audio/sounds";
 const Openings = lazy(() =>
   import("../screens/Openings").then((m) => ({ default: m.Openings })),
 );
@@ -62,6 +63,19 @@ export default function App() {
     [dismissedNotice, setDismissedNotice] = useState<string | null>(null),
     [entryLocale, setEntryLocale] = useState<Locale>("ru"),
     [creatingProfile, setCreatingProfile] = useState(false);
+  useEffect(() => {
+    if (snapshot) configureSound(snapshot.database.settings);
+  }, [snapshot?.database.settings.sound, snapshot?.database.settings.volume]);
+  useEffect(() => {
+    const unlock = () => unlockSound();
+    window.addEventListener("pointerdown", unlock, { capture: true });
+    window.addEventListener("keydown", unlock, { capture: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock, { capture: true });
+      window.removeEventListener("keydown", unlock, { capture: true });
+      disposeSound();
+    };
+  }, []);
   const refresh = useCallback(async () => {
     setSnapshot(await window.chessApp.snapshot());
   }, []);

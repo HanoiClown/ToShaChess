@@ -814,7 +814,7 @@ button:active:not(:disabled) {
   padding: 0;
   border-radius: 0;
   border: 0;
-  transition: none;
+  transition: background-color 120ms ease-out;
 }
 .square.light {
   background: var(--light-square);
@@ -843,6 +843,26 @@ button:active:not(:disabled) {
   z-index: 2;
   user-select: none;
   filter: drop-shadow(0 1px 1px #0002);
+}
+.square.piece-moving-square {
+  z-index: 4;
+}
+.piece-moving-square > img {
+  will-change: transform;
+}
+.hint-source-ring {
+  position: absolute;
+  inset: 5%;
+  border: 3px solid var(--tone-e7a238, #e7a238);
+  border-radius: 6px;
+  outline: 1px solid #3a2915;
+  pointer-events: none;
+  z-index: 3;
+  animation: piece-hint-appear 160ms ease-out;
+}
+@keyframes piece-hint-appear {
+  from { opacity: 0.3; }
+  to { opacity: 1; }
 }
 .square:focus-visible {
   outline: 3px solid var(--tone-e7a238, #e7a238);
@@ -998,7 +1018,7 @@ button:active:not(:disabled) {
 }
 .eval-bar > div {
   background: var(--tone-171715, #171715);
-  transition: none;
+  transition: height 210ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .eval-bar > span {
   position: absolute;

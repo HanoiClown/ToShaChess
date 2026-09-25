@@ -8,6 +8,8 @@ import { themeName, advanceSolution } from "../library/catalogue";
 import { playUci } from "../chess/game";
 import { pvSan } from "../analysis/evaluate";
 import { alternativeLine } from "../library/alternatives";
+import { usePlySequence } from "../ui/usePlySequence";
+import { playSound } from "../audio/sounds";
 export function PuzzlePlayer({
   puzzle,
   number,
@@ -30,7 +32,9 @@ export function PuzzlePlayer({
     [feedback, setFeedback] = useState(""),
     [hint, setHint] = useState(false),
     [checking, setChecking] = useState(false),
+    [verifying, setVerifying] = useState(false),
     [solved, setSolved] = useState(false);
+  const sequence = usePlySequence(puzzle.id);
   const started = useRef(Date.now()),
     alive = useRef(true),
     lock = useRef(false);
@@ -72,6 +76,7 @@ export function PuzzlePlayer({
         path = [...line.slice(0, offset), uci];
       }
       if (!accepted) {
+        setVerifying(true);
         const [before] = await window.chessApp.engine({
           initialFen: board.fen(),
           moves: [],
@@ -93,7 +98,9 @@ export function PuzzlePlayer({
         if (alternative) path = [...line.slice(0, offset), ...alternative];
       }
       if (!alive.current) return;
+      setVerifying(false);
       if (!accepted) {
+        playSound("error");
         setFeedback(
           l(
             "Есть более сильное продолжение. Попробуй снова.",
@@ -105,8 +112,9 @@ export function PuzzlePlayer({
       }
       const result = advanceSolution(puzzle.fen, path, offset, uci);
       setLine(path);
-      setOffset(result.offset);
       setHint(false);
+      setFeedback("");
+      if (!(await sequence.play(offset, result.offset, setOffset))) return;
       setSolved(result.complete);
       setFeedback(
         result.complete
@@ -116,12 +124,18 @@ export function PuzzlePlayer({
               "Correct. Your opponent replied — find the next move.",
             ),
       );
-      if (result.complete) await record(true);
+      if (result.complete) {
+        playSound("success");
+        await record(true);
+      }
     } catch (e) {
       if (alive.current) fail(e);
     } finally {
       lock.current = false;
-      if (alive.current) setChecking(false);
+      if (alive.current) {
+        setChecking(false);
+        setVerifying(false);
+      }
     }
   }
   return (
@@ -172,7 +186,7 @@ export function PuzzlePlayer({
             onMove={(u) => void answer(u)}
             disabled={solved || checking}
             lastMove={line[offset - 1]}
-            arrow={hint && !solved ? line[offset] : undefined}
+            hintSquare={hint && !solved ? line[offset]?.slice(0, 2) : undefined}
           />
         </section>
         <section className="side-panel puzzle-panel">
@@ -196,12 +210,17 @@ export function PuzzlePlayer({
             className={`feedback ${solved ? "good-text" : ""}`}
             role="status"
           >
-            {checking
+            {verifying
               ? l(
                   "Stockfish проверяет альтернативу…",
                   "Stockfish is checking the alternative…",
                 )
-              : feedback}
+              : sequence.playing
+                ? l(
+                    "Следи за ходами на доске…",
+                    "Watch the moves on the board…",
+                  )
+                : feedback}
           </div>
           {solved ? (
             <>

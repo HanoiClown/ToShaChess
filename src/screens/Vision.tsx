@@ -5,6 +5,7 @@ import { Board } from "../ui/Board";
 import { START } from "../chess/game";
 import { newRound, clickTarget, type Round } from "../library/vision";
 import type { VisionSettings } from "../shared/contracts";
+import { playSound } from "../audio/sounds";
 export function Vision() {
   const { snapshot, profile, locale, l, fail, refresh } = useApp(),
     progress = snapshot.database.progress[profile.id];
@@ -27,6 +28,7 @@ export function Vision() {
   async function finish(r: Round, time: number) {
     if (saved.current) return;
     saved.current = true;
+    playSound("end");
     const ended = { ...r, finished: true };
     current.current = ended;
     setRound(ended);
@@ -85,6 +87,7 @@ export function Vision() {
       void finish(next, time);
       return;
     }
+    playSound(square === r.target ? "move" : "error");
     setFeedback(
       square === r.target
         ? l("Верно", "Correct")
