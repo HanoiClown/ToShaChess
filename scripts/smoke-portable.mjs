@@ -47,7 +47,7 @@ try {
     await window.chessApp.analyze(g.id);
     return { imported, id: g.id, path: s.dataPath };
   });
-  
+
   await expect
     .poll(
       async () =>
