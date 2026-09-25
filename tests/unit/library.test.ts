@@ -5,9 +5,36 @@ import {
   filterPuzzles,
   levelOf,
   advanceSolution,
+  themeName,
+  themes,
 } from "../../src/library/catalogue";
 import { openings, openingPriority } from "../../src/library/openings";
 import { alternativeLine } from "../../src/library/alternatives";
+// DISTINCT theme from the complete 2026-09-10 Lichess puzzle snapshot (73 IDs).
+// Kept in the test so the public source suite does not need the multi-GB pack.
+const fullPackThemes =
+  `advancedPawn advantage anastasiaMate arabianMate attackingF2F7 attraction
+backRankMate balestraMate bishopEndgame blindSwineMate bodenMate capturingDefender castling clearance
+collinearMove cornerMate crushing defensiveMove deflection discoveredAttack discoveredCheck doubleBishopMate
+doubleCheck dovetailMate enPassant endgame epauletteMate equality exposedKing fork hangingPiece hookMate
+interference intermezzo killBoxMate kingsideAttack knightEndgame long master masterVsMaster mate mateIn1
+mateIn2 mateIn3 mateIn4 mateIn5 middlegame morphysMate oneMove opening operaMate pawnEndgame pillsburysMate
+pin promotion queenEndgame queenRookEndgame queensideAttack quietMove rookEndgame sacrifice short skewer
+smotheredMate superGM swallowstailMate trappedPiece triangleMate underPromotion veryLong vukovicMate
+xRayAttack zugzwang`.split(/\s+/);
+it("labels every full-pack and starter theme in Russian and English", () => {
+  const all = new Set([
+    ...fullPackThemes,
+    ...puzzles.flatMap((puzzle) => puzzle.themes ?? [puzzle.theme]),
+  ]);
+  for (const id of all) {
+    expect(themes[id], `Missing bilingual labels for ${id}`).toHaveLength(2);
+    expect(themeName(id, "ru"), `Russian label for ${id}`).toMatch(
+      /[А-Яа-яЁё]/,
+    );
+    expect(themeName(id, "en"), `English label for ${id}`).toMatch(/[A-Za-z]/);
+  }
+});
 it("does not shorten a puzzle using an incomplete PV or award a mate before checkmate", () => {
   const fen = new Chess().fen(),
     before = { score: { cp: 0, mate: null }, pv: ["e2e4"], depth: 16 };

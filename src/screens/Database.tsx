@@ -353,7 +353,7 @@ export function DatabaseScreen() {
                   {l("Сложность", "Difficulty")}
                   <select
                     value={level}
-                    disabled={busy}
+                    disabled={busy || !!puzzleId.trim()}
                     onChange={(e) => setLevel(e.target.value)}
                   >
                     <option value="first">{l("До 1000", "Under 1000")}</option>
@@ -367,15 +367,19 @@ export function DatabaseScreen() {
                   {l("Тема", "Theme")}
                   <select
                     value={theme}
-                    disabled={busy}
+                    disabled={busy || !!puzzleId.trim()}
                     onChange={(e) => setTheme(e.target.value)}
                   >
                     <option value="all">{l("Все темы", "All themes")}</option>
-                    {Object.keys(themes).map((t) => (
-                      <option value={t} key={t}>
-                        {themeName(t, locale)}
-                      </option>
-                    ))}
+                    {Object.keys(themes)
+                      .filter(
+                        (t) => !["tactics", "hanging", "king"].includes(t),
+                      )
+                      .map((t) => (
+                        <option value={t} key={t}>
+                          {themeName(t, locale)}
+                        </option>
+                      ))}
                   </select>
                 </label>
                 <label>
@@ -437,6 +441,14 @@ export function DatabaseScreen() {
               {l("Найти", "Search")}
             </button>
           </form>
+          {mode === "puzzles" && puzzleId.trim() && (
+            <p className="field-help" role="status">
+              {l(
+                "Поиск по ID открывает конкретную задачу независимо от сложности и темы.",
+                "An ID search opens that exact puzzle, regardless of difficulty and theme.",
+              )}
+            </p>
+          )}
           {busy && (
             <p role="status" className="notice">
               {l(

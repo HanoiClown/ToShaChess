@@ -55,6 +55,15 @@ test("empty public install creates users, plays offline pack and records earned 
       .selectOption("first");
     await page.getByRole("button", { name: "Найти", exact: true }).click();
     await expect(page.locator(".library-row")).toHaveCount(1);
+    await page.getByPlaceholder("00sHx").fill("TST01");
+    await expect(
+      page.locator(".database-filters select").first(),
+    ).toBeDisabled();
+    await expect(
+      page.locator(".database-filters select").nth(1),
+    ).toBeDisabled();
+    await page.getByRole("button", { name: "Найти", exact: true }).click();
+    await expect(page.locator(".library-row")).toHaveCount(1);
     await capture("04-puzzle-search");
     await page.locator(".library-row").click();
     await page
