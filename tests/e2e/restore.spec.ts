@@ -1,3 +1,4 @@
+import { seedProfiles } from "../helpers/profile-fixtures";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,6 +12,7 @@ test("restoring a newer timed game unmounts the stale live board", async () => {
     );
   env.CHESS_HOME_DATA = dir;
   delete env.ELECTRON_RUN_AS_NODE;
+  seedProfiles(env.CHESS_HOME_DATA);
   const app = await electron.launch({ args: ["."], env });
   try {
     const page = await app.firstWindow();

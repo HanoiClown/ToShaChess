@@ -2304,6 +2304,336 @@ details summary {
 .favorite-action {
   margin-bottom: 16px;
 }
+.profile-choices {
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1100px;
+  width: 100%;
+}
+.profile-choice strong,
+.profile-choice small {
+  overflow-wrap: anywhere;
+}
+.profile-create-form {
+  width: min(660px, 100%);
+  margin-top: 32px;
+  text-align: left;
+}
+.profile-create-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 24px;
+}
+.profile-create-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.profile-create-fields input,
+.profile-create-fields select {
+  width: 100%;
+  min-width: 0;
+}
+.profile-create-fields .field-help {
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.profile-path-help {
+  margin: 22px 0;
+}
+.profile-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.profile-form-error {
+  color: var(--tone-ffc4bc, #ffc4bc);
+  max-width: 660px;
+  line-height: 1.5;
+}
+.profile-entry-actions {
+  margin-top: 28px;
+}
+.profile-restore {
+  margin-top: 20px;
+}
+.profile-nickname {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.settings-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.database-summary {
+  margin-bottom: 24px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.database-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.1fr auto;
+  gap: 16px;
+  align-items: end;
+  margin: 24px 0;
+}
+.database-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.database-filters input,
+.database-filters select {
+  width: 100%;
+}
+.database-game-row strong,
+.database-game-row small {
+  overflow-wrap: anywhere;
+}
+.playback-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+.growth-panel {
+  margin: 24px 0;
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.growth-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 28px;
+}
+.growth-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 22px;
+}
+.growth-heading p,
+.growth-streak p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 65ch;
+}
+.growth-level {
+  flex: 0 0 240px;
+  font-variant-numeric: tabular-nums;
+}
+.growth-level > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+.growth-level progress {
+  display: block;
+  width: 100%;
+  height: 7px;
+  margin: 9px 0;
+  border: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--line);
+  accent-color: var(--green);
+}
+.growth-level progress::-webkit-progress-bar {
+  background: var(--line);
+}
+.growth-level progress::-webkit-progress-value {
+  background: var(--green);
+}
+.growth-level progress::-moz-progress-bar {
+  background: var(--green);
+}
+.growth-panel small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.growth-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 36px;
+  margin-top: 24px;
+}
+.growth-body h3 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+.growth-streak h3 span {
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--green);
+}
+.growth-week {
+  display: flex;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 10px;
+}
+.growth-week li {
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.growth-day-mark {
+  width: 29px;
+  height: 29px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.growth-week .is-earned .growth-day-mark {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--green-dark);
+}
+.growth-week [aria-current="date"] .growth-day-mark {
+  outline: 1px solid var(--muted);
+  outline-offset: 3px;
+}
+.growth-goals ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.growth-goals button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  min-height: 44px;
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding: 9px 0;
+}
+.growth-goals button:hover {
+  color: var(--green);
+}
+.growth-goals button > span {
+  flex: 1;
+}
+.growth-goals button > strong {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.growth-goals svg {
+  flex-shrink: 0;
+}
+.growth-details {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding-top: 15px;
+}
+.growth-details summary {
+  cursor: pointer;
+  width: fit-content;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 5px 0;
+}
+.growth-details summary > span {
+  color: var(--muted);
+  margin-left: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.growth-details summary:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+}
+.growth-achievements {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  gap: 20px 24px;
+  margin: 20px 0;
+  padding: 0;
+}
+.growth-achievements li {
+  display: flex;
+  align-items: start;
+  gap: 9px;
+}
+.growth-achievements svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.growth-achievements strong {
+  font-size: 14px;
+}
+.growth-achievements p {
+  margin: 3px 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.growth-details > p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+  max-width: 90ch;
+}
+@media (max-width: 1100px) {
+  .database-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 980px) {
+  .growth-heading {
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+  .growth-level {
+    flex-basis: 100%;
+    max-width: 320px;
+  }
+  .growth-body {
+    gap: 24px;
+  }
+  .growth-achievements {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .profile-create-fields {
+    grid-template-columns: 1fr;
+  }
+  .profile-main h1,
+  .profile-main > p {
+    text-align: center;
+  }
+  .profile-create-actions button {
+    flex: 1;
+  }
+  .growth-panel {
+    padding: 20px;
+  }
+  .growth-body {
+    grid-template-columns: 1fr;
+  }
+  .growth-achievements {
+    grid-template-columns: 1fr;
+  }
+  .growth-week {
+    gap: 10px;
+  }
+}
 .library-tabs {
   flex-wrap: wrap;
 }

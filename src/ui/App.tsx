@@ -20,6 +20,9 @@ import {
   ShieldCheck,
   Languages,
   Eye,
+  UserPlus,
+  Upload,
+  Database,
 } from "lucide-react";
 import type { Snapshot, Locale } from "../shared/contracts";
 import { AppContext, errorText, type Route } from "./context";
@@ -34,8 +37,12 @@ const Puzzles = lazy(() =>
 import { HistoryScreen } from "../screens/History";
 import { SettingsScreen } from "../screens/Settings";
 import { Vision } from "../screens/Vision";
+import { ProfileCreator } from "./ProfileCreator";
 const Openings = lazy(() =>
   import("../screens/Openings").then((m) => ({ default: m.Openings })),
+);
+const DatabaseScreen = lazy(() =>
+  import("../screens/Database").then((m) => ({ default: m.DatabaseScreen })),
 );
 const routes: { id: Route; icon: typeof Home }[] = [
   { id: "today", icon: Home },
@@ -44,6 +51,7 @@ const routes: { id: Route; icon: typeof Home }[] = [
   { id: "learn", icon: BookOpen },
   { id: "puzzles", icon: Target },
   { id: "vision", icon: Eye },
+  { id: "database", icon: Database },
   { id: "history", icon: History },
 ];
 export default function App() {
@@ -52,7 +60,8 @@ export default function App() {
     [reviewId, setReviewId] = useState<string | null>(null),
     [error, setError] = useState(""),
     [dismissedNotice, setDismissedNotice] = useState<string | null>(null),
-    [entryLocale, setEntryLocale] = useState<Locale>("ru");
+    [entryLocale, setEntryLocale] = useState<Locale>("ru"),
+    [creatingProfile, setCreatingProfile] = useState(false);
   const refresh = useCallback(async () => {
     setSnapshot(await window.chessApp.snapshot());
   }, []);
@@ -176,38 +185,121 @@ export default function App() {
           {languageSwitch}
         </header>
         <main className="profile-main">
-          <h1>{l("Кто сегодня играет?", "Who’s playing today?")}</h1>
+          <h1>
+            {creatingProfile || snapshot.database.profiles.length === 0
+              ? l("Твоя игра начинается здесь", "Your game starts here")
+              : l("Кто сегодня играет?", "Who’s playing today?")}
+          </h1>
           <p>
-            {l(
-              "Твоя доска. Твой темп. Твой прогресс.",
-              "Your board. Your pace. Your progress.",
-            )}
+            {creatingProfile || snapshot.database.profiles.length === 0
+              ? l(
+                  "Создай профиль, чтобы сохранять партии и видеть свой прогресс.",
+                  "Create a profile to save your games and follow your progress.",
+                )
+              : l(
+                  "Твоя доска. Твой темп. Твой прогресс.",
+                  "Your board. Your pace. Your progress.",
+                )}
           </p>
-          <div className="profile-choices">
-            {snapshot.database.profiles.map((p, i) => (
-              <button
-                className="profile-choice"
-                key={p.id}
-                onClick={() =>
-                  void window.chessApp
-                    .selectProfile(p.id)
-                    .then(refresh)
-                    .catch(fail)
-                }
-              >
-                <div className="profile-avatar" style={{ background: p.color }}>
-                  <img src={`./pieces/w${i === 0 ? "N" : "R"}.svg`} alt="" />
-                </div>
-                <strong>{p.name}</strong>
-                <span>
-                  {p.level === "new"
-                    ? l("Начать с основ", "Start with the basics")
-                    : l("Развивать свою игру", "Build your game")}
-                </span>
-                <ChevronRight size={20} />
-              </button>
-            ))}
-          </div>
+          {banner && (
+            <p className="profile-form-error" role="alert">
+              {banner}
+            </p>
+          )}
+          {creatingProfile || snapshot.database.profiles.length === 0 ? (
+            <ProfileCreator
+              locale={locale}
+              onCreated={(next) => {
+                setSnapshot(next);
+                setCreatingProfile(false);
+                setError("");
+                setRoute("today");
+                setReviewId(null);
+              }}
+              onCancel={
+                snapshot.database.profiles.length
+                  ? () => setCreatingProfile(false)
+                  : undefined
+              }
+            />
+          ) : (
+            <>
+              <div className="profile-choices">
+                {snapshot.database.profiles.map((p, i) => (
+                  <button
+                    className="profile-choice"
+                    key={p.id}
+                    onClick={() =>
+                      void window.chessApp
+                        .selectProfile(p.id)
+                        .then(refresh)
+                        .catch(fail)
+                    }
+                  >
+                    <div
+                      className="profile-avatar"
+                      style={{ background: p.color }}
+                    >
+                      <img
+                        src={`./pieces/w${i === 0 ? "N" : "R"}.svg`}
+                        alt=""
+                      />
+                    </div>
+                    <strong>{p.name}</strong>
+                    {p.nickname && (
+                      <small className="profile-nickname">@{p.nickname}</small>
+                    )}
+                    <span>
+                      {p.level === "new"
+                        ? l("Начать с основ", "Start with the basics")
+                        : l("Развивать свою игру", "Build your game")}
+                    </span>
+                    <ChevronRight size={20} />
+                  </button>
+                ))}
+              </div>
+              <div className="profile-entry-actions">
+                <button
+                  className="secondary"
+                  disabled={snapshot.database.profiles.length >= 20}
+                  onClick={() => {
+                    setError("");
+                    setCreatingProfile(true);
+                  }}
+                >
+                  <UserPlus size={18} />
+                  {l("Создать профиль", "Create profile")}
+                </button>
+              </div>
+              {snapshot.database.profiles.length >= 20 && (
+                <p className="field-help">
+                  {l(
+                    "На этом компьютере уже 20 профилей.",
+                    "This computer already has 20 profiles.",
+                  )}
+                </p>
+              )}
+            </>
+          )}
+          {!creatingProfile && (
+            <button
+              className="text-button profile-restore"
+              onClick={() =>
+                void window.chessApp
+                  .importBackup()
+                  .then((next) => {
+                    if (next) {
+                      setSnapshot(next);
+                      setError("");
+                    }
+                  })
+                  .catch(fail)
+              }
+            >
+              <Upload size={16} />
+              {l("Восстановить из резервной копии", "Restore from backup")}
+            </button>
+          )}
           <div className="profile-foot">
             <ShieldCheck size={18} />
             {l(
@@ -279,6 +371,9 @@ export default function App() {
                 {profile.name.slice(0, 1).toUpperCase()}
               </span>
               <strong>{profile.name}</strong>
+              {profile.nickname && (
+                <small className="profile-nickname">@{profile.nickname}</small>
+              )}
               <small>
                 {profile.level === "new"
                   ? l("Первые шаги", "First steps")
@@ -318,6 +413,7 @@ export default function App() {
               {route === "puzzles" && <Puzzles key="puzzles" />}
               {route === "endgames" && <Puzzles key="endgames" endgames />}
               {route === "openings" && <Openings />}
+              {route === "database" && <DatabaseScreen />}
             </Suspense>
             {route === "vision" && <Vision />}
             {route === "history" && <HistoryScreen />}

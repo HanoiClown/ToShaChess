@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ArrowRight,
   ArrowLeft,
@@ -15,6 +15,29 @@ import { dailyPuzzles, localDay } from "../library/daily";
 export function Puzzles({ endgames = false }: { endgames?: boolean }) {
   const { profile, locale, l, snapshot } = useApp(),
     progress = snapshot.database.progress[profile.id];
+  const [extra, setExtra] = useState<Puzzle[]>([]);
+  useEffect(() => {
+    let active = true;
+    const core = new Set(puzzles.map((p) => p.id));
+    const ids = [
+      ...new Set([...progress.favorites, ...progress.reviews.map((r) => r.id)]),
+    ].filter((id) => !core.has(id) && id.startsWith("lichess_"));
+    void (async () => {
+      const rows: Puzzle[] = [];
+      for (let i = 0; i < ids.length; i += 200) {
+        if (!active) return;
+        rows.push(
+          ...(await window.chessApp.libraryLookup(ids.slice(i, i + 200))),
+        );
+      }
+      if (active) setExtra(rows);
+    })().catch(() => {
+      if (active) setExtra([]);
+    });
+    return () => {
+      active = false;
+    };
+  }, [profile.id, progress.favorites, progress.reviews]);
   const [mode, setMode] = useState(
       endgames
         ? "endgames"
@@ -42,6 +65,7 @@ export function Puzzles({ endgames = false }: { endgames?: boolean }) {
         .map(
           (r) =>
             puzzles.find((p) => p.id === r.id) ??
+            extra.find((p) => p.id === r.id) ??
             ({
               id: r.id,
               fen: r.fen,
@@ -54,13 +78,13 @@ export function Puzzles({ endgames = false }: { endgames?: boolean }) {
               difficulty: "practice",
             } as Puzzle),
         ),
-    [progress.reviews],
+    [progress.reviews, extra],
   );
   const base =
     mode === "favorites"
-      ? puzzles.filter((p) => progress.favorites.includes(p.id))
+      ? [...puzzles, ...extra].filter((p) => progress.favorites.includes(p.id))
       : mode === "daily"
-        ? dailyPuzzles(puzzles, localDay(), profile.level)
+        ? dailyPuzzles(puzzles, localDay(), profile.skillLevel ?? profile.level)
         : mode === "mistakes"
           ? mistakes
           : mode === "starter"
@@ -93,6 +117,7 @@ export function Puzzles({ endgames = false }: { endgames?: boolean }) {
       solved,
       progress.reviews,
       progress.favorites,
+      extra,
     ],
   );
   const pages = Math.max(1, Math.ceil(filtered.length / 16)),
@@ -136,7 +161,7 @@ export function Puzzles({ endgames = false }: { endgames?: boolean }) {
         <span className="quiet-badge">
           <BookOpen size={18} />
           {puzzles.length.toLocaleString(locale)}{" "}
-          {l("позиций во всей библиотеке", "positions in the full library")}
+          {l("позиций в основной библиотеке", "positions in the core library")}
         </span>
       </div>
       <div className="tabs library-tabs">

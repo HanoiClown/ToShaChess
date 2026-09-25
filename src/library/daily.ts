@@ -1,17 +1,17 @@
 import type { Puzzle } from "../content/puzzles";
+import type { SkillLevel } from "../shared/contracts";
 export function localDay(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
-export function dailyPuzzles(
-  all: Puzzle[],
-  day: string,
-  level: "new" | "beginner",
-) {
+export function dailyPuzzles(all: Puzzle[], day: string, level: SkillLevel) {
+  const [min, max] = {
+    new: [500, 1000],
+    beginner: [500, 1500],
+    intermediate: [1300, 2000],
+    advanced: [1800, 4001],
+  }[level];
   const pool = all.filter(
-    (p) =>
-      p.rating !== undefined &&
-      p.rating >= 500 &&
-      p.rating < (level === "new" ? 1000 : 1500),
+    (p) => p.rating !== undefined && p.rating >= min && p.rating < max,
   );
   const hash = (s: string) => {
     let n = 2166136261;

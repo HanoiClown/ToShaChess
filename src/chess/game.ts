@@ -28,7 +28,7 @@ export function positionId(game: Pick<GameRecord, "initialFen" | "moves">) {
 export function parseGames(
   text: string,
   profileId: string,
-  playerName = "HanoiClown",
+  playerName = "",
 ): GameRecord[] {
   if (text.length > 10_000_000) throw Error("PGN > 10 MB");
   const chunks = text
@@ -49,13 +49,18 @@ export function parseGames(
     if (history.length > 4000) throw Error("Game too long");
     const headers = chess.getHeaders(),
       initialFen = history[0]?.before ?? headers.FEN ?? START;
-    const date = headers.Date;
     let playedAt: string | null = null;
-    if (date && /^\d{4}\.\d{2}\.\d{2}$/.test(date) && date > "1970.01.01") {
+    // Lichess archives use UTCDate; chess.js supplies an unknown Date placeholder
+    // when the standard tag is absent. Prefer a valid Date, then try UTCDate.
+    for (const date of [headers.Date, headers.UTCDate]) {
+      if (!date || !/^\d{4}\.\d{2}\.\d{2}$/.test(date) || date <= "1970.01.01")
+        continue;
       const iso = date.replaceAll(".", "-");
       const d = new Date(iso + "T12:00:00Z");
-      if (!Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === iso)
+      if (!Number.isNaN(d.valueOf()) && d.toISOString().slice(0, 10) === iso) {
         playedAt = iso;
+        break;
+      }
     }
     const moves = history.map((m) => m.from + m.to + (m.promotion ?? "")),
       result = headers.Result;

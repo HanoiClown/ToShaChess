@@ -1,4 +1,5 @@
 .analysis-venv/
+.library-venv/
 __pycache__/
 node_modules/
 dist/
@@ -21,6 +22,7 @@ ToShaChess Portable/
 ToShaChess-GitHub/
 history/
 stockfish/
+library-packs/
 *.lnk
 api-key.enc
 *.pgn

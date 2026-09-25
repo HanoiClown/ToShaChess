@@ -1,9 +1,6 @@
+import { profileDatabase } from "../helpers/profile-fixtures";
 import { it, expect } from "vitest";
-import {
-  freshDatabase,
-  validateDatabase,
-  mergeBackup,
-} from "../../electron/storage/schema";
+import { validateDatabase, mergeBackup } from "../../electron/storage/schema";
 import { newRound, clickTarget, nextTarget } from "../../src/library/vision";
 it("stops accepting clicks at deadline, counts mistakes and avoids immediate target repeats", () => {
   let round = newRound(30, 1000, () => 0);
@@ -21,7 +18,7 @@ it("stops accepting clicks at deadline, counts mistakes and avoids immediate tar
   expect(clickTarget(newRound(0, 0), "h8", 10000000).finished).toBe(false);
 });
 it("migrates old saves and merges vision history without mixing profiles", () => {
-  const old: any = freshDatabase();
+  const old: any = profileDatabase();
   delete old.progress.hanoi.vision;
   delete old.progress.hanoi.visionSettings;
   const d = validateDatabase(old);

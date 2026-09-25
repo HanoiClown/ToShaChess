@@ -10,9 +10,17 @@ import {
   UserRound,
 } from "lucide-react";
 import { useApp } from "../ui/context";
+import type { SkillLevel } from "../shared/contracts";
 export function SettingsScreen() {
   const { snapshot, profile, locale, l, refresh, fail } = useApp();
   const [name, setName] = useState(profile.name),
+    [nickname, setNickname] = useState(profile.nickname ?? ""),
+    [skillLevel, setSkillLevel] = useState<SkillLevel>(
+      profile.skillLevel ?? profile.level,
+    ),
+    [rating, setRating] = useState(
+      profile.rating === undefined ? "" : String(profile.rating),
+    ),
     [key, setKey] = useState(""),
     [status, setStatus] = useState(""),
     [saving, setSaving] = useState(false);
@@ -63,29 +71,97 @@ export function SettingsScreen() {
             <UserRound size={24} />
             <h2>{l("Профиль", "Profile")}</h2>
           </div>
-          <label>
-            {l("Имя", "Name")}
-            <div className="input-action">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void window.chessApp
+                .updateProfile({
+                  ...profile,
+                  name: name.trim(),
+                  nickname: nickname.trim() || undefined,
+                  skillLevel,
+                  rating: rating === "" ? undefined : Number(rating),
+                })
+                .then(refresh)
+                .then(() => setStatus(l("Профиль сохранён.", "Profile saved.")))
+                .catch(fail);
+            }}
+          >
+            <label>
+              {l("Имя", "Name")}
               <input
                 value={name}
+                required
                 maxLength={40}
                 onChange={(e) => setName(e.target.value)}
               />
-              <button
-                className="secondary"
-                disabled={!name.trim()}
-                onClick={() =>
-                  void window.chessApp
-                    .updateProfile({ ...profile, name: name.trim() })
-                    .then(refresh)
-                    .catch(fail)
+            </label>
+            <label>
+              {l("Никнейм", "Nickname")}
+              <input
+                value={nickname}
+                minLength={2}
+                maxLength={24}
+                autoComplete="nickname"
+                onChange={(event) => setNickname(event.target.value)}
+              />
+            </label>
+            <label>
+              {l("Уровень игры", "Chess experience")}
+              <select
+                value={skillLevel}
+                onChange={(event) =>
+                  setSkillLevel(event.target.value as SkillLevel)
                 }
               >
-                <Save size={17} />
-                {l("Сохранить", "Save")}
-              </button>
-            </div>
-          </label>
+                <option value="new">
+                  {l(
+                    "С нуля — изучаю правила",
+                    "From zero — learning the rules",
+                  )}
+                </option>
+                <option value="beginner">
+                  {l(
+                    "Начинающий — знаю основы",
+                    "Beginner — I know the basics",
+                  )}
+                </option>
+                <option value="intermediate">
+                  {l(
+                    "Средний — регулярно играю",
+                    "Intermediate — I play regularly",
+                  )}
+                </option>
+                <option value="advanced">
+                  {l(
+                    "Продвинутый — играю уверенно",
+                    "Advanced — confident player",
+                  )}
+                </option>
+              </select>
+            </label>
+            <label>
+              {l("Мой рейтинг · необязательно", "My rating · optional")}
+              <input
+                type="number"
+                min={0}
+                max={3000}
+                step={1}
+                value={rating}
+                onChange={(event) => setRating(event.target.value)}
+              />
+            </label>
+            <p className="field-help">
+              {l(
+                "Укажи свой рейтинг, если знаешь. 0 — рейтинга пока нет.",
+                "Enter your rating if you know it. 0 means no rating yet.",
+              )}
+            </p>
+            <button className="secondary" type="submit" disabled={!name.trim()}>
+              <Save size={17} />
+              {l("Сохранить профиль", "Save profile")}
+            </button>
+          </form>
           <fieldset className="theme-picker">
             <legend>{l("Тема приложения", "App theme")}</legend>
             {(

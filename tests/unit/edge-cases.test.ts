@@ -1,10 +1,10 @@
+import { profileStore } from "../helpers/profile-fixtures";
 import { it, expect } from "vitest";
 import { Chess } from "chess.js";
 import { terminalResult, timeoutResult } from "../../src/chess/game";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Store } from "../../electron/storage/store";
 import { AppService } from "../../electron/service";
 it("automatically draws on fivefold but leaves threefold as a claim", () => {
   const c = new Chess();
@@ -21,7 +21,7 @@ it("a lone king cannot win on time", () => {
 });
 it("stale exercise attempts cannot enter the newly selected profile; failed tasks become due", () => {
   const s = new AppService(
-    new Store(mkdtempSync(join(tmpdir(), "chess-edge-"))),
+    profileStore(mkdtempSync(join(tmpdir(), "chess-edge-"))),
     "unused",
     () => {},
   );

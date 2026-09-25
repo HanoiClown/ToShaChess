@@ -14,6 +14,8 @@ import { START, boardAt } from "../chess/game";
 import { buildPlan } from "../learning";
 import { lessons } from "../content/lessons";
 import { themeName } from "../library/catalogue";
+import { deriveGamification } from "../library/gamification";
+import { Achievements } from "../ui/Achievements";
 export function Today() {
   const { snapshot, profile, locale, l, t, nav, refresh, fail } = useApp();
   const progress = snapshot.database.progress[profile.id],
@@ -30,12 +32,8 @@ export function Today() {
         !progress.completed.includes(x.id),
     ),
     recent = games[0];
-  const today = new Date().toLocaleDateString(),
-    minutes = Math.floor(
-      progress.activity
-        .filter((a) => new Date(a.at).toLocaleDateString() === today)
-        .reduce((sum, a) => sum + a.seconds, 0) / 60,
-    ),
+  const growth = deriveGamification(snapshot.database, profile.id),
+    minutes = Math.floor(growth.today.activeSeconds / 60),
     due = progress.reviews.filter(
       (r) => r.due <= new Date().toISOString(),
     ).length;
@@ -176,6 +174,7 @@ export function Today() {
           </div>
         </section>
       </div>
+      <Achievements progress={growth} />
       {!games.length && (
         <div className="archive-banner">
           <Download size={24} />

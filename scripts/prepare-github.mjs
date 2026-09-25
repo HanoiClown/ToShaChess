@@ -38,7 +38,10 @@ const entries = [
 ];
 for (const p of entries)
   if (existsSync(join(root, p)))
-    cpSync(join(root, p), join(out, p), { recursive: true });
+    cpSync(join(root, p), join(out, p), {
+      recursive: true,
+      filter: (path) => !path.split(/[\\/]/).includes("__pycache__"),
+    });
 mkdirSync(join(out, "scripts"));
 for (const p of [
   "build-electron.mjs",
@@ -49,10 +52,13 @@ for (const p of [
   "setup-stockfish.ps1",
   "prepare-github.mjs",
   "smoke-portable.mjs",
+  "download-big-library.py",
+  "verify-big-library.py",
 ])
   cpSync(join(root, "scripts", p), join(out, "scripts", p));
 mkdirSync(join(out, "docs"));
 cpSync(join(root, "docs/PUBLISHING.md"), join(out, "docs/PUBLISHING.md"));
+cpSync(join(root, "docs/LIBRARY.md"), join(out, "docs/LIBRARY.md"));
 let count = 0;
 function audit(dir) {
   for (const item of readdirSync(dir, { withFileTypes: true })) {
@@ -61,15 +67,24 @@ function audit(dir) {
     if (item.isSymbolicLink()) throw Error("Unexpected symlink: " + rel);
     if (item.isDirectory()) {
       if (
-        ["data", "history", ".git", "node_modules", "stockfish"].includes(
-          item.name,
-        )
+        [
+          "data",
+          "history",
+          ".git",
+          "node_modules",
+          "stockfish",
+          "library-packs",
+          "__pycache__",
+        ].includes(item.name)
       )
         throw Error("Private/generated directory: " + rel);
       audit(path);
       continue;
     }
-    if (/\.(pgn|enc|exe|zip)$/i.test(item.name) || item.name.startsWith(".env"))
+    if (
+      /\.(pgn|enc|exe|zip|sqlite|zst|db)$/i.test(item.name) ||
+      item.name.startsWith(".env")
+    )
       throw Error("Private/generated file: " + rel);
     if (statSync(path).size > 50 * 1024 * 1024)
       throw Error("Oversized Git file: " + rel);

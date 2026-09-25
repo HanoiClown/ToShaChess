@@ -22,6 +22,30 @@ it("separates identity by owner, ignores links, handles unknown dates", () => {
   expect(a.id).not.toBe(b.id);
   expect(positionId(a)).toBe(positionId(b));
 });
+it.each(["", '[Date "????.??.??"]\n', '[Date "2016.02.31"]\n'])(
+  "imports a Lichess UTCDate when the standard Date is absent or invalid: %s",
+  (dateHeader) => {
+    const [game] = parseGames(
+      `[Event "Rated Classical game"]\n${dateHeader}[UTCDate "2016.11.30"]\n[Result "0-1"]\n\n1. e4 e6 0-1`,
+      "player",
+    );
+    expect(game.playedAt).toBe("2016-11-30");
+    expect(parseGames(exportGame(game), "player")[0].playedAt).toBe(
+      "2016-11-30",
+    );
+  },
+);
+it("prefers a valid standard Date over UTCDate and rejects invalid fallback dates", () => {
+  expect(
+    parseGames(
+      '[Date "2016.12.01"]\n[UTCDate "2016.11.30"]\n\n1. e4 *',
+      "player",
+    )[0].playedAt,
+  ).toBe("2016-12-01");
+  expect(
+    parseGames('[UTCDate "2016.02.31"]\n\n1. e4 *', "player")[0].playedAt,
+  ).toBeNull();
+});
 it("imports multiple PGNs and FEN promotion", () => {
   expect(
     parseGames('[Event "A"]\n\n1. e4 *\n\n[Event "B"]\n\n1. d4 *', "hanoi"),

@@ -11,16 +11,19 @@ Open-source chess training for Windows, powered by local Stockfish. Russian and 
 - **19 bilingual lessons**, personal mistake reviews, an hour-long suggested plan, favorites and a daily set of five puzzles.
 - Coordinate practice: free mode or 30/60/120 seconds, either board orientation, optional file/rank labels.
 - Green, dark purple, dark blue and dark red themes, saved separately for each profile.
+- Create up to 20 local profiles with a name, unique nickname, experience level and optional rating. New installations start with a registration form; upgrades retain existing profiles.
+- Personal XP levels, daily goals, practice streaks, weekly activity and nine achievements. Rewards come from completed practice, without repeated XP for the same puzzle or imported games.
+- An optional large offline pack: the complete downloaded Lichess puzzle snapshot and a searchable archive of rated games. Filter puzzles by rating and motif; browse games by player, ECO and rating, replay them and save selected games for Stockfish analysis. See [large library installation](docs/LIBRARY.md).
 
 Daily sets are selected locally from the bundled library and change with the local calendar date. They are not Lichess's official daily puzzle. Favorites and solved progress are personal to each profile. Beginner priority is a learning recommendation, not an objective ranking of opening strength. Puzzle ratings are not estimates of your playing rating.
 
 ## Запуск и перенос / Run and move
 
-Распакуй всю папку **ToShaChess Portable**, открой **ToShaChess.exe**. В настройках можно изменить имена двух профилей, язык, учебный маршрут и тему. Установка Node.js или отдельного Stockfish для готового приложения не нужна.
+Распакуй всю папку **ToShaChess Portable**, открой **ToShaChess.exe**. При первом запуске создай профиль: имя, ник и уровень игры. Кнопка «Создать профиль» на экране выбора добавляет других пользователей; настройки позволяют изменить данные, язык, учебный маршрут и тему. Установка Node.js или отдельного Stockfish для готового приложения не нужна.
 
-Для переноса закрой приложение и скопируй всю папку, **включая `data`**. Одного EXE недостаточно. Партии, прогресс и темы сохранятся. API-ключ на новом ПК вводится заново. При обновлении старого Chess Home перенеси его папку `data` в новую папку ToShaChess, пока оба приложения закрыты. Копии на разных ПК автоматически не синхронизируются.
+Для переноса закрой приложение и скопируй всю папку, **включая `data` и установленную `library-packs`**. Одного EXE недостаточно. Партии, прогресс, достижения и темы сохранятся. API-ключ на новом ПК вводится заново. При обновлении старого Chess Home перенеси его папку `data` в новую папку ToShaChess, пока оба приложения закрыты. Копии на разных ПК автоматически не синхронизируются.
 
-Extract the entire portable folder and run **ToShaChess.exe**. Close the app before copying the full folder, including `data`, to another PC. Alternatively export/import profiles in Settings. The database remains `data/chess-home.json` for backward compatibility. Existing profiles retain their names and progress; fresh installations use two editable generic profiles. A backup merge unions favorites; it does not propagate deletions between computers.
+Extract the entire portable folder and run **ToShaChess.exe**. Close the app before copying the full folder, including `data` and any installed `library-packs`, to another PC. Alternatively export/import profiles in Settings; profile backups do not embed the shared library pack. The database remains `data/chess-home.json` for backward compatibility. Existing profiles retain their names and progress; fresh installations contain no users. A backup merge unions favorites; it does not propagate deletions between computers.
 
 ## Offline coach and optional API
 

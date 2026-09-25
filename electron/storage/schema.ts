@@ -16,10 +16,35 @@ const line = z.object({
   pv: z.array(z.string().regex(/^[a-h][1-8][a-h][1-8][qrbn]?$/)).max(100),
   depth: z.number().int().min(0).max(256),
 });
+const profileName = z.string().trim().min(1).max(40);
+const nickname = z
+  .string()
+  .transform((value) => value.normalize("NFKC").trim())
+  .pipe(
+    z
+      .string()
+      .min(2)
+      .max(24)
+      .regex(/^[\p{L}\p{N}_-]+$/u),
+  );
+const skillLevel = z.enum(["new", "beginner", "intermediate", "advanced"]);
+const rating = z.number().int().min(0).max(3000);
+export const normalizeNickname = (value: string) =>
+  value.normalize("NFKC").trim().toLowerCase();
+export const createProfileSchema = z.object({
+  name: profileName,
+  nickname,
+  skillLevel,
+  rating: rating.optional(),
+  locale: z.enum(["ru", "en"]),
+});
 export const profileSchema = z.object({
   theme: z.enum(["green", "purple", "blue", "red"]).default("green"),
   id,
-  name: z.string().trim().min(1).max(40),
+  name: profileName,
+  nickname: nickname.optional(),
+  skillLevel: skillLevel.optional(),
+  rating: rating.optional(),
   locale: z.enum(["ru", "en"]),
   level: z.enum(["new", "beginner"]),
   color: z.string().regex(/^#[a-fA-F0-9]{6}$/),
@@ -96,6 +121,7 @@ export const gameSchema = z.object({
   playedAt: z.string().max(40).nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+  completedAt: z.iso.datetime().optional(),
   result: z.enum(["1-0", "0-1", "1/2-1/2", "*"]),
   analysis: z
     .array(
@@ -139,7 +165,7 @@ export const settingsSchema = z.object({
 });
 const databaseSchema = z.object({
   version: z.literal(1),
-  profiles: z.array(profileSchema).min(1).max(20),
+  profiles: z.array(profileSchema).max(20),
   games: z.array(gameSchema).max(10000),
   progress: z.record(id, progress),
   usage: z
@@ -167,24 +193,9 @@ export const emptyProgress = (): Progress => ({
 export function freshDatabase(): Database {
   return {
     version: 1,
-    profiles: [
-      {
-        id: "hanoi",
-        name: "Игрок 1",
-        locale: "ru",
-        level: "beginner",
-        color: "#81b64c",
-      },
-      {
-        id: "sister",
-        name: "Игрок 2",
-        locale: "ru",
-        level: "new",
-        color: "#b69be8",
-      },
-    ],
+    profiles: [],
     games: [],
-    progress: { hanoi: emptyProgress(), sister: emptyProgress() },
+    progress: {},
     usage: [],
     settings: { budget: 5000000, sound: true, engineMs: 300 },
     archiveImported: false,
@@ -194,6 +205,11 @@ export function validateDatabase(input: unknown): Database {
   const d = databaseSchema.parse(input);
   const ids = new Set(d.profiles.map((p) => p.id));
   if (ids.size !== d.profiles.length) throw Error("Duplicate profiles");
+  const nicknames = d.profiles.flatMap((profile) =>
+    profile.nickname ? [normalizeNickname(profile.nickname)] : [],
+  );
+  if (new Set(nicknames).size !== nicknames.length)
+    throw Error("nickname_taken");
   if (
     d.profiles.some((p) => !d.progress[p.id]) ||
     Object.keys(d.progress).some((k) => !ids.has(k))

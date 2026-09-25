@@ -18,6 +18,8 @@ import {
 import { Store } from "./storage/store";
 import { mergeBackup } from "./storage/schema";
 import { AppService } from "./service";
+import { OfflineLibrary } from "./library";
+import { LibraryClient } from "./library-client";
 import { exportGame } from "../src/chess/game";
 let win: BrowserWindow | null = null,
   service: AppService;
@@ -36,6 +38,18 @@ if (!app.requestSingleInstanceLock()) {
     Menu.setApplicationMenu(null);
     try {
       const store = new Store(dataPath);
+      const libraryPath =
+        process.env.TOSHACHESS_LIBRARY ??
+        join(
+          app.isPackaged ? dirname(app.getPath("exe")) : app.getAppPath(),
+          "library-packs",
+        );
+      const library = new OfflineLibrary(libraryPath),
+        libraryWorker = new LibraryClient(libraryPath);
+      app.on("before-quit", () => {
+        library.close();
+        libraryWorker.close();
+      });
       const notify = () => {
         if (win && !win.isDestroyed()) win.webContents.send("state-changed");
       };
@@ -70,7 +84,14 @@ if (!app.requestSingleInstanceLock()) {
           }
         });
       handle("snapshot", () => service.snapshot());
+      handle("library-status", () => libraryWorker.call("status"));
+      handle("library-puzzles", (f) => libraryWorker.call("puzzles", f));
+      handle("library-games", (f) => libraryWorker.call("games", f));
+      handle("library-game-pgn", (id) => libraryWorker.call("gamePgn", id));
+      handle("library-lookup", (ids) => library.getPuzzles(ids));
+      service.extraPuzzle = (id) => library.getPuzzle(id);
       handle("select-profile", (id) => service.selectProfile(id));
+      handle("create-profile", (input) => service.createProfile(input));
       handle("update-profile", (p) => service.updateProfile(p));
       handle("save-game", (g) => service.saveGame(g));
       handle("import-pgn", (text) => {
@@ -96,14 +117,18 @@ if (!app.requestSingleInstanceLock()) {
         if (picked.canceled) return { added: 0, skipped: 0 };
         if (service.activeProfile !== owner) throw Error("wrong_profile");
         const folder = picked.filePaths[0];
+        const files = readdirSync(folder, { withFileTypes: true })
+          .filter((entry) => entry.isFile() && entry.name.endsWith(".pgn"))
+          .map((entry) => join(folder, entry.name));
+        // Check the entire selection before reading or importing the first game.
+        // The optional library contains multi-gigabyte PGNs read by byte range.
+        for (const file of files)
+          if (statSync(file).size > 10000000)
+            throw Error("archive_pgn_too_large");
         let added = 0,
           skipped = 0;
-        for (const file of readdirSync(folder).filter((x) =>
-          x.endsWith(".pgn"),
-        )) {
-          const count = service.importPgn(
-            readFileSync(join(folder, file), "utf8"),
-          );
+        for (const file of files) {
+          const count = service.importPgn(readFileSync(file, "utf8"));
           added += count.added;
           skipped += count.skipped;
         }

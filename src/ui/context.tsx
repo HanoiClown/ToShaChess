@@ -11,7 +11,8 @@ export type Route =
   | "settings"
   | "vision"
   | "openings"
-  | "endgames";
+  | "endgames"
+  | "database";
 type Context = {
   snapshot: Snapshot;
   profile: Profile;
@@ -37,6 +38,30 @@ export function errorText(error: unknown, locale: Locale) {
     "",
   );
   const messages: Record<string, [string, string]> = {
+    nickname_taken: [
+      "Этот ник уже используется. Выбери другой.",
+      "This nickname is already in use. Choose another.",
+    ],
+    profile_limit: [
+      "Создано максимальное число профилей: 20.",
+      "The maximum of 20 profiles has been reached.",
+    ],
+    invalid_profile: [
+      "Проверь имя, ник и уровень игрока.",
+      "Check the player's name, nickname and skill level.",
+    ],
+    library_timeout: [
+      "Поиск занял слишком много времени. Уточни фильтры и повтори.",
+      "Search took too long. Narrow the filters and try again.",
+    ],
+    library_incomplete: [
+      "Пакет данных загружен не полностью. Заверши загрузку и перезапусти приложение.",
+      "The data pack is incomplete. Finish downloading it and restart the app.",
+    ],
+    archive_pgn_too_large: [
+      "В папке есть PGN больше 10 МБ. Выбери папку с небольшими файлами. Установленный большой пакет открывай в разделе «Большая база».",
+      "The folder contains a PGN larger than 10 MB. Choose a folder with smaller files. Open the installed large pack in Extended database.",
+    ],
     cloud_unavailable: [
       "Облачный ИИ недоступен. Проверь ключ, баланс и лимит аккаунта. Локальный анализ работает.",
       "Cloud AI is unavailable. Check your key, credits and account limits. Local analysis still works.",

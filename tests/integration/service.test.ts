@@ -1,3 +1,4 @@
+import { profileStore } from "../helpers/profile-fixtures";
 import { it, expect, vi } from "vitest";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -7,7 +8,7 @@ import { Store } from "../../electron/storage/store";
 import { parseGames } from "../../src/chess/game";
 it("replaces aborted analysis without an old completion removing the new job", async () => {
   const service = new AppService(
-    new Store(mkdtempSync(join(tmpdir(), "chess-job-"))),
+    profileStore(mkdtempSync(join(tmpdir(), "chess-job-"))),
     "unused",
     () => {},
   );
@@ -33,9 +34,9 @@ it("replaces aborted analysis without an old completion removing the new job", a
   expect(service.jobs.has(g.id)).toBe(false);
   service.dispose();
 });
-it("profile switching rejects stale saves and archive import only belongs to Hanoi", () => {
+it("profile switching rejects stale saves and keeps games separate", () => {
   const service = new AppService(
-    new Store(mkdtempSync(join(tmpdir(), "chess-service-"))),
+    profileStore(mkdtempSync(join(tmpdir(), "chess-service-"))),
     "unused",
     () => {},
   );
@@ -50,7 +51,7 @@ it("profile switching rejects stale saves and archive import only belongs to Han
   service.dispose();
 });
 it("undo and divergent play invalidate analysis, explanations and old exercises", () => {
-  const store = new Store(mkdtempSync(join(tmpdir(), "chess-undo-"))),
+  const store = profileStore(mkdtempSync(join(tmpdir(), "chess-undo-"))),
     service = new AppService(store, "unused", () => {});
   service.selectProfile("hanoi");
   const [g] = parseGames("1. e4 e5 2. Nf3 Nc6 *", "hanoi");

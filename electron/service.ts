@@ -7,6 +7,9 @@ import {
   profileSchema,
   attemptSchema,
   settingsSchema,
+  createProfileSchema,
+  emptyProgress,
+  normalizeNickname,
 } from "./storage/schema";
 import { parseGames, boardAt, playUci } from "../src/chess/game";
 import {
@@ -34,8 +37,12 @@ import type {
   Database,
   CoachReply,
   Locale,
+  CreateProfileInput,
 } from "../src/shared/contracts";
 export class AppService {
+  extraPuzzle?: (
+    id: string,
+  ) => import("../src/content/puzzles").Puzzle | undefined;
   activeProfile: string | null = null;
   notice: string | null = null;
   apiKey = "";
@@ -76,7 +83,10 @@ export class AppService {
   }
   favorite(profileId: string, puzzleId: string, enabled: boolean) {
     if (profileId !== this.owner()) throw Error("wrong_profile");
-    if (typeof enabled !== "boolean" || !puzzles.some((p) => p.id === puzzleId))
+    if (
+      typeof enabled !== "boolean" ||
+      (!puzzles.some((p) => p.id === puzzleId) && !this.extraPuzzle?.(puzzleId))
+    )
       throw Error("invalid_puzzle");
     this.store.update((d) => {
       const list = d.progress[profileId].favorites;
@@ -99,12 +109,44 @@ export class AppService {
   updateProfile(input: Profile) {
     const profile = profileSchema.parse(input);
     if (profile.id !== this.owner()) throw Error("wrong_profile");
+    this.checkNickname(profile.nickname, profile.id);
     this.store.update((d) => {
       const i = d.profiles.findIndex((p) => p.id === profile.id);
       d.profiles[i] = profile;
     });
     this.notify();
     return this.snapshot();
+  }
+  private checkNickname(nickname?: string, exceptId?: string) {
+    if (
+      nickname &&
+      this.store.data.profiles.some(
+        (profile) =>
+          profile.id !== exceptId &&
+          profile.nickname &&
+          normalizeNickname(profile.nickname) === normalizeNickname(nickname),
+      )
+    )
+      throw Error("nickname_taken");
+  }
+  createProfile(input: CreateProfileInput) {
+    const parsed = createProfileSchema.safeParse(input);
+    if (!parsed.success) throw Error("invalid_profile");
+    if (this.store.data.profiles.length >= 20) throw Error("profile_limit");
+    this.checkNickname(parsed.data.nickname);
+    const colors = ["#81b64c", "#b69be8", "#85b8e8", "#e79898"];
+    const profile: Profile = {
+      ...parsed.data,
+      id: randomUUID(),
+      level: parsed.data.skillLevel === "new" ? "new" : "beginner",
+      color: colors[this.store.data.profiles.length % colors.length],
+      theme: "green",
+    };
+    this.store.update((database) => {
+      database.profiles.push(profile);
+      database.progress[profile.id] = emptyProgress();
+    });
+    return this.selectProfile(profile.id);
   }
   getGame(id: string, owner = this.owner()) {
     const g = this.store.data.games.find(
@@ -120,6 +162,14 @@ export class AppService {
     const existing = this.store.data.games.find((x) => x.id === g.id);
     if (existing && existing.profileId !== g.profileId)
       throw Error("wrong_profile");
+    // The renderer cannot move an earned completion to a new calendar day.
+    g.completedAt =
+      existing?.completedAt ??
+      (g.mode !== "import" && g.result !== "*"
+        ? existing && existing.result !== "*"
+          ? existing.createdAt
+          : new Date().toISOString()
+        : undefined);
     const changed =
       !!existing &&
       (existing.initialFen !== g.initialFen ||
@@ -147,7 +197,7 @@ export class AppService {
     const owner = this.owner(),
       name =
         playerName ??
-        this.store.data.profiles.find((p) => p.id === owner)!.name;
+        (this.store.data.profiles.find((p) => p.id === owner)!.nickname || this.store.data.profiles.find((p) => p.id === owner)!.name);
     const games = parseGames(text, owner, name);
     let added = 0,
       skipped = 0;
@@ -168,9 +218,16 @@ export class AppService {
     const a = attemptSchema.parse(input),
       owner = this.owner();
     if (a.profileId !== owner) throw Error("wrong_profile");
+    const found =
+      puzzles.find((p) => p.id === a.itemId) ?? this.extraPuzzle?.(a.itemId);
+    if (
+      !found &&
+      !this.store.data.progress[owner].reviews.some((r) => r.id === a.itemId)
+    )
+      throw Error("invalid_puzzle");
     this.store.update((d) => {
       const progress = d.progress[owner],
-        p = puzzles.find((p) => p.id === a.itemId);
+        p = found;
       if (!a.correct && p && !progress.reviews.some((r) => r.id === p.id))
         progress.reviews.push({
           id: p.id,
@@ -202,6 +259,7 @@ export class AppService {
         "vision",
         "openings",
         "endgames",
+        "database",
       ].includes(section)
     )
       throw Error("invalid_activity");

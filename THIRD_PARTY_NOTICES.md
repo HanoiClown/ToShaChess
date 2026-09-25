@@ -1,5 +1,7 @@
 # Third-party notices
 
+The optional extended offline pack uses the Lichess puzzle database and standard rated game archive, both CC0: https://database.lichess.org/ . Its generated manifest records source URLs, sizes, counts, checksums and validation scope. These public archives are downloaded separately, without copying the user's private games or saved profiles into the distribution.
+
 Stockfish 19 — the Stockfish developers, GPL-3.0. Supplied executable, complete accompanying source, AUTHORS and Copying.txt are included under resources/stockfish. https://stockfishchess.org/
 
 Cburnett chess pieces — Colin M. L. Burnett. Source: https://github.com/lichess-org/lila/tree/master/public/piece/cburnett . Listed as GPL-2.0-or-later in Lichess COPYING.md; original Wikimedia pieces also carry CC BY-SA 3.0. Unmodified SVGs included with attribution under the GPL option.

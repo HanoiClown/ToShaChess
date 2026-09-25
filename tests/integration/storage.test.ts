@@ -1,3 +1,4 @@
+import { profileStore } from "../helpers/profile-fixtures";
 import { it, expect } from "vitest";
 import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -5,7 +6,7 @@ import { join } from "node:path";
 import { Store } from "../../electron/storage/store";
 it("persists separate profiles, recovers last good backup and serializes updates", () => {
   const dir = mkdtempSync(join(tmpdir(), "chesshome-"));
-  const s = new Store(dir);
+  const s = profileStore(dir);
   s.update((d) => {
     d.progress.hanoi.completed.push("board");
   });

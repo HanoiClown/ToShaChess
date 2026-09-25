@@ -1,5 +1,14 @@
+import { seedProfiles } from "../helpers/profile-fixtures";
 import { test, expect, _electron as electron } from "@playwright/test";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  openSync,
+  ftruncateSync,
+  closeSync,
+  unlinkSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 test("themes, favorites, daily five and PGN-folder import persist per profile", async () => {
@@ -10,6 +19,7 @@ test("themes, favorites, daily five and PGN-folder import persist per profile", 
     ),
   );
   delete env.ELECTRON_RUN_AS_NODE;
+  seedProfiles(env.CHESS_HOME_DATA);
   let app = await electron.launch({ args: ["."], env });
   try {
     const page = await app.firstWindow();
@@ -121,6 +131,82 @@ test("themes, favorites, daily five and PGN-folder import persist per profile", 
     const snapshot = await again.evaluate(() => window.chessApp.snapshot());
     expect(snapshot.database.progress.hanoi.favorites).toEqual([favorite]);
     expect(snapshot.database.progress.sister.favorites).toEqual([]);
+  } finally {
+    await app.close();
+  }
+});
+
+test("archive import preflights oversized PGNs before reads or profile changes", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "tosha-archive-limit-"));
+  const folder = join(dir, "archive");
+  mkdirSync(folder);
+  writeFileSync(join(folder, "a-valid.pgn"), "1. e4 e5 *");
+  const oversized = join(folder, "z-oversized.pgn");
+  const fd = openSync(oversized, "w");
+  try {
+    ftruncateSync(fd, 10_000_001);
+  } finally {
+    closeSync(fd);
+  }
+  mkdirSync(join(folder, "zz-directory.pgn"));
+  const env: Record<string, string> = Object.fromEntries(
+    Object.entries({ ...process.env, CHESS_HOME_DATA: dir }).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
+  delete env.ELECTRON_RUN_AS_NODE;
+  seedProfiles(dir);
+  const app = await electron.launch({ args: ["."], env });
+  try {
+    const page = await app.firstWindow();
+    await page.locator(".profile-choice").first().click();
+    const before = (await page.evaluate(() => window.chessApp.snapshot()))
+      .database;
+    await app.evaluate(({ dialog }, folder) => {
+      dialog.showOpenDialog = async () => ({
+        canceled: false,
+        filePaths: [folder],
+      });
+      const fs = process.getBuiltinModule("node:fs") as any;
+      const originalRead = fs.readFileSync;
+      const probe = {
+        reads: 0,
+        restore: () => {
+          fs.readFileSync = originalRead;
+        },
+      };
+      (globalThis as any).__archiveReadProbe = probe;
+      fs.readFileSync = (...args: any[]) => {
+        if (String(args[0]).startsWith(folder)) probe.reads++;
+        return originalRead(...args);
+      };
+    }, folder);
+    const rejection = await page.evaluate(async () => {
+      try {
+        await window.chessApp.importArchive();
+        return "unexpected_success";
+      } catch (error) {
+        return String(error);
+      }
+    });
+    expect(rejection).toContain("archive_pgn_too_large");
+    expect(
+      await app.evaluate(() => (globalThis as any).__archiveReadProbe.reads),
+    ).toBe(0);
+    expect(
+      (await page.evaluate(() => window.chessApp.snapshot())).database,
+    ).toEqual(before);
+    await app.evaluate(() => (globalThis as any).__archiveReadProbe.restore());
+    unlinkSync(oversized);
+    expect(await page.evaluate(() => window.chessApp.importArchive())).toEqual({
+      added: 1,
+      skipped: 0,
+    });
+    const after = (await page.evaluate(() => window.chessApp.snapshot()))
+      .database;
+    expect(after.games).toHaveLength(1);
+    expect(after.games[0].profileId).toBe("hanoi");
+    expect(after.progress).toEqual(before.progress);
   } finally {
     await app.close();
   }

@@ -1,3 +1,4 @@
+import { seedProfiles } from "../helpers/profile-fixtures";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -13,6 +14,7 @@ test("library filters, complete multi-move puzzle and coordinate results stay pr
   );
   env.CHESS_HOME_DATA = mkdtempSync(join(tmpdir(), "chess-library-"));
   delete env.ELECTRON_RUN_AS_NODE;
+  seedProfiles(env.CHESS_HOME_DATA);
   const app = await electron.launch({ args: ["."], env });
   try {
     const page = await app.firstWindow();
@@ -119,6 +121,7 @@ test("opening atlas filters gambits and saves a completed short line", async () 
   );
   env.CHESS_HOME_DATA = mkdtempSync(join(tmpdir(), "chess-openings-"));
   delete env.ELECTRON_RUN_AS_NODE;
+  seedProfiles(env.CHESS_HOME_DATA);
   const app = await electron.launch({ args: ["."], env });
   try {
     const page = await app.firstWindow();

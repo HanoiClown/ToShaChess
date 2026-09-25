@@ -1,3 +1,4 @@
+import { seedProfiles } from "../helpers/profile-fixtures";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -10,12 +11,11 @@ test("profile selection, language switching, legal moves and separated progress"
   );
   env.CHESS_HOME_DATA = mkdtempSync(join(tmpdir(), "chess-e2e-"));
   delete env.ELECTRON_RUN_AS_NODE;
+  seedProfiles(env.CHESS_HOME_DATA);
   const app = await electron.launch({ args: ["."], env });
   try {
     const page = await app.firstWindow();
-    await expect(
-      page.locator(".profile-choice").first(),
-    ).toBeVisible();
+    await expect(page.locator(".profile-choice").first()).toBeVisible();
     await page.locator(".profile-choice").first().click();
     await page.getByRole("button", { name: "EN", exact: true }).click();
     await expect(

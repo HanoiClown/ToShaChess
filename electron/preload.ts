@@ -1,8 +1,14 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { DesktopApi } from "../src/shared/contracts";
 const api: DesktopApi = {
+  libraryStatus: () => ipcRenderer.invoke("library-status"),
+  libraryPuzzles: (f) => ipcRenderer.invoke("library-puzzles", f),
+  libraryLookup: (ids) => ipcRenderer.invoke("library-lookup", ids),
+  libraryGames: (f) => ipcRenderer.invoke("library-games", f),
+  libraryGamePgn: (id) => ipcRenderer.invoke("library-game-pgn", id),
   snapshot: () => ipcRenderer.invoke("snapshot"),
   selectProfile: (id) => ipcRenderer.invoke("select-profile", id),
+  createProfile: (input) => ipcRenderer.invoke("create-profile", input),
   updateProfile: (p) => ipcRenderer.invoke("update-profile", p),
   saveGame: (g) => ipcRenderer.invoke("save-game", g),
   importPgn: (t) => ipcRenderer.invoke("import-pgn", t),

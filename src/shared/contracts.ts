@@ -21,10 +21,22 @@ export type Analysis = {
   loss: number;
   provisional: boolean;
 };
+export type SkillLevel = "new" | "beginner" | "intermediate" | "advanced";
+export type CreateProfileInput = {
+  name: string;
+  nickname: string;
+  skillLevel: SkillLevel;
+  rating?: number;
+  locale: Locale;
+};
 export type Profile = {
   theme?: "green" | "purple" | "blue" | "red";
   id: string;
   name: string;
+  nickname?: string;
+  skillLevel?: SkillLevel;
+  /** Optional self-reported rating; 0 means no rating yet. */
+  rating?: number;
   locale: Locale;
   level: "new" | "beginner";
   color: string;
@@ -82,6 +94,7 @@ export type GameRecord = {
   playedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  completedAt?: string;
   result: "1-0" | "0-1" | "1/2-1/2" | "*";
   analysis: Analysis[];
   explanations: Partial<Record<Locale, Record<string, string>>>;
@@ -114,8 +127,18 @@ export type Snapshot = {
 };
 export type CoachReply = { source: "local" | "openai"; text: string };
 export interface DesktopApi {
+  libraryStatus(): Promise<import("./library").LibraryStatus>;
+  libraryPuzzles(
+    filter: import("./library").LibraryFilter,
+  ): Promise<import("./library").PuzzlePage>;
+  libraryLookup(ids: string[]): Promise<import("../content/puzzles").Puzzle[]>;
+  libraryGames(
+    filter: import("./library").GameFilter,
+  ): Promise<{ items: import("./library").LibraryGame[]; more: boolean }>;
+  libraryGamePgn(id: number): Promise<string>;
   snapshot(): Promise<Snapshot>;
   selectProfile(id: string | null): Promise<Snapshot>;
+  createProfile(input: CreateProfileInput): Promise<Snapshot>;
   updateProfile(profile: Profile): Promise<Snapshot>;
   saveGame(game: GameRecord): Promise<Snapshot>;
   importPgn(text: string): Promise<{ added: number; skipped: number }>;

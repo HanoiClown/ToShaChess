@@ -1,5 +1,6 @@
 import type { Locale } from "./shared/contracts";
 export const ru = {
+  database: "Большая база",
   vision: "Видение доски",
   openings: "Атлас дебютов",
   endgames: "Окончания",
@@ -42,6 +43,7 @@ export const ru = {
   complete: "Завершено",
 };
 export const en: Record<keyof typeof ru, string> = {
+  database: "Offline database",
   vision: "Board vision",
   openings: "Opening atlas",
   endgames: "Endgames",
