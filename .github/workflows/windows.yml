@@ -15,7 +15,9 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run setup:engine
+      # Use the runner's PowerShell directly; nesting Windows PowerShell inside
+      # pwsh inherits incompatible module paths on hosted Windows runners.
+      - run: ./scripts/setup-stockfish.ps1
       - run: npm run typecheck
       - run: npm test
       - run: npm run verify:content
