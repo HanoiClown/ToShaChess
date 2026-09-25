@@ -246,7 +246,11 @@ export class OfflineLibrary {
       "id,white,black,white_elo,black_elo,result,date,eco,opening";
     const where = ["id>?"],
       params: (string | number)[] = [f.after];
-    if (f.eco) {
+    const exactEco = f.eco?.length === 3;
+    if (exactEco) {
+      where.push("eco=?");
+      params.push(f.eco!);
+    } else if (f.eco) {
       // ECO codes are uppercase ASCII; this range uses the pack's BINARY index.
       const upper =
         f.eco.slice(0, -1) +
@@ -285,7 +289,10 @@ export class OfflineLibrary {
         this.gameIndexes!.has(index) ? `INDEXED BY ${index}` : "";
       const tailParams = [probeEnd, ...params.slice(1)];
       const remaining = 25 - rows.length;
-      if (f.player) {
+      // A short name prefix spans many rows. Exact ECO keeps those results in
+      // ID order, so LIMIT can stop without sorting both complete name ranges.
+      const useEcoOrder = exactEco && f.player.length <= 2;
+      if (f.player && !useEcoOrder) {
         // Separate indexed prefixes avoid SQLite preferring one full row-ID scan
         // for a white/black OR. Each branch keeps only its first remaining IDs.
         const branch = (side: "white" | "black") =>
@@ -302,9 +309,9 @@ export class OfflineLibrary {
         rows.push(
           ...db
             .prepare(
-              `SELECT ${columns} FROM games ${hint(index)} WHERE ${where.join(" AND ")} ORDER BY id LIMIT ${remaining}`,
+              `SELECT ${columns} FROM games ${hint(index)} WHERE ${where.join(" AND ")}${playerWhere} ORDER BY id LIMIT ${remaining}`,
             )
-            .all(...tailParams),
+            .all(...tailParams, ...playerParams),
         );
       }
     }

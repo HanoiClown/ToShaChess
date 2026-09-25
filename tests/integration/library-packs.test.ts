@@ -208,6 +208,69 @@ it("uses search indexes after a bounded probe for sparse filters", () => {
   }
 });
 
+it("pages a short player prefix within an exact ECO without sorting the full name ranges", () => {
+  const { db, lib } = indexedGames();
+  const originalPrepare = DatabaseSync.prototype.prepare;
+  const queries: { sql: string; args: (string | number | null)[] }[] = [];
+  const prepare = vi
+    .spyOn(DatabaseSync.prototype, "prepare")
+    .mockImplementation(function (this: DatabaseSync, sql: string) {
+      const statement = originalPrepare.call(this, sql);
+      if (/^SELECT /i.test(sql) && sql.includes("LIMIT")) {
+        const all = statement.all.bind(statement);
+        statement.all = (...args: any[]) => {
+          queries.push({ sql, args });
+          return all(...args);
+        };
+      }
+      return statement;
+    });
+  try {
+    const first = lib.games({ player: "m", eco: "C50", minRating: 2500 });
+    expect(first.items.map((game) => game.id)).toEqual([
+      1,
+      2,
+      ...Array.from({ length: 22 }, (_, i) => 10001 + i),
+    ]);
+    expect(first.more).toBe(true);
+    const second = lib.games({
+      player: "m",
+      eco: "C50",
+      minRating: 2500,
+      after: first.items.at(-1)!.id,
+    });
+    expect(second.items.map((game) => game.id)).toEqual(
+      Array.from({ length: 9 }, (_, i) => 10023 + i),
+    );
+    expect(second.more).toBe(false);
+  } finally {
+    prepare.mockRestore();
+  }
+  try {
+    const plans = queries.flatMap(({ sql, args }) =>
+      db
+        .prepare("EXPLAIN QUERY PLAN " + sql)
+        .all(...args)
+        .map((row) => String(row.detail)),
+    );
+    expect(
+      plans.some(
+        (plan) =>
+          plan.startsWith("SEARCH ") &&
+          plan.includes("games_eco_id") &&
+          plan.includes("eco=?") &&
+          /(?:id|rowid)>\?/.test(plan),
+      ),
+    ).toBe(true);
+    expect(plans.some((plan) => plan.includes("TEMP B-TREE FOR ORDER BY"))).toBe(
+      false,
+    );
+  } finally {
+    lib.close();
+    db.close();
+  }
+});
+
 it("rejects PGN paths escaping through a directory junction or symlink", () => {
   const { dir, db, lib } = indexedGames();
   const outside = mkdtempSync(join(tmpdir(), "tosha-outside-pack-"));
