@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.3
+
+- Styled every native dropdown with the active green, purple, blue or red palette, selected-item markers, keyboard focus and bounded scrolling.
+- Added 170 ms menu and disclosure transitions, respecting reduced-motion preferences.
+- Verified menu keyboard interaction, Russian/English labels and narrow-window layout across all four themes.
+
 ## 1.3.2 — Adaptive full screen
 
 - Add native full screen from the header button or F11, including profile selection; Escape exits and restores the previous window bounds.

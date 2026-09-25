@@ -1,0 +1,151 @@
+/* Shared native controls keep keyboard navigation and follow every palette. */
+:root {
+  color-scheme: dark;
+  --menu-surface: var(--tone-262522, #262522);
+  --menu-text: var(--tone-f1efe9, #f1efe9);
+  --menu-hover: var(--tone-403d38, #403d38);
+  --menu-selected: var(--tone-38432d, #38432d);
+  --menu-motion: 170ms;
+  --menu-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+select {
+  cursor: pointer;
+  min-height: 44px;
+  border-radius: 10px;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
+}
+select:hover:not(:disabled),
+select:open {
+  border-color: var(--green);
+}
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+@supports (appearance: base-select) {
+  select,
+  select::picker(select) {
+    appearance: base-select;
+  }
+  select {
+    align-items: center;
+    gap: 12px;
+    overflow-wrap: anywhere;
+  }
+  select::picker-icon {
+    color: var(--muted);
+    transition: rotate var(--menu-motion) var(--menu-ease);
+  }
+  select:open::picker-icon {
+    rotate: 180deg;
+    color: var(--green);
+  }
+  select::picker(select) {
+    background: var(--menu-surface);
+    color: var(--menu-text);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.35);
+    padding: 5px;
+    margin-block: 6px;
+    max-block-size: min(360px, 60dvh);
+    max-inline-size: calc(100vw - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity var(--menu-motion) ease,
+      transform var(--menu-motion) var(--menu-ease),
+      display var(--menu-motion) allow-discrete,
+      overlay var(--menu-motion) allow-discrete;
+  }
+  select:open::picker(select) {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @starting-style {
+    select:open::picker(select) {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+  select option {
+    min-height: 40px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    gap: 10px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+  }
+  select option:checked {
+    background: var(--menu-selected);
+    font-weight: 800;
+  }
+  select option:hover:not(:disabled),
+  select option:focus-visible {
+    background: var(--menu-hover);
+    outline: 2px solid var(--green);
+    outline-offset: -2px;
+  }
+  select option::checkmark {
+    color: var(--green);
+  }
+  select option:disabled {
+    color: var(--muted);
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+details > summary {
+  border-radius: 7px;
+  padding-block: 8px;
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+details > summary:hover,
+details[open] > summary {
+  color: var(--green);
+}
+details > summary::marker {
+  color: var(--green);
+}
+details > summary:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+}
+@supports (interpolate-size: allow-keywords) {
+  details {
+    interpolate-size: allow-keywords;
+  }
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    opacity: 0;
+    transition:
+      block-size var(--menu-motion) var(--menu-ease),
+      opacity var(--menu-motion) ease,
+      content-visibility var(--menu-motion) allow-discrete;
+  }
+  details[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --menu-motion: 0ms;
+  }
+  select,
+  details > summary {
+    transition: none;
+  }
+  select::picker(select) {
+    transform: none;
+  }
+}

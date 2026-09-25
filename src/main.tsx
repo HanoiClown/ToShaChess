@@ -8,6 +8,7 @@ import App from "./ui/App";
 import "./ui/styles.css";
 import "./ui/themes.css";
 import "./ui/fullscreen.css";
+import "./ui/menus.css";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
