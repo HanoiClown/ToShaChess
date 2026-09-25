@@ -1,0 +1,802 @@
+[
+  {
+    "id": "archive-1",
+    "fen": "rnbqkb1r/ppp1pppp/5n2/8/2B1P3/5N2/PP1P1PPP/RNBQK2R b KQkq - 2 5",
+    "best": "f6e4",
+    "score": {
+      "cp": 0,
+      "mate": null
+    },
+    "line": [
+      "f6e4",
+      "d1a4",
+      "b8c6",
+      "c4f7",
+      "e8f7",
+      "a4e4"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 21
+  },
+  {
+    "id": "archive-2",
+    "fen": "rnbqkb1r/ppp2ppp/5n2/4N3/2B1P3/8/PP1P1PPP/RNBQK2R b KQkq - 0 6",
+    "best": "f8c5",
+    "score": {
+      "cp": 131,
+      "mate": null
+    },
+    "line": [
+      "f8c5",
+      "d1a4",
+      "c7c6",
+      "c4f7",
+      "e8f8",
+      "e1g1"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 18
+  },
+  {
+    "id": "archive-3",
+    "fen": "rnbqkb1r/ppp3pp/8/4p3/2B1Q3/8/PP1P1PPP/RNB2RK1 b kq - 1 9",
+    "best": "d8d4",
+    "score": {
+      "cp": 66,
+      "mate": null
+    },
+    "line": [
+      "d8d4",
+      "e4d4",
+      "e5d4",
+      "f1e1",
+      "e8d8",
+      "d2d3"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-4",
+    "fen": "rn3bnr/pkp5/1p1p3p/3Pp1p1/1PP1P3/N6P/P4P1P/R1B1K1NR w KQ e6 0 14",
+    "best": "c1d2",
+    "score": {
+      "cp": 110,
+      "mate": null
+    },
+    "line": [
+      "c1d2",
+      "b8d7",
+      "g1e2",
+      "g8e7",
+      "a3c2",
+      "e7g6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 21
+  },
+  {
+    "id": "archive-5",
+    "fen": "rn3bnr/1kp5/3p3p/p1PPp1p1/4P3/N6P/P4P1P/R1B1K1NR w KQ - 0 16",
+    "best": "c5c6",
+    "score": {
+      "cp": 457,
+      "mate": null
+    },
+    "line": [
+      "c5c6",
+      "b8c6",
+      "d5c6",
+      "b7c6",
+      "g1e2",
+      "g8f6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 19
+  },
+  {
+    "id": "archive-6",
+    "fen": "rnbqkbnr/pp2pppp/2p5/8/3pP3/2N2P2/PPPP2PP/R1BQKBNR w KQkq - 0 4",
+    "best": "c3e2",
+    "score": {
+      "cp": -46,
+      "mate": null
+    },
+    "line": [
+      "c3e2",
+      "c6c5",
+      "f3f4",
+      "b8c6",
+      "g1f3",
+      "c8g4"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 22
+  },
+  {
+    "id": "archive-7",
+    "fen": "rn1qkbnr/pp1bpppp/8/1B6/P3P3/3p1P2/1PPP2PP/R1BQK1NR w KQkq - 0 7",
+    "best": "b5d3",
+    "score": {
+      "cp": -340,
+      "mate": null
+    },
+    "line": [
+      "b5d3",
+      "e7e5",
+      "c2c3",
+      "b8c6",
+      "d3c2",
+      "f7f5"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 18
+  },
+  {
+    "id": "archive-8",
+    "fen": "r3kb1r/ppp2ppp/2n5/2Pqp3/Q7/3b1N2/PP1B1PPP/R3KB1R w KQkq - 1 11",
+    "best": "f1d3",
+    "score": {
+      "cp": -8,
+      "mate": null
+    },
+    "line": [
+      "f1d3",
+      "d5d3",
+      "f3e5",
+      "d3d4",
+      "a4d4",
+      "c6d4"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 21
+  },
+  {
+    "id": "archive-9",
+    "fen": "r3kb1r/p1p2ppp/2n5/1pPqp3/Q7/3b1N2/PP1B1PPP/2KR1B1R w kq b6 0 12",
+    "best": "c5b6",
+    "score": {
+      "cp": 219,
+      "mate": null
+    },
+    "line": [
+      "c5b6",
+      "d3f1",
+      "h1f1",
+      "c7b6",
+      "d2c3",
+      "b6b5"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 21
+  },
+  {
+    "id": "archive-10",
+    "fen": "3rkb1r/p1p2ppp/2n5/1pP1p3/8/1P1b1N2/1P1B1PPP/2KR1B1R w k - 1 14",
+    "best": "f1d3",
+    "score": {
+      "cp": -148,
+      "mate": null
+    },
+    "line": [
+      "f1d3",
+      "d8d3",
+      "f3e5",
+      "c6e5",
+      "h1e1",
+      "f7f6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 22
+  },
+  {
+    "id": "archive-11",
+    "fen": "3rkb1r/p1p2ppp/2n5/1pP5/4p2P/1P1b1N2/1P1B1PP1/2KR1B1R w k - 0 15",
+    "best": "f1d3",
+    "score": {
+      "cp": -183,
+      "mate": null
+    },
+    "line": [
+      "f1d3",
+      "d8d3",
+      "f3g5",
+      "f8c5",
+      "g5e4",
+      "c5b6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 21
+  },
+  {
+    "id": "archive-12",
+    "fen": "3rk2r/p1p2ppp/2n5/1pb5/4p2P/1P1b1N2/1P1B1PP1/2K1RB1R w k - 0 16",
+    "best": "f1d3",
+    "score": {
+      "cp": -187,
+      "mate": null
+    },
+    "line": [
+      "f1d3",
+      "d8d3",
+      "e1e4",
+      "e8d7",
+      "h4h5",
+      "f7f6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-13",
+    "fen": "3rk2r/p1p3pp/2n5/1pb2pN1/4p2P/1P1b4/1P1B1PP1/2K1RB1R w k - 0 17",
+    "best": "g5e6",
+    "score": {
+      "cp": -45,
+      "mate": null
+    },
+    "line": [
+      "g5e6",
+      "d3f1",
+      "e1f1",
+      "c5b6",
+      "e6d8",
+      "e8d8"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-14",
+    "fen": "3rk2r/p1p3pp/1bn5/1p4N1/4p2P/1P1b4/1P1B2P1/2K1RB1R w k - 0 19",
+    "best": "g5e6",
+    "score": {
+      "cp": -94,
+      "mate": null
+    },
+    "line": [
+      "g5e6",
+      "d8d5",
+      "f1d3",
+      "d5d3",
+      "e1e4",
+      "e8d7"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 19
+  },
+  {
+    "id": "archive-15",
+    "fen": "4k3/p1p3pp/2n5/2N5/1p5P/1P2r3/1P4P1/2K2R2 w - - 2 28",
+    "best": "c5a6",
+    "score": {
+      "cp": -117,
+      "mate": null
+    },
+    "line": [
+      "c5a6",
+      "e8e7",
+      "a6c7",
+      "e3g3",
+      "c7a6",
+      "g3g4"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 18
+  },
+  {
+    "id": "archive-16",
+    "fen": "8/8/2k3p1/p7/8/1P1N1n2/1P6/3K4 w - - 0 38",
+    "best": "d1e2",
+    "score": {
+      "cp": 0,
+      "mate": null
+    },
+    "line": [
+      "d1e2",
+      "f3h4",
+      "d3e5",
+      "c6b5",
+      "e5c4",
+      "g6g5"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 28
+  },
+  {
+    "id": "archive-17",
+    "fen": "rnbqkbnr/ppp2ppp/8/3pp3/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3",
+    "best": "d4e5",
+    "score": {
+      "cp": 172,
+      "mate": null
+    },
+    "line": [
+      "d4e5",
+      "g8e7",
+      "b1c3",
+      "d5d4",
+      "c3b5",
+      "b8c6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-18",
+    "fen": "r1b1kb1r/ppp2ppp/2n5/2q1P3/8/1P3P2/P1P1N1PP/R1BQKB1R w KQkq - 1 10",
+    "best": "c1f4",
+    "score": {
+      "cp": -82,
+      "mate": null
+    },
+    "line": [
+      "c1f4",
+      "c8e6",
+      "c2c3",
+      "f8e7",
+      "b3b4",
+      "c5b6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 17
+  },
+  {
+    "id": "archive-19",
+    "fen": "r1b1kb1r/ppp2ppp/2n5/4q3/2P5/1P3P2/P3N1PP/R1BQKB1R w KQkq - 0 11",
+    "best": "c1f4",
+    "score": {
+      "cp": -374,
+      "mate": null
+    },
+    "line": [
+      "c1f4",
+      "f8b4",
+      "e1f2",
+      "b4c5",
+      "f2g3",
+      "e5f6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 16
+  },
+  {
+    "id": "archive-20",
+    "fen": "rnbqkbnr/ppp2p1p/6p1/3Pp3/8/2N5/PPPP1PPP/R1BQKBNR w KQkq e6 0 4",
+    "best": "d2d4",
+    "score": {
+      "cp": 368,
+      "mate": null
+    },
+    "line": [
+      "d2d4",
+      "f8b4",
+      "d4e5",
+      "g8e7",
+      "f1c4",
+      "b8d7"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-21",
+    "fen": "r3kb1r/1pp1qppp/p1n1b3/4p3/2P5/3PBN2/PP2BPPP/R2Q1RK1 w kq - 0 11",
+    "best": "d3d4",
+    "score": {
+      "cp": 48,
+      "mate": null
+    },
+    "line": [
+      "d3d4",
+      "c6d4",
+      "f3d4",
+      "e5d4",
+      "d1d4",
+      "e7f6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-22",
+    "fen": "r3kb1r/1pp2ppp/p1n1bq2/4p3/2P3P1/3PBN2/PP2BP1P/R2Q1RK1 w kq - 1 12",
+    "best": "g4g5",
+    "score": {
+      "cp": -84,
+      "mate": null
+    },
+    "line": [
+      "g4g5",
+      "f6f5",
+      "d3d4",
+      "e8c8",
+      "d4d5",
+      "h7h6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 18
+  },
+  {
+    "id": "archive-23",
+    "fen": "3rkb1r/1pp2ppp/p1n2q2/8/2P1P1b1/1P2BN2/P3BP1P/R1Q2RK1 w k - 0 15",
+    "best": "e3g5",
+    "score": {
+      "cp": -142,
+      "mate": null
+    },
+    "line": [
+      "e3g5",
+      "f6g6",
+      "f3h4",
+      "g6h5",
+      "e2g4",
+      "h5g4"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 14
+  },
+  {
+    "id": "archive-24",
+    "fen": "r1bqkbnr/pp3ppp/2n1p3/2pp4/4PP2/2NP4/PPP3PP/R1BQKBNR w KQkq - 0 5",
+    "best": "g1f3",
+    "score": {
+      "cp": -22,
+      "mate": null
+    },
+    "line": [
+      "g1f3",
+      "d5d4",
+      "c3b1",
+      "f8d6",
+      "f1e2",
+      "g8e7"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 21
+  },
+  {
+    "id": "archive-25",
+    "fen": "r1bqkbnr/pp3ppp/4p3/2pp1P2/3nP3/2NP4/PPP3PP/R1BQKBNR w KQkq - 1 6",
+    "best": "f5e6",
+    "score": {
+      "cp": 7,
+      "mate": null
+    },
+    "line": [
+      "f5e6",
+      "c8e6",
+      "c3d5",
+      "e6d5",
+      "e4d5",
+      "d8d5"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 19
+  },
+  {
+    "id": "archive-26",
+    "fen": "r1bqk1nr/1p2bppp/p3p3/1Np2P2/4P3/7N/PPP3PP/R1BQK2R w KQkq - 0 10",
+    "best": "d1d8",
+    "score": {
+      "cp": 25,
+      "mate": null
+    },
+    "line": [
+      "d1d8",
+      "e8d8",
+      "b5c3",
+      "g8f6",
+      "c1g5",
+      "h7h6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-27",
+    "fen": "r4knr/1pb2pp1/p3b3/2p1P2p/P7/2N4N/1PP3PP/R1BKR3 w - - 0 16",
+    "best": "c1e3",
+    "score": {
+      "cp": -33,
+      "mate": null
+    },
+    "line": [
+      "c1e3",
+      "g8e7",
+      "e3c5",
+      "a8d8",
+      "d1e2",
+      "h8h6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 22
+  },
+  {
+    "id": "archive-28",
+    "fen": "3r1knr/1pb2p2/p3b3/2p1P1pp/P4N2/2N5/1PPB2PP/R2KR3 w - - 0 18",
+    "best": "f4e6",
+    "score": {
+      "cp": 253,
+      "mate": null
+    },
+    "line": [
+      "f4e6",
+      "f7e6",
+      "c3e4",
+      "g8h6",
+      "e4c5",
+      "f8f7"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 18
+  },
+  {
+    "id": "archive-29",
+    "fen": "2br2nr/1pb2k2/p4P2/2N3pp/P7/2N5/1PPB2PP/R2KR3 w - - 1 21",
+    "best": "c3e4",
+    "score": {
+      "cp": 183,
+      "mate": null
+    },
+    "line": [
+      "c3e4",
+      "f7g6",
+      "d1c1",
+      "g8h6",
+      "d2g5",
+      "h6f7"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-30",
+    "fen": "2b3kr/1pb5/p4n2/P5Np/3r2P1/2N4P/1PPB4/R2KR3 w - - 1 26",
+    "best": "g5f3",
+    "score": {
+      "cp": 271,
+      "mate": null
+    },
+    "line": [
+      "g5f3",
+      "d4d8",
+      "g4g5",
+      "f6g4",
+      "c3e4",
+      "c8f5"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 18
+  },
+  {
+    "id": "archive-31",
+    "fen": "2b3kr/1p2R3/p4n2/P5Np/3r1bP1/2N4P/1PPB4/R2K4 w - - 3 27",
+    "best": "g5f3",
+    "score": {
+      "cp": 123,
+      "mate": null
+    },
+    "line": [
+      "g5f3",
+      "d4d8",
+      "g4g5",
+      "f6h7",
+      "d1e2",
+      "f4d2"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 22
+  },
+  {
+    "id": "archive-32",
+    "fen": "rnbqkbnr/ppp1p3/5pp1/3p2Np/4P3/3P4/PPP2PPP/RNBQKB1R w KQkq - 0 5",
+    "best": "g5f3",
+    "score": {
+      "cp": -17,
+      "mate": null
+    },
+    "line": [
+      "g5f3",
+      "d5e4",
+      "d3e4",
+      "d8d1",
+      "e1d1",
+      "b8c6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 23
+  },
+  {
+    "id": "archive-33",
+    "fen": "rn2k2r/p1p1n3/5pp1/1R1bq2p/6P1/P2P1P2/2PBB2P/3QK2R w Kkq - 7 17",
+    "best": "c2c4",
+    "score": {
+      "cp": -398,
+      "mate": null
+    },
+    "line": [
+      "c2c4",
+      "h5g4",
+      "f3g4",
+      "d5h1",
+      "b5e5",
+      "f6e5"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 17
+  },
+  {
+    "id": "archive-34",
+    "fen": "rn2k2r/p1p1n3/5pp1/1R1b3p/3q2P1/P2P1P2/2PBB2P/3Q1RK1 w kq - 9 18",
+    "best": "f1f2",
+    "score": {
+      "cp": -439,
+      "mate": null
+    },
+    "line": [
+      "f1f2",
+      "h5g4",
+      "c2c3",
+      "d4e5",
+      "d3d4",
+      "e5d6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-35",
+    "fen": "rnbqkb1r/ppp4p/6pn/4Pp1Q/2BNp3/8/PPP2PPP/RNB1K2R w KQkq - 0 8",
+    "best": "h5d1",
+    "score": {
+      "cp": -21,
+      "mate": null
+    },
+    "line": [
+      "h5d1",
+      "h6g4",
+      "b1c3",
+      "g4e5",
+      "c4b3",
+      "f8g7"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 18
+  },
+  {
+    "id": "archive-36",
+    "fen": "rnbqkr2/ppppbppp/5n2/4p3/2B1P3/2N4N/PPPP1PPP/R1BQK2R w KQq - 6 5",
+    "best": "h3g5",
+    "score": {
+      "cp": 36,
+      "mate": null
+    },
+    "line": [
+      "h3g5",
+      "b8c6",
+      "e1g1",
+      "d7d6",
+      "g5f3",
+      "c8g4"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 19
+  },
+  {
+    "id": "archive-37",
+    "fen": "rnbq1r2/p1ppkppp/3b1n2/1p2p3/1PB1P1P1/P1N2Q1N/2PP1P1P/R1B1K2R w KQ - 0 9",
+    "best": "g4g5",
+    "score": {
+      "cp": 467,
+      "mate": null
+    },
+    "line": [
+      "g4g5",
+      "f6g8",
+      "c3b5",
+      "b8c6",
+      "c1b2",
+      "a7a5"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 19
+  },
+  {
+    "id": "archive-38",
+    "fen": "r1bqk1nr/pppp1p1p/n3p1pb/8/3PP3/2N2Q2/PPP2PPP/R1B1KBNR w KQkq - 1 5",
+    "best": "c1h6",
+    "score": {
+      "cp": 349,
+      "mate": null
+    },
+    "line": [
+      "c1h6",
+      "g8h6",
+      "e1c1",
+      "e8g8",
+      "f3e3",
+      "h6g4"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 17
+  },
+  {
+    "id": "archive-39",
+    "fen": "rnb1kbnr/pppp1ppp/5q2/8/3pP3/6P1/PPP2P1P/RNBQKBNR w KQkq - 0 5",
+    "best": "f1g2",
+    "score": {
+      "cp": -34,
+      "mate": null
+    },
+    "line": [
+      "f1g2",
+      "f8c5",
+      "g1e2",
+      "g8e7",
+      "e1g1",
+      "d7d6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 20
+  },
+  {
+    "id": "archive-40",
+    "fen": "rnb1k1nr/pppp1ppp/7q/2b1P3/8/4P1P1/PPPP3P/RNBQKBNR w KQkq - 1 5",
+    "best": "d2d4",
+    "score": {
+      "cp": 323,
+      "mate": null
+    },
+    "line": [
+      "d2d4",
+      "c5b6",
+      "a2a4",
+      "a7a5",
+      "g1f3",
+      "d7d6"
+    ],
+    "theme": "tactics",
+    "source": "Training position",
+    "depth": 19
+  }
+]

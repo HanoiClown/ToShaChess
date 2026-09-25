@@ -1,0 +1,88 @@
+{
+  "name": "toshachess",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Open-source offline chess training with Stockfish",
+  "author": "HanoiClown",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "vite build && node scripts/build-electron.mjs",
+    "start": "node scripts/start.mjs",
+    "test:engine": "vitest run tests/integration/stockfish.test.ts",
+    "test:ui": "playwright test",
+    "verify:content": "tsx scripts/verify-content.ts",
+    "package:win": "npm run build && electron-builder --win dir",
+    "setup:engine": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-stockfish.ps1",
+    "prepare:github": "node scripts/prepare-github.mjs"
+  },
+  "build": {
+    "appId": "org.toshachess.desktop",
+    "productName": "ToShaChess",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "stockfish",
+        "to": "stockfish",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "THIRD_PARTY_NOTICES.md",
+        "to": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "from": "licenses",
+        "to": "licenses"
+      },
+      {
+        "from": "LICENSE",
+        "to": "LICENSE"
+      },
+      {
+        "from": "README.md",
+        "to": "README.md"
+      }
+    ],
+    "win": {
+      "target": "dir",
+      "signAndEditExecutable": false
+    }
+  },
+  "dependencies": {
+    "@fontsource/nunito-sans": "^5.3.0",
+    "chess.js": "^1.4.0",
+    "lucide-react": "^1.48.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.1"
+  }
+}

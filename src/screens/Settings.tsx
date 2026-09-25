@@ -1,0 +1,403 @@
+import { useState } from "react";
+import {
+  Settings,
+  KeyRound,
+  Download,
+  Upload,
+  Save,
+  HardDrive,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
+import { useApp } from "../ui/context";
+export function SettingsScreen() {
+  const { snapshot, profile, locale, l, refresh, fail } = useApp();
+  const [name, setName] = useState(profile.name),
+    [key, setKey] = useState(""),
+    [status, setStatus] = useState(""),
+    [saving, setSaving] = useState(false);
+  const settings = snapshot.database.settings,
+    now = new Date(),
+    month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+    usage = snapshot.database.usage.filter((x) => x.month === month),
+    spent = usage.reduce((s, x) => s + (x.actual ?? 0), 0),
+    reserved = usage
+      .filter((x) => x.actual === null)
+      .reduce((s, x) => s + x.reserved, 0),
+    total = spent + reserved;
+  async function keySave() {
+    setSaving(true);
+    try {
+      await window.chessApp.saveKey(key);
+      setKey("");
+      await refresh();
+      setStatus(
+        l(
+          "Ключ сохранён в защищённом хранилище Windows.",
+          "Key saved using Windows secure storage.",
+        ),
+      );
+    } catch (e) {
+      fail(e);
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <h1>{l("Твоя игра, твои настройки", "Make yourself at home")}</h1>
+          <p>
+            {l(
+              "Настрой профиль, тренера и перенос на другой компьютер.",
+              "Manage your profile, coach and transfer to another computer.",
+            )}
+          </p>
+        </div>
+        <Settings size={30} />
+      </div>
+      <div className="settings-layout">
+        <section className="settings-section">
+          <div className="section-title">
+            <UserRound size={24} />
+            <h2>{l("Профиль", "Profile")}</h2>
+          </div>
+          <label>
+            {l("Имя", "Name")}
+            <div className="input-action">
+              <input
+                value={name}
+                maxLength={40}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <button
+                className="secondary"
+                disabled={!name.trim()}
+                onClick={() =>
+                  void window.chessApp
+                    .updateProfile({ ...profile, name: name.trim() })
+                    .then(refresh)
+                    .catch(fail)
+                }
+              >
+                <Save size={17} />
+                {l("Сохранить", "Save")}
+              </button>
+            </div>
+          </label>
+          <fieldset className="theme-picker">
+            <legend>{l("Тема приложения", "App theme")}</legend>
+            {(
+              [
+                ["green", "Зелёная", "Green"],
+                ["purple", "Тёмно-фиолетовая", "Dark purple"],
+                ["blue", "Тёмно-синяя", "Dark blue"],
+                ["red", "Тёмно-красная", "Dark red"],
+              ] as const
+            ).map(([id, ru, en]) => (
+              <button
+                key={id}
+                className={`theme-choice theme-${id}`}
+                aria-pressed={(profile.theme ?? "green") === id}
+                onClick={() =>
+                  void window.chessApp
+                    .updateProfile({ ...profile, theme: id })
+                    .then(refresh)
+                    .catch(fail)
+                }
+              >
+                <span aria-hidden="true" className="theme-swatch" />
+                {l(ru, en)}
+              </button>
+            ))}
+          </fieldset>
+          <label>
+            {l("Начальный маршрут", "Starting path")}
+            <select
+              value={profile.level}
+              onChange={(e) =>
+                void window.chessApp
+                  .updateProfile({
+                    ...profile,
+                    level: e.target.value as "new" | "beginner",
+                  })
+                  .then(refresh)
+                  .catch(fail)
+              }
+            >
+              <option value="new">
+                {l("С нуля — правила и фигуры", "From zero — rules and pieces")}
+              </option>
+              <option value="beginner">
+                {l(
+                  "Знаю основы — тактика и дебюты",
+                  "I know the basics — tactics and openings",
+                )}
+              </option>
+            </select>
+          </label>
+          <p className="field-help">
+            {l(
+              "Изменение маршрута не удаляет прогресс. Язык переключается в правом верхнем углу.",
+              "Changing your path does not erase progress. Switch languages in the top-right corner.",
+            )}
+          </p>
+        </section>
+        <section className="settings-section">
+          <div className="section-title">
+            <ShieldCheck size={24} />
+            <h2>Stockfish 19</h2>
+          </div>
+          <label>
+            {l("Подробность локального анализа", "Local analysis detail")}
+            <select
+              value={settings.engineMs}
+              onChange={(e) =>
+                void window.chessApp
+                  .updateSettings({ ...settings, engineMs: +e.target.value })
+                  .then(refresh)
+                  .catch(fail)
+              }
+            >
+              <option value={100}>
+                {l("Быстро — первый обзор", "Fast — first overview")}
+              </option>
+              <option value={300}>{l("Сбалансированно", "Balanced")}</option>
+              <option value={800}>
+                {l(
+                  "Тщательно — больше времени на ход",
+                  "Thorough — more time per move",
+                )}
+              </option>
+              <option value={1500}>
+                {l(
+                  "Глубоко — для сложных позиций",
+                  "Deep — for complex positions",
+                )}
+              </option>
+            </select>
+          </label>
+          <p>
+            {l(
+              "Работает локально и бесплатно, без API-ключа. Позиции с крупными ошибками проверяются повторно.",
+              "Runs locally for free, without an API key. Major mistakes are checked again at greater depth.",
+            )}
+          </p>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={settings.sound}
+              onChange={(e) =>
+                void window.chessApp
+                  .updateSettings({ ...settings, sound: e.target.checked })
+                  .then(refresh)
+                  .catch(fail)
+              }
+            />
+            {l("Звук ходов", "Move sounds")}
+          </label>
+        </section>
+        <section className="settings-section coach-settings">
+          <div className="section-title">
+            <KeyRound size={24} />
+            <h2>{l("Разговорный тренер", "Conversational coach")}</h2>
+            <span
+              className={`connection-badge ${snapshot.hasKey ? "connected" : ""}`}
+            >
+              {snapshot.hasKey
+                ? l("Ключ добавлен", "Key added")
+                : l("Локальный режим", "Local mode")}
+            </span>
+          </div>
+          <p>
+            {l(
+              "Stockfish считает варианты. OpenAI объясняет их словами. После партии объяснения создаются автоматически, пока доступен бюджет.",
+              "Stockfish calculates. OpenAI explains. Explanations are generated automatically after a game while the budget allows.",
+            )}
+          </p>
+          <label>
+            {l("API-ключ OpenAI", "OpenAI API key")}
+            <div className="input-action">
+              <input
+                type="password"
+                autoComplete="off"
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+                placeholder="sk-…"
+                aria-label="API key"
+              />
+              <button
+                className="secondary"
+                disabled={!key.trim() || saving}
+                onClick={() => void keySave()}
+              >
+                {l("Сохранить ключ", "Save key")}
+              </button>
+            </div>
+          </label>
+          {snapshot.hasKey && (
+            <button
+              className="text-button"
+              onClick={() =>
+                void window.chessApp.saveKey("").then(refresh).catch(fail)
+              }
+            >
+              {l("Удалить ключ с этого ПК", "Remove key from this PC")}
+            </button>
+          )}
+          {snapshot.keyIssue && (
+            <p className="warning-text">
+              {l(
+                "Сохранённый ключ нельзя расшифровать на этом ПК. Введи его заново.",
+                "The saved key cannot be decrypted on this PC. Enter it again.",
+              )}
+            </p>
+          )}
+          <div className="budget-heading">
+            <strong>
+              {l("Общий месячный бюджет", "Shared monthly budget")}
+            </strong>
+            <span>
+              ${(total / 1000000).toFixed(3)} / $
+              {(settings.budget / 1000000).toFixed(2)}
+            </span>
+          </div>
+          <div className="progress-track">
+            <span
+              style={{
+                width: `${Math.min(100, settings.budget ? (total / settings.budget) * 100 : 0)}%`,
+              }}
+            />
+          </div>
+          <p className="field-help">
+            {l(
+              `Из них в резерве: $${(reserved / 1000000).toFixed(3)}. Общий лимит для всех профилей, не баланс аккаунта OpenAI.`,
+              `Reserved: $${(reserved / 1000000).toFixed(3)}. Shared across profiles; this is not your OpenAI account balance.`,
+            )}
+          </p>
+          <label>
+            {l("Лимит в месяц, USD (до $5)", "Monthly limit, USD (up to $5)")}
+            <select
+              value={settings.budget}
+              onChange={(e) =>
+                void window.chessApp
+                  .updateSettings({ ...settings, budget: +e.target.value })
+                  .then(refresh)
+                  .catch(fail)
+              }
+            >
+              {[0, 1000000, 2000000, 3000000, 5000000].map((v) => (
+                <option key={v} value={v}>
+                  {v === 0
+                    ? l("Только бесплатный режим", "Free mode only")
+                    : `$${v / 1000000}`}
+                </option>
+              ))}
+            </select>
+          </label>
+          <small className="muted">
+            {l(
+              "GPT-4.1 mini · учёт по тарифу $0.40 / $1.60 за миллион входных / выходных токенов, проверен 25.09.2026. Расходы других приложений не учитываются.",
+              "GPT-4.1 mini · $0.40 / $1.60 per million input / output tokens, checked 2026-09-25. Other apps’ spending is not included.",
+            )}
+          </small>
+        </section>
+        <section className="settings-section transfer-settings">
+          <div className="section-title">
+            <HardDrive size={24} />
+            <h2>{l("Переезд на другой ПК", "Move to another PC")}</h2>
+          </div>
+          <p>
+            {l(
+              "Скопируй всю папку ToShaChess, включая data, на основной ПК и запусти ToShaChess.exe. Для объединения с другой копией используй резервную копию ниже.",
+              "Copy the entire ToShaChess folder, including data, to your desktop PC and run ToShaChess.exe. To merge with another copy, use a backup below.",
+            )}
+          </p>
+          <ol>
+            <li>
+              {l(
+                "Закрой приложение перед копированием папки.",
+                "Close the app before copying its folder.",
+              )}
+            </li>
+            <li>
+              {l(
+                "Все профили, партии и занятия находятся в data.",
+                "All profiles, games and learning progress are in data.",
+              )}
+            </li>
+            <li>
+              {l(
+                "API-ключ на новом ПК вводится заново.",
+                "Re-enter your API key on the new PC.",
+              )}
+            </li>
+          </ol>
+          <div className="transfer-actions">
+            <button
+              className="secondary"
+              onClick={() =>
+                void window.chessApp
+                  .exportBackup()
+                  .then((ok) => {
+                    if (ok)
+                      setStatus(
+                        l(
+                          "Резервная копия сохранена без API-ключа.",
+                          "Backup saved without the API key.",
+                        ),
+                      );
+                  })
+                  .catch(fail)
+              }
+            >
+              <Download size={18} />
+              {l("Экспорт всех профилей", "Export all profiles")}
+            </button>
+            <button
+              className="secondary"
+              onClick={() =>
+                void window.chessApp
+                  .importBackup()
+                  .then(async (result) => {
+                    if (result) {
+                      await refresh();
+                      setStatus(
+                        l(
+                          "Данные объединены. Предыдущая версия сохранена в .bak.",
+                          "Data merged. The previous version is saved in .bak.",
+                        ),
+                      );
+                    }
+                  })
+                  .catch(fail)
+              }
+            >
+              <Upload size={18} />
+              {l("Импорт копии", "Import backup")}
+            </button>
+          </div>
+          <p className="field-help">
+            {l(
+              "Две копии на разных ПК не синхронизируются автоматически. Для единого бюджета переноси актуальную data и используй одну копию.",
+              "Two copies on different PCs do not sync automatically. Transfer the latest data and use one copy to keep a single budget.",
+            )}
+          </p>
+          <details>
+            <summary>{l("Где находятся данные?", "Where is my data?")}</summary>
+            <code className="data-path">{snapshot.dataPath}</code>
+          </details>
+        </section>
+      </div>
+      {status && (
+        <div className="notice good-text" role="status">
+          {status}
+          <button className="text-button" onClick={() => setStatus("")}>
+            {l("Закрыть", "Close")}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}

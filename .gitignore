@@ -1,0 +1,26 @@
+.analysis-venv/
+__pycache__/
+node_modules/
+dist/
+dist-electron/
+release/
+.env
+.env.*
+!.env.example
+*.log
+.worktrees/
+.superpowers/
+test-results/
+playwright-report/
+
+data/
+Chess Home Portable/
+*.zip
+.impeccable/review/
+ToShaChess Portable/
+ToShaChess-GitHub/
+history/
+stockfish/
+*.lnk
+api-key.enc
+*.pgn
