@@ -1,4 +1,9 @@
-import { test, expect, _electron as electron } from "@playwright/test";
+import {
+  test,
+  expect,
+  _electron as electron,
+  type Page,
+} from "@playwright/test";
 import { mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -19,16 +24,50 @@ async function launch() {
     env,
   });
   const page = await app.firstWindow();
+  // Keep the fixture representative of a small hosted Windows runner.
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.locator(".profile-choice").first().click();
   await page.getByRole("button", { name: "Конструктор", exact: true }).click();
   return { app, page };
+}
+
+async function captureDiagram(page: Page) {
+  const board = page.locator(".setup-board");
+  await board
+    .locator("img")
+    .evaluateAll((images) =>
+      Promise.all(images.map((image) => (image as HTMLImageElement).decode())),
+    );
+  // Clicking the FEN import can scroll the board behind the sticky header.
+  // A locator screenshot only ensures visibility, not freedom from occlusion.
+  await board.evaluate((element) =>
+    element.scrollIntoView({ block: "center" }),
+  );
+  await expect
+    .poll(
+      () =>
+        board.evaluate((element) => {
+          const box = element.getBoundingClientRect();
+          const header = document
+            .querySelector(".topbar")!
+            .getBoundingClientRect();
+          return box.top >= header.bottom && box.bottom <= innerHeight;
+        }),
+      { message: "The whole diagram must be below the sticky header" },
+    )
+    .toBe(true);
+  const png = await board.screenshot({ animations: "disabled" });
+  await test
+    .info()
+    .attach("source-diagram", { body: png, contentType: "image/png" });
+  return png;
 }
 test("offline real image recognition, corrections, last move and study exploration", async () => {
   const { app, page: p } = await launch();
   try {
     await p.getByLabel("FEN", { exact: true }).fill(fen);
     await p.getByRole("button", { name: "Импорт FEN", exact: true }).click();
-    const png = await p.locator(".setup-board").screenshot();
+    const png = await captureDiagram(p);
     await p
       .getByRole("button", { name: "Начальная позиция", exact: true })
       .click();
@@ -114,7 +153,7 @@ test("image paste, theme persistence, profile privacy and play from the reconstr
   try {
     await p.getByLabel("FEN", { exact: true }).fill(fen);
     await p.getByRole("button", { name: "Импорт FEN", exact: true }).click();
-    const png = await p.locator(".setup-board").screenshot();
+    const png = await captureDiagram(p);
     await p
       .getByRole("button", { name: "Импорт по фото", exact: true })
       .click();
@@ -201,7 +240,7 @@ test("flipped screenshot, manual crop, wrong-file recovery and narrow English la
     await p.getByLabel("FEN", { exact: true }).fill(fen);
     await p.getByRole("button", { name: "Импорт FEN", exact: true }).click();
     await p.getByRole("button", { name: "Перевернуть", exact: true }).click();
-    const png = await p.locator(".setup-board").screenshot();
+    const png = await captureDiagram(p);
     await p
       .getByRole("button", { name: "Импорт по фото", exact: true })
       .click();
@@ -244,6 +283,7 @@ test("flipped screenshot, manual crop, wrong-file recovery and narrow English la
       w.setFullScreen(false);
       w.setSize(820, 720);
     });
+    await p.setViewportSize({ width: 820, height: 720 });
     await expect(
       p.getByRole("button", { name: "Use in position editor", exact: true }),
     ).toBeVisible();
