@@ -1,0 +1,147 @@
+.coach-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  min-width: 0;
+}
+.coach-portrait {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 60px;
+  border-radius: 16px 16px 8px 8px;
+  background: var(--green-dark);
+  color: var(--green);
+}
+.coach-bubble {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 16px;
+  background: var(--panel);
+  border-radius: 14px;
+}
+.coach-card-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.coach-card-title strong {
+  flex: 1;
+}
+.coach-score {
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: var(--bg);
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.coach-bubble p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.accuracy-summary {
+  padding: 16px;
+  margin: 0 0 18px;
+  background: var(--panel);
+  border-radius: 12px;
+}
+.accuracy-summary h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+.accuracy-sides {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.accuracy-sides > div {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.accuracy-sides strong {
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.accuracy-summary details,
+.material-panel {
+  font-size: 13px;
+  color: var(--muted);
+}
+.accuracy-summary p {
+  max-width: 70ch;
+  line-height: 1.5;
+}
+.material-panel {
+  margin: 10px 0;
+  padding: 10px 12px;
+  background: var(--panel);
+  border-radius: 8px;
+}
+.material-panel summary {
+  cursor: pointer;
+}
+.material-panel summary b {
+  margin-left: 10px;
+  color: var(--green);
+}
+.material-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+}
+.material-side img {
+  width: 20px;
+  height: 22px;
+  vertical-align: middle;
+  background: #d8d6ce;
+  border-radius: 3px;
+}
+.remaining-pieces {
+  display: flex;
+  gap: 7px;
+}
+.remaining-pieces > span {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.material-side small {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+@media (max-height: 800px) {
+  .coach-bubble {
+    padding: 9px 12px;
+  }
+  .coach-bubble p {
+    font-size: 12px;
+  }
+  .coach-portrait {
+    height: 46px;
+    width: 38px;
+  }
+  .material-panel {
+    margin: 6px 0;
+    padding: 7px;
+  }
+}
+@media (max-width: 800px) {
+  .accuracy-sides {
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .coach-portrait {
+    display: none;
+  }
+}

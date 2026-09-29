@@ -1,0 +1,134 @@
+.training-intake {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+  margin-bottom: 28px;
+}
+.training-intake h2,
+.training-queue-heading h2 {
+  margin: 0 0 8px;
+}
+.training-intake p {
+  max-width: 70ch;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.training-add {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.training-add label {
+  flex: 1;
+  max-width: 560px;
+  display: grid;
+  gap: 7px;
+}
+.training-add button {
+  min-height: 44px;
+}
+.training-queue-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.training-queue-heading > span {
+  color: var(--muted);
+}
+.training-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  gap: 20px;
+}
+.training-open {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 12px;
+  min-width: 0;
+}
+.training-open span {
+  color: var(--muted);
+  font-weight: 400;
+  max-width: 65ch;
+  line-height: 1.5;
+}
+.training-open small {
+  color: var(--green);
+}
+.training-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+}
+.training-empty {
+  padding: 24px 0;
+  color: var(--muted);
+}
+.training-mode {
+  max-width: 420px;
+  margin-bottom: 18px;
+}
+.training-mode label {
+  display: grid;
+  gap: 8px;
+}
+.training-layout {
+  align-items: start;
+}
+.training-layout .review-controls {
+  margin: 0 0 12px;
+  min-height: 44px;
+}
+.training-panel {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.training-panel h2,
+.training-panel p {
+  margin: 0;
+}
+.training-panel p {
+  line-height: 1.6;
+}
+.training-panel label {
+  display: grid;
+  gap: 7px;
+}
+.training-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.training-lines p {
+  width: 100%;
+}
+.training-predictions {
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 800px) {
+  .training-row,
+  .training-add {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .training-row-actions {
+    flex-direction: row;
+  }
+  .training-open {
+    padding-inline: 0;
+  }
+}

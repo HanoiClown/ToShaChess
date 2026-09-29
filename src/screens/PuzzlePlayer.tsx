@@ -10,6 +10,11 @@ import { pvSan } from "../analysis/evaluate";
 import { alternativeLine } from "../library/alternatives";
 import { usePlySequence } from "../ui/usePlySequence";
 import { playSound } from "../audio/sounds";
+import { engineRequest } from "../shared/engine-requests";
+import { buildRefutation } from "../library/puzzle-feedback";
+import { CoachCard } from "../ui/CoachCard";
+import { scoreText } from "../analysis/evaluate";
+import type { Score, EngineLine } from "../shared/contracts";
 export function PuzzlePlayer({
   puzzle,
   number,
@@ -35,6 +40,16 @@ export function PuzzlePlayer({
     [verifying, setVerifying] = useState(false),
     [solved, setSolved] = useState(false);
   const sequence = usePlySequence(puzzle.id);
+  const [mistake, setMistake] = useState<{
+      uci: string;
+      fen: string;
+      reply: string[];
+      before: Score;
+      after: Score;
+      san: string;
+    } | null>(null),
+    [preview, setPreview] = useState(0);
+  const request = useRef<ReturnType<typeof engineRequest> | null>(null);
   const started = useRef(Date.now()),
     alive = useRef(true),
     lock = useRef(false);
@@ -42,7 +57,7 @@ export function PuzzlePlayer({
     alive.current = true;
     return () => {
       alive.current = false;
-      void window.chessApp.cancelEngine();
+      request.current?.cancel();
     };
   }, []);
   const board = new Chess(puzzle.fen);
@@ -63,13 +78,19 @@ export function PuzzlePlayer({
     await refresh();
   }
   async function answer(uci: string) {
-    if (lock.current || solved) return;
+    if (lock.current || solved || mistake) return;
     lock.current = true;
     setChecking(true);
     try {
       let path = line;
       const child = new Chess(board.fen());
-      playUci(child, uci);
+      let moved;
+      try {
+        moved = playUci(child, uci);
+      } catch {
+        return;
+      }
+      let evaluated: { before: EngineLine; after: EngineLine } | null = null;
       let accepted = uci === line[offset];
       if (!accepted && child.isCheckmate()) {
         accepted = true;
@@ -77,15 +98,20 @@ export function PuzzlePlayer({
       }
       if (!accepted) {
         setVerifying(true);
-        const [before] = await window.chessApp.engine({
+        const r = engineRequest();
+        request.current?.cancel();
+        request.current = r;
+        const [before] = await r.analyze({
           initialFen: board.fen(),
           moves: [],
         });
-        const [after] = await window.chessApp.engine({
+        if (!alive.current || !r.active) return;
+        const [after] = await r.analyze({
           initialFen: board.fen(),
           moves: [uci],
         });
-        if (!alive.current) return;
+        if (!alive.current || !r.active) return;
+        evaluated = { before, after };
         const alternative = alternativeLine(
           board.fen(),
           uci,
@@ -100,6 +126,18 @@ export function PuzzlePlayer({
       if (!alive.current) return;
       setVerifying(false);
       if (!accepted) {
+        if (evaluated) {
+          setMistake({
+            uci,
+            fen: child.fen(),
+            reply: buildRefutation(child.fen(), evaluated.after),
+            before: evaluated.before.score,
+            after: evaluated.after.score,
+            san: moved.san,
+          });
+          setPreview(0);
+          setHint(false);
+        }
         playSound("error");
         setFeedback(
           l(
@@ -137,6 +175,24 @@ export function PuzzlePlayer({
         setVerifying(false);
       }
     }
+  }
+  const visible = new Chess(mistake?.fen ?? board.fen());
+  if (mistake)
+    for (const u of mistake.reply.slice(0, preview)) playUci(visible, u);
+  async function showReply() {
+    if (!mistake || sequence.playing) return;
+    setChecking(true);
+    try {
+      await sequence.play(preview, mistake.reply.length, setPreview);
+    } finally {
+      if (alive.current) setChecking(false);
+    }
+  }
+  function retry() {
+    setMistake(null);
+    setPreview(0);
+    setFeedback("");
+    setHint(false);
   }
   return (
     <>
@@ -178,14 +234,30 @@ export function PuzzlePlayer({
         </button>
       )}
       <div className="game-layout">
-        <section className="board-column">
+        <section className={`board-column ${mistake ? "puzzle-wrong" : ""}`}>
+          {mistake && (
+            <CoachCard
+              locale={locale}
+              san={mistake.san}
+              quality="mistake"
+              score={mistake.after}
+              text={`${l("Оценка за белых", "White evaluation")}: ${scoreText(mistake.before, locale)} → ${scoreText(mistake.after, locale)}. ${l("Посмотри ответ соперника и попробуй другой ход.", "Watch the opponent’s reply and try a different move.")}`}
+            />
+          )}
           <Board
-            fen={board.fen()}
+            fen={visible.fen()}
             locale={locale}
             orientation={new Chess(puzzle.fen).turn()}
             onMove={(u) => void answer(u)}
-            disabled={solved || checking}
-            lastMove={line[offset - 1]}
+            disabled={solved || checking || !!mistake}
+            lastMove={
+              mistake
+                ? preview
+                  ? mistake.reply[preview - 1]
+                  : mistake.uci
+                : line[offset - 1]
+            }
+            moveQuality={mistake && preview === 0 ? "mistake" : undefined}
             hintSquare={hint && !solved ? line[offset]?.slice(0, 2) : undefined}
           />
         </section>
@@ -222,6 +294,28 @@ export function PuzzlePlayer({
                   )
                 : feedback}
           </div>
+          {mistake && (
+            <div className="refutation-actions">
+              <button
+                className="secondary full"
+                disabled={
+                  checking ||
+                  !mistake.reply.length ||
+                  preview === mistake.reply.length
+                }
+                onClick={() => void showReply()}
+              >
+                {l("Посмотреть ответ", "Watch the reply")}
+              </button>
+              <button
+                className="primary full"
+                disabled={checking}
+                onClick={retry}
+              >
+                {l("Попробовать снова", "Try again")}
+              </button>
+            </div>
+          )}
           {solved ? (
             <>
               <p className="variation-text">{pvSan(puzzle.fen, line, 30)}</p>
@@ -239,7 +333,7 @@ export function PuzzlePlayer({
           ) : (
             <button
               className="secondary full"
-              disabled={checking}
+              disabled={checking || !!mistake}
               onClick={() => setHint(true)}
             >
               <Lightbulb size={18} />
@@ -255,6 +349,8 @@ export function PuzzlePlayer({
               setSolved(false);
               setHint(false);
               setFeedback("");
+              setMistake(null);
+              setPreview(0);
               started.current = Date.now();
             }}
           >

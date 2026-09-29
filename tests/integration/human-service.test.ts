@@ -1,0 +1,28 @@
+import {it,expect,vi} from "vitest";
+import {mkdtempSync,existsSync} from "node:fs";
+import {resolve,join} from "node:path";
+import {tmpdir} from "node:os";
+import {AppService} from "../../electron/service";
+import {PackManager} from "../../electron/packs/manager";
+import {profileStore} from "../helpers/profile-fixtures";
+import {START} from "../../src/chess/game";
+it.skipIf(!existsSync(resolve("engine-packs/maia-cpu.json")))("keeps human predictions separate from analysis, budget and the other profile",async()=>{
+  const service=new AppService(profileStore(mkdtempSync(join(tmpdir(),"tosha-human-"))),"unused",()=>{});
+  service.packs=new PackManager(resolve("engine-packs"),resolve("scripts"),()=>{});
+  service.selectProfile("hanoi");
+  const outstanding:{resolve:(value:unknown)=>void;signal:AbortSignal}[]=[];
+  vi.spyOn((service as any).interactive,"analyze").mockImplementation((...args:any[])=>new Promise(res=>outstanding.push({resolve:res,signal:args[3]})));
+  const position={initialFen:START,moves:["e2e4","e7e5"]};
+  const sf=service.analyzePosition({requestId:"independent-sf",position});
+  const prediction=await service.predictHuman({requestId:"human",position,pack:"maia-cpu",selfElo:1100,opponentElo:1100});
+  expect(prediction.kind).toBe("human-prediction");
+  expect(prediction.candidates.length).toBeGreaterThan(10);
+  expect(prediction).not.toHaveProperty("score");
+  expect(outstanding[0].signal.aborted).toBe(false);
+  outstanding[0].resolve([]);await sf;
+  expect(service.store.data.usage).toHaveLength(0);
+  const stale=service.predictHuman({requestId:"old-profile",position,pack:"maia-cpu",selfElo:1100,opponentElo:1100});
+  service.selectProfile("sister");await expect(stale).rejects.toThrow("Cancelled");
+  expect(service.store.data.games).toHaveLength(0);
+  service.dispose();
+},90000);

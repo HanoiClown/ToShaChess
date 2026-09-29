@@ -1,0 +1,1010 @@
+[
+  {
+    "course": "kings",
+    "id": "king-diagonal",
+    "prefix": "e4 e5 f4 exf4",
+    "bad": "g4",
+    "fen": "rnbqkbnr/pppp1ppp/8/8/4Pp2/8/PPPP2PP/RNBQKBNR w KQkq - 0 3",
+    "line": ["g2g4", "d8h4", "e1e2", "d7d5"],
+    "san": ["g4", "Qh4+", "Ke2", "d5"],
+    "defence": ["f1c4", "d8h4", "e1f1"],
+    "defenceSan": ["Bc4", "Qh4+", "Kf1"],
+    "before": {
+      "cp": -46,
+      "mate": null
+    },
+    "after": {
+      "cp": -656,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 610
+  },
+  {
+    "course": "kings",
+    "id": "h4-queen",
+    "prefix": "e4 e5 f4 exf4 Nf3",
+    "bad": "Qh4+",
+    "fen": "rnbqkbnr/pppp1ppp/8/8/4Pp2/5N2/PPPP2PP/RNBQKB1R b KQkq - 1 3",
+    "line": ["d8h4", "f3h4", "b8c6", "h4f5"],
+    "san": ["Qh4+", "Nxh4", "Nc6", "Nf5"],
+    "defence": ["g7g5", "d2d4", "g5g4"],
+    "defenceSan": ["g5", "d4", "g4"],
+    "before": {
+      "cp": -45,
+      "mate": null
+    },
+    "after": {
+      "cp": 876,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 921
+  },
+  {
+    "course": "kings",
+    "id": "ignore-g4",
+    "prefix": "e4 e5 f4 exf4 Nf3 g5 h4 g4",
+    "bad": "Bc4",
+    "fen": "rnbqkbnr/pppp1p1p/8/8/4PppP/5N2/PPPP2P1/RNBQKB1R w KQkq - 0 5",
+    "line": ["f1c4", "g4f3", "d1f3", "d7d5"],
+    "san": ["Bc4", "gxf3", "Qxf3", "d5"],
+    "defence": ["f3e5", "g8f6", "d2d4"],
+    "defenceSan": ["Ne5", "Nf6", "d4"],
+    "before": {
+      "cp": -66,
+      "mate": null
+    },
+    "after": {
+      "cp": -430,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 364
+  },
+  {
+    "course": "kings",
+    "id": "declined-greed",
+    "prefix": "e4 e5 f4 Bc5",
+    "bad": "fxe5",
+    "fen": "rnbqk1nr/pppp1ppp/8/2b1p3/4PP2/8/PPPP2PP/RNBQKBNR w KQkq - 1 3",
+    "line": ["f4e5", "d8h4", "g2g3", "h4e4"],
+    "san": ["fxe5", "Qh4+", "g3", "Qxe4+"],
+    "defence": ["g1f3", "d7d6", "c2c3"],
+    "defenceSan": ["Nf3", "d6", "c3"],
+    "before": {
+      "cp": 2,
+      "mate": null
+    },
+    "after": {
+      "cp": -493,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 495
+  },
+  {
+    "course": "kings",
+    "id": "ignore-c6",
+    "prefix": "e4 e5 f4 exf4 Nf3 d5 exd5 Nf6 Bb5+ c6",
+    "bad": "d3",
+    "fen": "rnbqkb1r/pp3ppp/2p2n2/1B1P4/5p2/5N2/PPPP2PP/RNBQK2R w KQkq - 0 6",
+    "line": ["d2d3", "c6b5", "c2c4", "b5c4"],
+    "san": ["d3", "cxb5", "c4", "bxc4"],
+    "defence": ["d5c6", "b8c6", "b1c3"],
+    "defenceSan": ["dxc6", "Nxc6", "Nc3"],
+    "before": {
+      "cp": -29,
+      "mate": null
+    },
+    "after": {
+      "cp": -669,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 640
+  },
+  {
+    "course": "evans",
+    "id": "bishop-tempo",
+    "prefix": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3",
+    "bad": "Nf6",
+    "fen": "r1bqk1nr/pppp1ppp/2n5/4p3/1bB1P3/2P2N2/P2P1PPP/RNBQK2R b KQkq - 0 5",
+    "line": ["g8f6", "c3b4", "f6e4", "e1g1"],
+    "san": ["Nf6", "cxb4", "Nxe4", "O-O"],
+    "defence": ["b4a5", "d1b3", "d8f6"],
+    "defenceSan": ["Ba5", "Qb3", "Qf6"],
+    "before": {
+      "cp": -13,
+      "mate": null
+    },
+    "after": {
+      "cp": 485,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 498
+  },
+  {
+    "course": "evans",
+    "id": "queen-fork",
+    "prefix": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4",
+    "bad": "Nf6",
+    "fen": "r1bqk1nr/pppp1ppp/2n5/b3p3/2BPP3/2P2N2/P4PPP/RNBQK2R b KQkq - 0 6",
+    "line": ["g8f6", "d4e5", "f6g4", "c1g5"],
+    "san": ["Nf6", "dxe5", "Ng4", "Bg5"],
+    "defence": ["d7d6", "d1b3", "d8d7"],
+    "defenceSan": ["d6", "Qb3", "Qd7"],
+    "before": {
+      "cp": -1,
+      "mate": null
+    },
+    "after": {
+      "cp": 192,
+      "mate": null
+    },
+    "depth": 18,
+    "delta": 193
+  },
+  {
+    "course": "evans",
+    "id": "lost-bishop",
+    "prefix": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d6 cxd4 Bb6 h3 Na5",
+    "bad": "e5",
+    "fen": "r1bqk1nr/ppp2ppp/1b1p4/n7/2BPP3/5N1P/P4PP1/RNBQ1RK1 w kq - 1 10",
+    "line": ["e4e5", "a5c4", "d1a4", "c7c6"],
+    "san": ["e5", "Nxc4", "Qa4+", "c6"],
+    "defence": ["c4d3", "g8e7", "b1c3"],
+    "defenceSan": ["Bd3", "Ne7", "Nc3"],
+    "before": {
+      "cp": 22,
+      "mate": null
+    },
+    "after": {
+      "cp": -91,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 113
+  },
+  {
+    "course": "evans",
+    "id": "recapture-choice",
+    "prefix": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4 O-O d6 cxd4 Bb6 Nc3 Nf6 e5 dxe5",
+    "bad": "dxe5",
+    "fen": "r1bqk2r/ppp2ppp/1bn2n2/4p3/2BP4/2N2N2/P4PPP/R1BQ1RK1 w kq - 0 11",
+    "line": ["d4e5", "d8d1", "f1d1", "f6g4"],
+    "san": ["dxe5", "Qxd1", "Rxd1", "Ng4"],
+    "defence": ["c1a3", "c6d4", "f3e5"],
+    "defenceSan": ["Ba3", "Nxd4", "Nxe5"],
+    "before": {
+      "cp": 190,
+      "mate": null
+    },
+    "after": {
+      "cp": -163,
+      "mate": null
+    },
+    "depth": 14,
+    "delta": 353
+  },
+  {
+    "course": "scotch",
+    "id": "ignore-e5",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 Bc4 Nf6 O-O Bc5 e5",
+    "bad": "O-O",
+    "fen": "r1bqk2r/pppp1ppp/2n2n2/2b1P3/2Bp4/5N2/PPP2PPP/RNBQ1RK1 b kq - 0 6",
+    "line": ["e8g8", "e5f6", "d8f6", "f1e1"],
+    "san": ["O-O", "exf6", "Qxf6", "Re1"],
+    "defence": ["d7d5", "e5f6", "d5c4"],
+    "defenceSan": ["d5", "exf6", "dxc4"],
+    "before": {
+      "cp": 20,
+      "mate": null
+    },
+    "after": {
+      "cp": 542,
+      "mate": null
+    },
+    "depth": 18,
+    "delta": 522
+  },
+  {
+    "course": "scotch",
+    "id": "ignore-d5",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 Bc4 Nf6 O-O Bc5 e5 d5",
+    "bad": "h3",
+    "fen": "r1bqk2r/ppp2ppp/2n2n2/2bpP3/2Bp4/5N2/PPP2PPP/RNBQ1RK1 w kq d6 0 7",
+    "line": ["h2h3", "d5c4", "e5f6", "d8f6"],
+    "san": ["h3", "dxc4", "exf6", "Qxf6"],
+    "defence": ["e5f6", "d5c4", "f6g7"],
+    "defenceSan": ["exf6", "dxc4", "fxg7"],
+    "before": {
+      "cp": 27,
+      "mate": null
+    },
+    "after": {
+      "cp": -481,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 508
+  },
+  {
+    "course": "scotch",
+    "id": "loose-queen",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 Bc4 Nf6 O-O Bc5 e5 d5 exf6 dxc4 Re1+ Be6 Ng5 Qd5 Nc3",
+    "bad": "O-O",
+    "fen": "r3k2r/ppp2ppp/2n1bP2/2bq2N1/2pp4/2N5/PPP2PPP/R1BQR1K1 b kq - 5 10",
+    "line": ["e8g8", "c3d5", "e6d5", "d1h5"],
+    "san": ["O-O", "Nxd5", "Bxd5", "Qh5"],
+    "defence": ["d5f5", "c3e4", "e8c8"],
+    "defenceSan": ["Qf5", "Nce4", "O-O-O"],
+    "before": {
+      "cp": 6,
+      "mate": null
+    },
+    "after": {
+      "cp": 1009,
+      "mate": null
+    },
+    "depth": 19,
+    "delta": 1003
+  },
+  {
+    "course": "scotch",
+    "id": "pawn-overreach",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 Bc4 Bc5 c3",
+    "bad": "dxc3",
+    "fen": "r1bqk1nr/pppp1ppp/2n5/2b5/2BpP3/2P2N2/PP3PPP/RNBQK2R b KQkq - 0 5",
+    "line": ["d4c3", "c4f7", "e8f7", "d1d5"],
+    "san": ["dxc3", "Bxf7+", "Kxf7", "Qd5+"],
+    "defence": ["g8f6", "e4e5", "d7d5"],
+    "defenceSan": ["Nf6", "e5", "d5"],
+    "before": {
+      "cp": -1,
+      "mate": null
+    },
+    "after": {
+      "cp": 96,
+      "mate": null
+    },
+    "depth": 19,
+    "delta": 97
+  },
+  {
+    "course": "goring",
+    "id": "queen-tempo",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 c3 d5 exd5 Qxd5 cxd4 Bg4 Be2 O-O-O Nc3",
+    "bad": "Qxd4",
+    "fen": "2kr1bnr/ppp2ppp/2n5/3q4/3P2b1/2N2N2/PP2BPPP/R1BQK2R b KQ - 4 8",
+    "line": ["d5d4", "f3d4", "g4e2", "d1e2"],
+    "san": ["Qxd4", "Nxd4", "Bxe2", "Qxe2"],
+    "defence": ["d5d7", "d4d5", "g4f3"],
+    "defenceSan": ["Qd7", "d5", "Bxf3"],
+    "before": {
+      "cp": 15,
+      "mate": null
+    },
+    "after": {
+      "cp": 694,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 679
+  },
+  {
+    "course": "goring",
+    "id": "bishop-left",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Nxc3 Bb4 Bc4 d6 O-O Bxc3",
+    "bad": "Re1",
+    "fen": "r1bqk1nr/ppp2ppp/2np4/8/2B1P3/2b2N2/PP3PPP/R1BQ1RK1 w kq - 0 8",
+    "line": ["f1e1", "c3e1", "d1e1", "g8f6"],
+    "san": ["Re1", "Bxe1", "Qxe1", "Nf6"],
+    "defence": ["b2c3", "g8f6", "e4e5"],
+    "defenceSan": ["bxc3", "Nf6", "e5"],
+    "before": {
+      "cp": -22,
+      "mate": null
+    },
+    "after": {
+      "cp": -764,
+      "mate": null
+    },
+    "depth": 19,
+    "delta": 742
+  },
+  {
+    "course": "goring",
+    "id": "queen-vs-bishop",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Nxc3 Bb4 Bc4 d6 O-O Bxc3 bxc3 Nf6 Re1 O-O Ba3",
+    "bad": "a6",
+    "fen": "r1bq1rk1/ppp2ppp/2np1n2/8/2B1P3/B1P2N2/P4PPP/R2QR1K1 b - - 4 10",
+    "line": ["a7a6", "e4e5", "f6e8", "h2h3"],
+    "san": ["a6", "e5", "Ne8", "h3"],
+    "defence": ["c8g4", "h2h3", "g4f3"],
+    "defenceSan": ["Bg4", "h3", "Bxf3"],
+    "before": {
+      "cp": -103,
+      "mate": null
+    },
+    "after": {
+      "cp": 136,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 239
+  },
+  {
+    "course": "goring",
+    "id": "double-pawn-delay",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Bc4 cxb2 Bxb2",
+    "bad": "a6",
+    "fen": "r1bqkbnr/pppp1ppp/2n5/8/2B1P3/5N2/PB3PPP/RN1QK2R b KQkq - 0 6",
+    "line": ["a7a6", "e1g1", "d7d6", "d1b3"],
+    "san": ["a6", "O-O", "d6", "Qb3"],
+    "defence": ["f8b4", "b1c3", "g8f6"],
+    "defenceSan": ["Bb4+", "Nc3", "Nf6"],
+    "before": {
+      "cp": -43,
+      "mate": null
+    },
+    "after": {
+      "cp": 86,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 129
+  },
+  {
+    "course": "danish",
+    "id": "queen-grab",
+    "prefix": "e4 e5 d4 exd4 c3 dxc3 Bc4 cxb2 Bxb2 d5 Bxd5 Nf6",
+    "bad": "Bxb7",
+    "fen": "rnbqkb1r/ppp2ppp/5n2/3B4/4P3/8/PB3PPP/RN1QK1NR w KQkq - 1 7",
+    "line": ["d5b7", "d8d1", "e1d1", "c8b7"],
+    "san": ["Bxb7", "Qxd1+", "Kxd1", "Bxb7"],
+    "defence": ["d5f7", "e8f7", "d1d8"],
+    "defenceSan": ["Bxf7+", "Kxf7", "Qxd8"],
+    "before": {
+      "cp": -3,
+      "mate": null
+    },
+    "after": {
+      "cp": -736,
+      "mate": null
+    },
+    "depth": 21,
+    "delta": 733
+  },
+  {
+    "course": "danish",
+    "id": "forget-check",
+    "prefix": "e4 e5 d4 exd4 c3 dxc3 Bc4 cxb2 Bxb2 d5 Bxd5 Nf6 Bxf7+ Kxf7 Qxd8",
+    "bad": "Nc6",
+    "fen": "rnbQ1b1r/ppp2kpp/5n2/8/4P3/8/PB3PPP/RN2K1NR b KQ - 0 8",
+    "line": ["b8c6", "d8c7", "f8e7", "g1f3"],
+    "san": ["Nc6", "Qxc7+", "Be7", "Nf3"],
+    "defence": ["f8b4", "d8d2", "b4d2"],
+    "defenceSan": ["Bb4+", "Qd2", "Bxd2+"],
+    "before": {
+      "cp": -4,
+      "mate": null
+    },
+    "after": {
+      "cp": 771,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 775
+  },
+  {
+    "course": "danish",
+    "id": "early-queen",
+    "prefix": "e4 e5 d4 exd4 c3",
+    "bad": "Qh4",
+    "fen": "rnbqkbnr/pppp1ppp/8/8/3pP3/2P5/PP3PPP/RNBQKBNR b KQkq - 0 3",
+    "line": ["d8h4", "f1d3", "d4c3", "g1f3"],
+    "san": ["Qh4", "Bd3", "dxc3", "Nf3"],
+    "defence": ["d8e7", "c3d4", "e7e4"],
+    "defenceSan": ["Qe7", "cxd4", "Qxe4+"],
+    "before": {
+      "cp": -21,
+      "mate": null
+    },
+    "after": {
+      "cp": 92,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 113
+  },
+  {
+    "course": "danish",
+    "id": "undefended-rook",
+    "prefix": "e4 e5 d4 exd4 c3 dxc3 Bc4 cxb2 Bxb2 d5 Bxd5",
+    "bad": "Qg5",
+    "fen": "rnbqkbnr/ppp2ppp/8/3B4/4P3/8/PB3PPP/RN1QK1NR b KQkq - 0 6",
+    "line": ["d8g5", "g1f3", "g5h5", "e1g1"],
+    "san": ["Qg5", "Nf3", "Qh5", "O-O"],
+    "defence": ["g8f6", "d5f7", "e8f7"],
+    "defenceSan": ["Nf6", "Bxf7+", "Kxf7"],
+    "before": {
+      "cp": -8,
+      "mate": null
+    },
+    "after": {
+      "cp": 201,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 209
+  },
+  {
+    "course": "vienna",
+    "id": "knight-fork",
+    "prefix": "e4 e5 Nc3 Nf6 f4 exf4 e5",
+    "bad": "Ne4",
+    "fen": "rnbqkb1r/pppp1ppp/5n2/4P3/5p2/2N5/PPPP2PP/R1BQKBNR b KQkq - 0 4",
+    "line": ["f6e4", "c3e4", "d7d6", "e5d6"],
+    "san": ["Ne4", "Nxe4", "d6", "exd6"],
+    "defence": ["f6g8", "g1f3", "d7d6"],
+    "defenceSan": ["Ng8", "Nf3", "d6"],
+    "before": {
+      "cp": 48,
+      "mate": null
+    },
+    "after": {
+      "cp": 579,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 531
+  },
+  {
+    "course": "vienna",
+    "id": "queen-sacrifice",
+    "prefix": "e4 e5 Nc3 Nf6 f4 d5 fxe5 Nxe4 Nf3",
+    "bad": "Qh4+",
+    "fen": "rnbqkb1r/ppp2ppp/8/3pP3/4n3/2N2N2/PPPP2PP/R1BQKB1R b KQkq - 1 5",
+    "line": ["d8h4", "f3h4", "c7c6", "e5e6"],
+    "san": ["Qh4+", "Nxh4", "c6", "e6"],
+    "defence": ["f8c5", "d2d4", "c5b4"],
+    "defenceSan": ["Bc5", "d4", "Bb4"],
+    "before": {
+      "cp": -13,
+      "mate": null
+    },
+    "after": {
+      "cp": 900,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 913
+  },
+  {
+    "course": "vienna",
+    "id": "ignore-knight",
+    "prefix": "e4 e5 Nc3 Nf6 f4 d5 fxe5",
+    "bad": "Bc5",
+    "fen": "rnbqkb1r/ppp2ppp/5n2/3pP3/4P3/2N5/PPPP2PP/R1BQKBNR b KQkq - 0 4",
+    "line": ["f8c5", "e5f6", "d8f6", "g1f3"],
+    "san": ["Bc5", "exf6", "Qxf6", "Nf3"],
+    "defence": ["f6e4", "g1f3", "f8c5"],
+    "defenceSan": ["Nxe4", "Nf3", "Bc5"],
+    "before": {
+      "cp": -20,
+      "mate": null
+    },
+    "after": {
+      "cp": 659,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 679
+  },
+  {
+    "course": "vienna",
+    "id": "centre-overreach",
+    "prefix": "e4 e5 Nc3 Nf6 f4 d5 fxe5 Nxe4 Nf3 Be7 d4 O-O Bd3 Nxc3 bxc3 c5",
+    "bad": "dxc5",
+    "fen": "rnbq1rk1/pp2bppp/8/2ppP3/3P4/2PB1N2/P1P3PP/R1BQK2R w KQ - 0 9",
+    "line": ["d4c5", "e7c5", "d1e2", "d8b6"],
+    "san": ["dxc5", "Bxc5", "Qe2", "Qb6"],
+    "defence": ["e1g1", "b8c6", "d4c5"],
+    "defenceSan": ["O-O", "Nc6", "dxc5"],
+    "before": {
+      "cp": 35,
+      "mate": null
+    },
+    "after": {
+      "cp": -157,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 192
+  },
+  {
+    "course": "morra",
+    "id": "siberian",
+    "prefix": "e4 c5 d4 cxd4 c3 dxc3 Nxc3 Nc6 Nf3 e6 Bc4 Qc7 O-O Nf6 Qe2 Ng4",
+    "bad": "h3",
+    "fen": "r1b1kb1r/ppqp1ppp/2n1p3/8/2B1P1n1/2N2N2/PP2QPPP/R1B2RK1 w kq - 6 9",
+    "line": ["h2h3", "c6d4", "h3g4", "d4e2"],
+    "san": ["h3", "Nd4", "hxg4", "Nxe2+"],
+    "defence": ["f1d1", "f8c5", "c3b5"],
+    "defenceSan": ["Rd1", "Bc5", "Nb5"],
+    "before": {
+      "cp": 35,
+      "mate": null
+    },
+    "after": {
+      "cp": -512,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 547
+  },
+  {
+    "course": "morra",
+    "id": "bishop-taken",
+    "prefix": "e4 c5 d4 cxd4 c3 dxc3 Nxc3 Nc6 Nf3 d6 Bc4 e6 O-O Nf6 Qe2 Be7 Rd1 O-O Bf4 e5",
+    "bad": "h3",
+    "fen": "r1bq1rk1/pp2bppp/2np1n2/4p3/2B1PB2/2N2N2/PP2QPPP/R2R2K1 w - - 0 11",
+    "line": ["h2h3", "e5f4", "e4e5", "f6e8"],
+    "san": ["h3", "exf4", "e5", "Ne8"],
+    "defence": ["f3e5", "c6e5", "f4e5"],
+    "defenceSan": ["Nxe5", "Nxe5", "Bxe5"],
+    "before": {
+      "cp": 137,
+      "mate": null
+    },
+    "after": {
+      "cp": -512,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 649
+  },
+  {
+    "course": "morra",
+    "id": "ignore-e5",
+    "prefix": "e4 c5 d4 cxd4 c3 Nf6 e5",
+    "bad": "Nc6",
+    "fen": "rnbqkb1r/pp1ppppp/5n2/4P3/3p4/2P5/PP3PPP/RNBQKBNR b KQkq - 0 4",
+    "line": ["b8c6", "e5f6", "d4c3", "b1c3"],
+    "san": ["Nc6", "exf6", "dxc3", "Nxc3"],
+    "defence": ["f6d5", "c3d4", "d7d6"],
+    "defenceSan": ["Nd5", "cxd4", "d6"],
+    "before": {
+      "cp": 15,
+      "mate": null
+    },
+    "after": {
+      "cp": 521,
+      "mate": null
+    },
+    "depth": 19,
+    "delta": 506
+  },
+  {
+    "course": "morra",
+    "id": "ignore-nb6",
+    "prefix": "e4 c5 d4 cxd4 c3 Nf6 e5 Nd5 Nf3 Nc6 cxd4 d6 Bc4 Nb6",
+    "bad": "O-O",
+    "fen": "r1bqkb1r/pp2pppp/1nnp4/4P3/2BP4/5N2/PP3PPP/RNBQK2R w KQkq - 2 8",
+    "line": ["e1g1", "b6c4", "e5d6", "e7e6"],
+    "san": ["O-O", "Nxc4", "exd6", "e6"],
+    "defence": ["c4b5", "d6e5", "f3e5"],
+    "defenceSan": ["Bb5", "dxe5", "Nxe5"],
+    "before": {
+      "cp": 10,
+      "mate": null
+    },
+    "after": {
+      "cp": -445,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 455
+  },
+  {
+    "course": "morra",
+    "id": "queen-pin",
+    "prefix": "e4 c5 d4 cxd4 c3 dxc3 Nxc3 Nc6 Nf3 d6 Bc4 e6 O-O Nf6 Qe2 Be7 Rd1",
+    "bad": "d5",
+    "fen": "r1bqk2r/pp2bppp/2nppn2/8/2B1P3/2N2N2/PP2QPPP/R1BR2K1 b kq - 5 9",
+    "line": ["d6d5", "e4d5", "f6d5", "c3d5"],
+    "san": ["d5", "exd5", "Nxd5", "Nxd5"],
+    "defence": ["e6e5", "c4b5", "e8g8"],
+    "defenceSan": ["e5", "Bb5", "O-O"],
+    "before": {
+      "cp": 15,
+      "mate": null
+    },
+    "after": {
+      "cp": 550,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 535
+  },
+  {
+    "course": "caro",
+    "id": "bishop-trap",
+    "prefix": "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3",
+    "bad": "Bg4",
+    "fen": "rn1qkbnr/pp2pppp/2p5/5b2/3P4/6N1/PPP2PPP/R1BQKBNR b KQkq - 2 5",
+    "line": ["f5g4", "d1g4", "g8f6", "g4d1"],
+    "san": ["Bg4", "Qxg4", "Nf6", "Qd1"],
+    "defence": ["f5g6", "h2h4", "h7h6"],
+    "defenceSan": ["Bg6", "h4", "h6"],
+    "before": {
+      "cp": 31,
+      "mate": null
+    },
+    "after": {
+      "cp": 790,
+      "mate": null
+    },
+    "depth": 18,
+    "delta": 759
+  },
+  {
+    "course": "caro",
+    "id": "forgot-h7",
+    "prefix": "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 h4",
+    "bad": "Nf6",
+    "fen": "rn1qkbnr/pp2pppp/2p3b1/8/3P3P/6N1/PPP2PP1/R1BQKBNR b KQkq - 0 6",
+    "line": ["g8f6", "h4h5", "g6e4", "h1h4"],
+    "san": ["Nf6", "h5", "Be4", "Rh4"],
+    "defence": ["h7h6", "g1f3", "b8d7"],
+    "defenceSan": ["h6", "Nf3", "Nd7"],
+    "before": {
+      "cp": 27,
+      "mate": null
+    },
+    "after": {
+      "cp": 204,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 177
+  },
+  {
+    "course": "caro",
+    "id": "smothered",
+    "prefix": "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nd7 Qe2",
+    "bad": "Ngf6",
+    "fen": "r1bqkbnr/pp1npppp/2p5/8/3PN3/8/PPP1QPPP/R1B1KBNR b KQkq - 2 5",
+    "line": ["g8f6", "e4d6"],
+    "san": ["Ngf6", "Nd6#"],
+    "defence": ["d7f6", "g1f3", "f6e4"],
+    "defenceSan": ["Ndf6", "Nf3", "Nxe4"],
+    "before": {
+      "cp": 25,
+      "mate": null
+    },
+    "after": {
+      "cp": 99999,
+      "mate": 1
+    },
+    "depth": 245,
+    "delta": 99974
+  },
+  {
+    "course": "caro",
+    "id": "ignore-knight",
+    "prefix": "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5",
+    "bad": "Nf3",
+    "fen": "rn1qkbnr/pp2pppp/2p5/5b2/3PN3/8/PPP2PPP/R1BQKBNR w KQkq - 1 5",
+    "line": ["g1f3", "f5e4", "f1c4", "g8f6"],
+    "san": ["Nf3", "Bxe4", "Bc4", "Nf6"],
+    "defence": ["e4g3", "f5g6", "g1f3"],
+    "defenceSan": ["Ng3", "Bg6", "Nf3"],
+    "before": {
+      "cp": 28,
+      "mate": null
+    },
+    "after": {
+      "cp": -658,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 686
+  },
+  {
+    "course": "kings",
+    "id": "ignore-nc4",
+    "prefix": "e4 e5 f4 exf4 Nf3 g5 h4 g4 Ne5 Nf6 Bc4 d5 exd5 Bd6 d4 Nh5 Nc3",
+    "bad": "Qxh4+",
+    "fen": "rnbqk2r/ppp2p1p/3b4/3PN2n/2BP1ppP/2N5/PPP3P1/R1BQK2R b KQkq - 2 9",
+    "line": ["d8h4", "h1h4", "h5f6", "c1f4"],
+    "san": ["Qxh4+", "Rxh4", "Nf6", "Bxf4"],
+    "defence": ["e8g8", "c3e2", "d8e7"],
+    "defenceSan": ["O-O", "Ne2", "Qe7"],
+    "before": {
+      "cp": -109,
+      "mate": null
+    },
+    "after": {
+      "cp": 1026,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 1135
+  },
+  {
+    "course": "evans",
+    "id": "central-greed",
+    "prefix": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Ba5 d4 exd4",
+    "bad": "Qxd4",
+    "fen": "r1bqk1nr/pppp1ppp/2n5/b7/2BpP3/2P2N2/P4PPP/RNBQK2R w KQkq - 0 7",
+    "line": ["d1d4", "c6d4", "f3d4", "d7d6"],
+    "san": ["Qxd4", "Nxd4", "Nxd4", "d6"],
+    "defence": ["d1b3", "d8f6", "e1g1"],
+    "defenceSan": ["Qb3", "Qf6", "O-O"],
+    "before": {
+      "cp": -1,
+      "mate": null
+    },
+    "after": {
+      "cp": -892,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 891
+  },
+  {
+    "course": "scotch",
+    "id": "f7-sacrifice",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 Bc4 Nf6",
+    "bad": "Bxf7+",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/8/2BpP3/5N2/PPP2PPP/RNBQK2R w KQkq - 2 5",
+    "line": ["c4f7", "e8f7", "e4e5", "d8e7"],
+    "san": ["Bxf7+", "Kxf7", "e5", "Qe7"],
+    "defence": ["e4e5", "d7d5", "c4b5"],
+    "defenceSan": ["e5", "d5", "Bb5"],
+    "before": {
+      "cp": 5,
+      "mate": null
+    },
+    "after": {
+      "cp": -583,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 588
+  },
+  {
+    "course": "scotch",
+    "id": "bishop-check",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 Bc4 Bc5 c3 Nf6 cxd4 Bb4+ Bd2 Bxd2+ Nbxd2 d5",
+    "bad": "O-O",
+    "fen": "r1bqk2r/ppp2ppp/2n2n2/3p4/2BPP3/5N2/PP1N1PPP/R2QK2R w KQkq - 0 9",
+    "line": ["e1g1", "d5c4", "d2c4", "e8g8"],
+    "san": ["O-O", "dxc4", "Nxc4", "O-O"],
+    "defence": ["e4d5", "f6d5", "e1g1"],
+    "defenceSan": ["exd5", "Nxd5", "O-O"],
+    "before": {
+      "cp": 10,
+      "mate": null
+    },
+    "after": {
+      "cp": -493,
+      "mate": null
+    },
+    "depth": 18,
+    "delta": 503
+  },
+  {
+    "course": "goring",
+    "id": "greedy-e4",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Nxc3 Nf6 e5",
+    "bad": "Nxe5",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4P3/8/2N2N2/PP3PPP/R1BQKB1R b KQkq - 0 6",
+    "line": ["c6e5", "f3e5", "d8e7", "d1e2"],
+    "san": ["Nxe5", "Nxe5", "Qe7", "Qe2"],
+    "defence": ["f6g4", "d1e2", "d7d6"],
+    "defenceSan": ["Ng4", "Qe2", "d6"],
+    "before": {
+      "cp": 30,
+      "mate": null
+    },
+    "after": {
+      "cp": 362,
+      "mate": null
+    },
+    "depth": 19,
+    "delta": 332
+  },
+  {
+    "course": "goring",
+    "id": "pinned-knight",
+    "prefix": "e4 e5 Nf3 Nc6 d4 exd4 c3 dxc3 Nxc3 Bb4",
+    "bad": "Qd4",
+    "fen": "r1bqk1nr/pppp1ppp/2n5/8/1b2P3/2N2N2/PP3PPP/R1BQKB1R w KQkq - 1 6",
+    "line": ["d1d4", "c6d4", "f3d4", "d7d6"],
+    "san": ["Qd4", "Nxd4", "Nxd4", "d6"],
+    "defence": ["f1c4", "d7d6", "f3g5"],
+    "defenceSan": ["Bc4", "d6", "Ng5"],
+    "before": {
+      "cp": -4,
+      "mate": null
+    },
+    "after": {
+      "cp": -861,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 857
+  },
+  {
+    "course": "danish",
+    "id": "f7-queen",
+    "prefix": "e4 e5 d4 exd4 c3 dxc3 Bc4 cxb2 Bxb2",
+    "bad": "Bc5",
+    "fen": "rnbqkbnr/pppp1ppp/8/8/2B1P3/8/PB3PPP/RN1QK1NR b KQkq - 0 5",
+    "line": ["f8c5", "b2g7", "b7b5", "c4b3"],
+    "san": ["Bc5", "Bxg7", "b5", "Bb3"],
+    "defence": ["g8f6", "b1c3", "d7d5"],
+    "defenceSan": ["Nf6", "Nc3", "d5"],
+    "before": {
+      "cp": -54,
+      "mate": null
+    },
+    "after": {
+      "cp": 574,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 628
+  },
+  {
+    "course": "danish",
+    "id": "knight-grab",
+    "prefix": "e4 e5 d4 exd4 c3 dxc3 Nxc3 Nc6 Nf3 d6 Bc4 Nf6",
+    "bad": "Bxf7+",
+    "fen": "r1bqkb1r/ppp2ppp/2np1n2/8/2B1P3/2N2N2/PP3PPP/R1BQK2R w KQkq - 2 7",
+    "line": ["c4f7", "e8f7", "d1b3", "f7e8"],
+    "san": ["Bxf7+", "Kxf7", "Qb3+", "Ke8"],
+    "defence": ["d1b3", "d8d7", "c4e2"],
+    "defenceSan": ["Qb3", "Qd7", "Be2"],
+    "before": {
+      "cp": 0,
+      "mate": null
+    },
+    "after": {
+      "cp": -393,
+      "mate": null
+    },
+    "depth": 16,
+    "delta": 393
+  },
+  {
+    "course": "vienna",
+    "id": "bishop-fork",
+    "prefix": "e4 e5 Nc3 Nf6 f4 d5 fxe5 Nxe4 Nf3 Be7 d4 O-O Bd3",
+    "bad": "a6",
+    "fen": "rnbq1rk1/ppp1bppp/8/3pP3/3Pn3/2NB1N2/PPP3PP/R1BQK2R b KQ - 2 7",
+    "line": ["a7a6", "c3e4", "d5e4", "d3e4"],
+    "san": ["a6", "Nxe4", "dxe4", "Bxe4"],
+    "defence": ["e4c3", "b2c3", "c7c5"],
+    "defenceSan": ["Nxc3", "bxc3", "c5"],
+    "before": {
+      "cp": 2,
+      "mate": null
+    },
+    "after": {
+      "cp": 312,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 310
+  },
+  {
+    "course": "vienna",
+    "id": "greed-f4",
+    "prefix": "e4 e5 Nc3 Bc5 f4",
+    "bad": "Qh4+",
+    "fen": "rnbqk1nr/pppp1ppp/8/2b1p3/4PP2/2N5/PPPP2PP/R1BQKBNR b KQkq - 0 3",
+    "line": ["d8h4", "g2g3", "h4d8", "f4e5"],
+    "san": ["Qh4+", "g3", "Qd8", "fxe5"],
+    "defence": ["d7d6", "f4e5", "b8c6"],
+    "defenceSan": ["d6", "fxe5", "Nc6"],
+    "before": {
+      "cp": -17,
+      "mate": null
+    },
+    "after": {
+      "cp": 262,
+      "mate": null
+    },
+    "depth": 18,
+    "delta": 279
+  },
+  {
+    "course": "morra",
+    "id": "greedy-queen",
+    "prefix": "e4 c5 d4 cxd4 c3 dxc3 Nxc3 Nc6 Nf3 d6 Bc4 e6 O-O Nf6 Qe2",
+    "bad": "Nxe4",
+    "fen": "r1bqkb1r/pp3ppp/2nppn2/8/2B1P3/2N2N2/PP2QPPP/R1B2RK1 b kq - 3 8",
+    "line": ["f6e4", "e2e4", "f8e7", "c4b3"],
+    "san": ["Nxe4", "Qxe4", "Be7", "Bb3"],
+    "defence": ["c8d7", "f1d1", "d8b8"],
+    "defenceSan": ["Bd7", "Rd1", "Qb8"],
+    "before": {
+      "cp": 0,
+      "mate": null
+    },
+    "after": {
+      "cp": 492,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 492
+  },
+  {
+    "course": "caro",
+    "id": "advance-chain",
+    "prefix": "e4 c6 d4 d5 e5 Bf5 Nf3 e6 Be2 c5 O-O Nc6 Be3",
+    "bad": "Bxc2",
+    "fen": "r2qkbnr/pp3ppp/2n1p3/2ppPb2/3P4/4BN2/PPP1BPPP/RN1Q1RK1 b kq - 3 7",
+    "line": ["f5c2", "d1c2", "c5d4", "e3d4"],
+    "san": ["Bxc2", "Qxc2", "cxd4", "Bxd4"],
+    "defence": ["c5d4", "f3d4", "c6d4"],
+    "defenceSan": ["cxd4", "Nxd4", "Nxd4"],
+    "before": {
+      "cp": 19,
+      "mate": null
+    },
+    "after": {
+      "cp": 609,
+      "mate": null
+    },
+    "depth": 17,
+    "delta": 590
+  },
+  {
+    "course": "caro",
+    "id": "panov-pin",
+    "prefix": "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Bf5 Ng3 Bg6 h4 h6 Nf3 Nd7 h5 Bh7 Bd3 Bxd3",
+    "bad": "Qe2",
+    "fen": "r2qkbnr/pp1nppp1/2p4p/7P/3P4/3b1NN1/PPP2PP1/R1BQK2R w KQkq - 0 10",
+    "line": ["d1e2", "d3e2", "e1e2", "c6c5"],
+    "san": ["Qe2", "Bxe2", "Kxe2", "c5"],
+    "defence": ["d1d3", "e7e6", "c1f4"],
+    "defenceSan": ["Qxd3", "e6", "Bf4"],
+    "before": {
+      "cp": 41,
+      "mate": null
+    },
+    "after": {
+      "cp": -961,
+      "mate": null
+    },
+    "depth": 15,
+    "delta": 1002
+  },
+  {
+    "course": "evans",
+    "id": "declined-trap",
+    "prefix": "e4 e5 Nf3 Nc6 Bc4 Bc5 b4 Bxb4 c3 Bc5 d4",
+    "bad": "d6",
+    "fen": "r1bqk1nr/pppp1ppp/2n5/2b1p3/2BPP3/2P2N2/P4PPP/RNBQK2R b KQkq - 0 6",
+    "line": ["d7d6", "d4c5", "g8f6", "c5d6"],
+    "san": ["d6", "dxc5", "Nf6", "cxd6"],
+    "defence": ["c5b6", "f3e5", "c6e5"],
+    "defenceSan": ["Bb6", "Nxe5", "Nxe5"],
+    "before": {
+      "cp": 47,
+      "mate": null
+    },
+    "after": {
+      "cp": 645,
+      "mate": null
+    },
+    "depth": 18,
+    "delta": 598
+  }
+]

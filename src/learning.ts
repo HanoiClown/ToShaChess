@@ -12,7 +12,11 @@ export function recordAttempt(progress: Progress, attempt: Attempt) {
     ).toISOString();
   }
 }
-export function buildPlan(progress: Progress, level: Profile["level"]) {
+export function buildPlan(
+  progress: Progress,
+  level: Profile["level"],
+  preferences?: Profile["learning"],
+) {
   const weak = new Map<string, { correct: number; total: number }>();
   for (const a of progress.attempts.slice(-100)) {
     const v = weak.get(a.theme) ?? { correct: 0, total: 0 };
@@ -29,17 +33,45 @@ export function buildPlan(progress: Progress, level: Profile["level"]) {
       (a, b) => a[1].correct / a[1].total - b[1].correct / b[1].total,
     )[0]?.[0] ??
     "hanging";
-  return level === "new"
-    ? [
-        { section: "learn", minutes: 15, theme: "basics" },
-        { section: "puzzles", minutes: 10, theme: "mate" },
-        { section: "play", minutes: 20, theme: "practice" },
-        { section: "review", minutes: 15, theme },
-      ]
-    : [
-        { section: "puzzles", minutes: 10, theme },
-        { section: "learn", minutes: 10, theme: "openings" },
-        { section: "play", minutes: 25, theme: "practice" },
-        { section: "review", minutes: 15, theme },
-      ];
+  const plan =
+    level === "new"
+      ? [
+          { section: "learn", minutes: 15, theme: "basics" },
+          { section: "puzzles", minutes: 10, theme: "mate" },
+          { section: "play", minutes: 20, theme: "practice" },
+          { section: "review", minutes: 15, theme },
+        ]
+      : [
+          { section: "puzzles", minutes: 10, theme },
+          { section: "learn", minutes: 10, theme: "openings" },
+          { section: "play", minutes: 25, theme: "practice" },
+          { section: "review", minutes: 15, theme },
+        ];
+  if (!preferences) return plan;
+  const preferred =
+    preferences.goal === "tactics"
+      ? "puzzles"
+      : ["basics", "openings"].includes(preferences.goal)
+        ? "learn"
+        : null;
+  const weights = plan.map(
+    (item) => item.minutes * (item.section === preferred ? 1.7 : 1),
+  );
+  const total = weights.reduce((sum, v) => sum + v, 0);
+  const allocation = weights.map((v) =>
+    Math.floor((v / total) * preferences.minutes),
+  );
+  let remainder =
+    preferences.minutes - allocation.reduce((sum, v) => sum + v, 0);
+  for (let i = 0; remainder > 0; i++, remainder--)
+    allocation[i % allocation.length]++;
+  return plan.map((item, i) => ({
+    ...item,
+    minutes: allocation[i],
+    theme:
+      item.section === "learn" &&
+      ["basics", "openings"].includes(preferences.goal)
+        ? preferences.goal
+        : item.theme,
+  }));
 }

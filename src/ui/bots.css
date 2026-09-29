@@ -1,0 +1,71 @@
+.bot-picker h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+.bot-catalog {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 210px;
+  overflow: auto;
+  padding: 4px;
+  scrollbar-color: var(--green) var(--panel);
+}
+.bot-choice {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  min-width: 0;
+}
+.bot-choice[aria-pressed="true"] {
+  border-color: var(--green);
+  background: var(--green-dark);
+}
+.bot-choice img {
+  width: 42px;
+  height: 48px;
+  flex-shrink: 0;
+}
+.bot-choice strong,
+.bot-choice span > span {
+  display: block;
+}
+.bot-choice strong {
+  font-size: 14px;
+}
+.bot-choice small {
+  color: var(--green);
+  white-space: nowrap;
+}
+.bot-choice span > span {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.bot-dialogue {
+  background: var(--panel);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.side-panel > .game-setup {
+  gap: 12px;
+  padding: 18px;
+}
+.game-setup .setup-title {
+  margin-bottom: 0;
+}
+@media (max-width: 1100px) {
+  .bot-catalog {
+    grid-template-columns: 1fr;
+    max-height: 235px;
+  }
+}

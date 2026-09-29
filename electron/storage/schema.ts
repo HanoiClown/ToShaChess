@@ -29,9 +29,21 @@ const nickname = z
   );
 const skillLevel = z.enum(["new", "beginner", "intermediate", "advanced"]);
 const rating = z.number().int().min(0).max(3000);
+const learning = z.object({
+  minutes: z.union([z.literal(15), z.literal(30), z.literal(60)]),
+  goal: z.enum(["basics", "tactics", "openings", "balanced"]),
+  explanation: z.enum(["short", "detailed"]),
+});
+const maiaSettings = z.object({
+  pack: z.enum(["maia-cpu", "maia-23m", "maia-79m"]),
+  selfElo: z.number().int().min(600).max(2600),
+  opponentElo: z.number().int().min(600).max(2600),
+  temperature: z.number().min(0.5).max(1.5),
+});
 export const normalizeNickname = (value: string) =>
   value.normalize("NFKC").trim().toLowerCase();
 export const createProfileSchema = z.object({
+  learning: learning.optional(),
   name: profileName,
   nickname,
   skillLevel,
@@ -39,6 +51,15 @@ export const createProfileSchema = z.object({
   locale: z.enum(["ru", "en"]),
 });
 export const profileSchema = z.object({
+  opponent: z
+    .object({
+      provider: z.enum(["stockfish", "maia"]),
+      botId: id,
+      color: z.enum(["w", "b"]),
+      maia: maiaSettings,
+    })
+    .optional(),
+  learning: learning.optional(),
   theme: z.enum(["green", "purple", "blue", "red"]).default("green"),
   id,
   name: profileName,
@@ -109,60 +130,71 @@ const progress = z.object({
     .max(200000)
     .default([]),
 });
-export const gameSchema = z.object({
-  id,
-  profileId: id,
-  initialFen: z.string().max(160),
-  moves: z.array(z.string().regex(/^[a-h][1-8][a-h][1-8][qrbn]?$/)).max(4000),
-  headers: z.record(z.string().max(100), z.string().max(2000)),
-  playerColor: z.enum(["w", "b"]),
-  mode: z.enum(["normal", "training", "import"]),
-  bot: z.boolean(),
-  playedAt: z.string().max(40).nullable(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-  completedAt: z.iso.datetime().optional(),
-  result: z.enum(["1-0", "0-1", "1/2-1/2", "*"]),
-  analysis: z
-    .array(
-      z.object({
-        ply: z.number().int().positive(),
-        before: line,
-        after: line,
-        best: z.string().max(5),
-        quality: z.enum([
-          "best",
-          "excellent",
-          "good",
-          "inaccuracy",
-          "mistake",
-          "blunder",
-          "brilliant",
-          "book",
-        ]),
-        loss: z.number().min(0),
-        provisional: z.boolean(),
-      }),
-    )
-    .max(4000),
-  explanations: z.object({
-    ru: z.record(z.string(), text).optional(),
-    en: z.record(z.string(), text).optional(),
-  }),
-  clock: z
-    .object({
-      w: z.number().min(0),
-      b: z.number().min(0),
-      increment: z.number().min(0).max(600000),
-    })
-    .optional(),
-  level: z.number().int().min(0).max(4).optional(),
-});
+export const gameSchema = z
+  .object({
+    id,
+    profileId: id,
+    initialFen: z.string().max(160),
+    moves: z.array(z.string().regex(/^[a-h][1-8][a-h][1-8][qrbn]?$/)).max(4000),
+    headers: z.record(z.string().max(100), z.string().max(2000)),
+    playerColor: z.enum(["w", "b"]),
+    mode: z.enum(["normal", "training", "import"]),
+    bot: z.boolean(),
+    playedAt: z.string().max(40).nullable(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+    completedAt: z.iso.datetime().optional(),
+    result: z.enum(["1-0", "0-1", "1/2-1/2", "*"]),
+    analysis: z
+      .array(
+        z.object({
+          ply: z.number().int().positive(),
+          before: line,
+          after: line,
+          best: z.string().max(5),
+          quality: z.enum([
+            "best",
+            "excellent",
+            "good",
+            "inaccuracy",
+            "mistake",
+            "blunder",
+            "brilliant",
+            "book",
+          ]),
+          loss: z.number().min(0),
+          provisional: z.boolean(),
+        }),
+      )
+      .max(4000),
+    explanations: z.object({
+      ru: z.record(z.string(), text).optional(),
+      en: z.record(z.string(), text).optional(),
+    }),
+    clock: z
+      .object({
+        w: z.number().min(0),
+        b: z.number().min(0),
+        increment: z.number().min(0).max(600000),
+      })
+      .optional(),
+    level: z.number().int().min(0).max(4).optional(),
+    botId: id.optional(),
+    botRating: z.number().int().min(0).max(4000).optional(),
+    startPly: z.number().int().min(0).max(4000).optional(),
+    strongStockfish: z.boolean().optional(),
+    maia: maiaSettings.optional(),
+  })
+  .refine((game) => (game.startPly ?? 0) <= game.moves.length, {
+    message: "Invalid practice start ply",
+    path: ["startPly"],
+  });
 export const settingsSchema = z.object({
   budget: z.number().int().min(0).max(5000000),
   sound: z.boolean(),
   volume: z.number().int().min(0).max(100).default(65),
   engineMs: z.number().int().min(100).max(1500),
+  botQuips: z.boolean().default(true),
 });
 const databaseSchema = z.object({
   version: z.literal(1),

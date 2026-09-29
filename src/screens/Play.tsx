@@ -26,12 +26,29 @@ import {
 import { pvSan } from "../analysis/evaluate";
 import type { Color, GameRecord, EngineLine } from "../shared/contracts";
 import { playSound } from "../audio/sounds";
-export function Play() {
+import { MaterialPanel } from "../ui/MaterialPanel";
+import { materialSummary } from "../analysis/material-summary";
+import { bots, legacyBot } from "../bots/catalog";
+import { BotPicker } from "../ui/BotPicker";
+import { chooseQuip } from "../bots/quips";
+import { engineRequest } from "../shared/engine-requests";
+import { useEnginePacks } from "../ui/EnginePacks";
+import type { PackId } from "../shared/packs";
+export function Play({
+  active = true,
+  gameId,
+}: {
+  active?: boolean;
+  gameId?: string;
+}) {
   const { snapshot, profile, locale, l, t, nav, fail } = useApp();
   const saved = snapshot.database.games
     .filter(
       (g) =>
-        g.profileId === profile.id && g.mode !== "import" && g.result === "*",
+        g.profileId === profile.id &&
+        g.mode !== "import" &&
+        g.result === "*" &&
+        (!gameId || g.id === gameId),
     )
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0];
   const [game, setGame] = useState<GameRecord | null>(() => saved ?? null),
@@ -41,10 +58,88 @@ export function Play() {
     [hint, setHint] = useState<EngineLine | null>(null),
     [flipped, setFlipped] = useState(false),
     [confirm, setConfirm] = useState(false);
-  const [color, setColor] = useState<Color>("w"),
+  const [color, setColor] = useState<Color>(profile.opponent?.color ?? "w"),
     [mode, setMode] = useState<"normal" | "training">("training"),
     [level, setLevel] = useState(profile.level === "new" ? 0 : 1),
     [time, setTime] = useState("0");
+  const [botId, setBotId] = useState(
+    profile.opponent?.botId &&
+      bots.some((b) => b.id === profile.opponent!.botId)
+      ? profile.opponent.botId
+      : profile.level === "new"
+        ? "pixel"
+        : "spark",
+  );
+  const [quip, setQuip] = useState("");
+  const { packs } = useEnginePacks();
+  const [opponent, setOpponent] = useState<"stockfish" | "maia">(
+      profile.opponent?.provider ?? "stockfish",
+    ),
+    [maiaPack, setMaiaPack] = useState<PackId>(
+      profile.opponent?.maia.pack ?? "maia-cpu",
+    ),
+    [maiaElo, setMaiaElo] = useState(profile.opponent?.maia.selfElo ?? 1100),
+    [humanElo, setHumanElo] = useState(
+      profile.opponent?.maia.opponentElo ?? 1100,
+    ),
+    [temperature, setTemperature] = useState(
+      profile.opponent?.maia.temperature ?? 1,
+    );
+  const lastQuip = useRef({ ply: -3, at: 0 });
+  const bot =
+    bots.find((b) => b.id === (game?.botId ?? botId)) ?? legacyBot(game?.level);
+  const hintRequest = useRef<ReturnType<typeof engineRequest> | null>(null);
+  useEffect(() => {
+    if (!active) {
+      setPaused(true);
+      pausedRef.current = true;
+      setBusy(false);
+      hintRequest.current?.cancel();
+    }
+    return () => {
+      hintRequest.current?.cancel();
+    };
+  }, [active]);
+  useEffect(() => {
+    if (!game || snapshot.database.settings.botQuips === false) {
+      setQuip("");
+      return;
+    }
+    const c = boardAt(game),
+      m = c.history({ verbose: true }).at(-1);
+    const event =
+      game.result !== "*"
+        ? "end"
+        : !m
+          ? "start"
+          : c.isCheck()
+            ? "check"
+            : m.captured
+              ? m.color === game.playerColor
+                ? "loss"
+                : "capture"
+              : null;
+    if (!event) return;
+    const text = chooseQuip({
+      botId: bot.id,
+      event,
+      locale,
+      ply: game.moves.length,
+      now: Date.now(),
+      lastPly: lastQuip.current.ply,
+      lastAt: lastQuip.current.at,
+    });
+    if (text) {
+      setQuip(text);
+      lastQuip.current = { ply: game.moves.length, at: Date.now() };
+    }
+  }, [
+    game?.id,
+    game?.moves.length,
+    game?.result,
+    locale,
+    snapshot.database.settings.botQuips,
+  ]);
   const ref = useRef(game),
     pausedRef = useRef(paused),
     tick = useRef(Date.now()),
@@ -106,18 +201,22 @@ export function Play() {
   }
   useEffect(() => {
     const current = game;
-    if (!current || current.result !== "*" || paused) return;
+    if (!current || current.result !== "*" || paused || !active) return;
     const c = boardAt(current);
     if (c.turn() === current.playerColor) return;
     let cancelled = false;
+    const request = engineRequest();
     setBusy(true);
     window.chessApp
-      .engine(
-        { initialFen: current.initialFen, moves: current.moves },
-        current.level ?? 1,
-      )
-      .then((lines) => {
-        if (!cancelled && lines[0]?.pv[0]) makeMove(lines[0].pv[0]);
+      .botMove({
+        requestId: request.requestId,
+        position: { initialFen: current.initialFen, moves: current.moves },
+        botId: current.botId ?? legacyBot(current.level).id,
+        maia: current.maia,
+        strong: current.strongStockfish,
+      })
+      .then(({ move }) => {
+        if (!cancelled && request.active) makeMove(move);
       })
       .catch((e) => {
         if (!cancelled) {
@@ -130,9 +229,9 @@ export function Play() {
       });
     return () => {
       cancelled = true;
-      void window.chessApp.cancelEngine();
+      request.cancel();
     };
-  }, [game?.id, game?.moves.length, game?.result, paused]);
+  }, [game?.id, game?.moves.length, game?.result, paused, active]);
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now(),
@@ -179,7 +278,49 @@ export function Play() {
       increment,
       level,
     );
+    const chosen = bots.find((b) => b.id === botId)!;
+    g.botId = chosen.id;
+    g.botRating = chosen.rating;
+    g.headers[color === "w" ? "Black" : "White"] =
+      `${chosen.name[locale]} (≈${chosen.rating})`;
+    if (opponent === "maia") {
+      if (packs.find((p) => p.id === maiaPack)?.status !== "ready")
+        throw Error("maia_pack_missing");
+      g.maia = {
+        pack: maiaPack,
+        selfElo: maiaElo,
+        opponentElo: humanElo,
+        temperature,
+      };
+      g.botRating = undefined;
+      g.headers[color === "w" ? "Black" : "White"] =
+        `Maia-3 · ${maiaElo} Lichess model`;
+      g.headers.Engine = `Maia-3 ${maiaPack}`;
+    }
+    lastQuip.current = { ply: -3, at: 0 };
     await window.chessApp.saveGame(g);
+    // Hidden, unfinished Maia inputs must not prevent starting a Stockfish game.
+    const ratingOrPrevious = (value: number, previous?: number) =>
+      Number.isInteger(value) && value >= 600 && value <= 2600
+        ? value
+        : (previous ?? 1100);
+    await window.chessApp.updateProfile({
+      ...profile,
+      opponent: {
+        provider: opponent,
+        botId,
+        color,
+        maia: g.maia ?? {
+          pack: maiaPack,
+          selfElo: ratingOrPrevious(maiaElo, profile.opponent?.maia.selfElo),
+          opponentElo: ratingOrPrevious(
+            humanElo,
+            profile.opponent?.maia.opponentElo,
+          ),
+          temperature,
+        },
+      },
+    });
     sync(g);
     setView(0);
     setHint(null);
@@ -190,9 +331,10 @@ export function Play() {
     if (!game || game.mode !== "training") return;
     await window.chessApp.cancelEngine();
     const moves = [...game.moves];
-    if (moves.length) moves.pop();
+    if (moves.length > (game.startPly ?? 0)) moves.pop();
     let c = boardAt({ ...game, moves });
-    if (c.turn() !== game.playerColor && moves.length) moves.pop();
+    if (c.turn() !== game.playerColor && moves.length > (game.startPly ?? 0))
+      moves.pop();
     const next = {
       ...game,
       moves,
@@ -208,17 +350,20 @@ export function Play() {
   }
   async function requestHint() {
     if (!game) return;
+    hintRequest.current?.cancel();
+    const request = engineRequest();
+    hintRequest.current = request;
     setBusy(true);
     try {
-      const [line] = await window.chessApp.engine({
+      const [line] = await request.analyze({
         initialFen: game.initialFen,
         moves: game.moves,
       });
-      setHint(line);
+      if (request.active) setHint(line);
     } catch (e) {
-      fail(e);
+      if (request.active) fail(e);
     } finally {
-      setBusy(false);
+      if (request.active) setBusy(false);
     }
   }
   const current = game ? boardAt(game) : new Chess(),
@@ -238,12 +383,32 @@ export function Play() {
     return (
       <div className="player-bar">
         <div className={`player-avatar ${human ? "human" : "bot"}`}>
-          <img src={`./pieces/${side}${human ? "N" : "K"}.svg`} alt="" />
+          <img
+            src={human ? `./pieces/${side}N.svg` : `./bots/${bot.id}.svg`}
+            alt=""
+          />
         </div>
         <div>
-          <strong>{human ? profile.name : "Stockfish"}</strong>
+          <strong>
+            {human
+              ? profile.name
+              : game?.maia
+                ? "Maia-3"
+                : game?.strongStockfish
+                  ? "Stockfish"
+                  : bot.name[locale]}
+          </strong>
           <small>
-            {human ? l("Ты", "You") : names[game?.level ?? level]}
+            {human
+              ? l("Ты", "You")
+              : game?.maia
+                ? `${game.maia.selfElo} · ${l("модель Lichess", "Lichess model")}`
+                : game?.strongStockfish
+                  ? l(
+                      "Сильная защита · 1,5 с на ход",
+                      "Strong defence · 1.5s per move",
+                    )
+                  : `≈${game?.botRating ?? bot.rating} Elo`}
             {!human && busy ? " · " + l("думает…", "thinking…") : ""}
           </small>
         </div>
@@ -278,9 +443,18 @@ export function Play() {
       <div className="game-layout">
         <section className="board-column">
           {playerBar(orientation === "w" ? "b" : "w")}
+          {quip && (
+            <p className="bot-dialogue" aria-live="polite">
+              {bot.name[locale]}: {quip}
+            </p>
+          )}
           <div className="board-with-eval">
             {game?.mode === "training" && hint && (
-              <EvalBar score={hint.score} orientation={orientation} />
+              <EvalBar
+                locale={locale}
+                score={hint.score}
+                orientation={orientation}
+              />
             )}
             <Board
               fen={display.fen()}
@@ -300,6 +474,24 @@ export function Play() {
             />
           </div>
           {playerBar(orientation)}
+          <small className="muted">
+            {l(
+              "ПКМ: стрелка или отметка клетки. ЛКМ очищает отметки.",
+              "Right-click: draw an arrow or mark a square. Left-click clears marks.",
+            )}
+          </small>
+          <MaterialPanel
+            locale={locale}
+            orientation={orientation}
+            summary={materialSummary(
+              game
+                ? {
+                    initialFen: game.initialFen,
+                    moves: game.moves.slice(0, view),
+                  }
+                : { initialFen: START, moves: [] },
+            )}
+          />
           {game && view !== game.moves.length && (
             <button
               className="secondary full"
@@ -317,24 +509,113 @@ export function Play() {
                 <h2>{l("Новая партия", "New game")}</h2>
               </div>
               <label>
-                {l("Сложность соперника", "Opponent level")}
+                {l("Соперник", "Opponent")}
                 <select
-                  value={level}
-                  onChange={(e) => setLevel(+e.target.value)}
+                  value={opponent}
+                  onChange={(e) =>
+                    setOpponent(e.target.value as "stockfish" | "maia")
+                  }
                 >
-                  {names.map((name, i) => (
-                    <option value={i} key={i}>
-                      {name}
-                    </option>
-                  ))}
+                  <option value="stockfish">
+                    {l("Персонажи · Stockfish", "Characters · Stockfish")}
+                  </option>
+                  <option value="maia">
+                    {l("Maia-3 · человеческие ходы", "Maia-3 · human moves")}
+                  </option>
                 </select>
               </label>
-              <p className="field-help">
-                {l(
-                  "Учебные уровни — не рейтинг Chess.com.",
-                  "Practice levels are not Chess.com ratings.",
-                )}
-              </p>
+              {opponent === "maia" ? (
+                <div className="human-settings">
+                  <label>
+                    {l("Модель", "Model")}
+                    <select
+                      value={maiaPack}
+                      onChange={(e) => setMaiaPack(e.target.value as PackId)}
+                    >
+                      {packs.map((p) => (
+                        <option
+                          value={p.id}
+                          key={p.id}
+                          disabled={p.status !== "ready"}
+                        >
+                          {p.title}{" "}
+                          {p.status !== "ready"
+                            ? l("— не установлена", "— not installed")
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    {l(
+                      "Уровень соперника · шкала Lichess",
+                      "Opponent level · Lichess scale",
+                    )}
+                    <input
+                      type="number"
+                      min={600}
+                      max={2600}
+                      step={100}
+                      value={maiaElo}
+                      onChange={(e) => setMaiaElo(Number(e.target.value))}
+                    />
+                  </label>
+                  <label>
+                    {l(
+                      "Твой уровень для модели · шкала Lichess",
+                      "Your level for the model · Lichess scale",
+                    )}
+                    <input
+                      type="number"
+                      min={600}
+                      max={2600}
+                      step={100}
+                      value={humanElo}
+                      onChange={(e) => setHumanElo(Number(e.target.value))}
+                    />
+                  </label>
+                  <label>
+                    {l("Разнообразие ответов", "Reply variety")}
+                    <select
+                      value={temperature}
+                      onChange={(e) => setTemperature(Number(e.target.value))}
+                    >
+                      <option value={0.65}>
+                        {l("Привычные ответы", "Familiar replies")}
+                      </option>
+                      <option value={1}>
+                        {l("Исходная модель", "Original policy")}
+                      </option>
+                      <option value={1.3}>
+                        {l("Больше экспериментов", "More experiments")}
+                      </option>
+                    </select>
+                  </label>
+                  <p className="field-help">
+                    {l(
+                      "Это условие обученной модели, не подтверждённый рейтинг бота и не шкала Chess.com. Изменение разнообразия может менять силу игры.",
+                      "This is a model condition, not a measured bot rating or a Chess.com rating. Reply variety can change playing strength.",
+                    )}
+                  </p>
+                  {packs.find((p) => p.id === maiaPack)?.status !== "ready" && (
+                    <button
+                      className="secondary"
+                      onClick={() => nav("settings")}
+                    >
+                      {l(
+                        "Установить Maia в настройках",
+                        "Install Maia in Settings",
+                      )}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <BotPicker
+                  selectedId={botId}
+                  locale={locale}
+                  onSelect={setBotId}
+                />
+              )}
               <label>
                 {l("Твой цвет", "Your colour")}
                 <div className="segmented">
@@ -374,7 +655,11 @@ export function Play() {
               </label>
               <label>
                 {l("Контроль времени", "Time control")}
-                <select value={time} onChange={(e) => setTime(e.target.value)}>
+                <select
+                  aria-label={l("Контроль времени", "Time control")}
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                >
                   <option value="0">{l("Без часов", "Untimed")}</option>
                   <option value="10">10 + 0</option>
                   <option value="15+10">15 + 10</option>
@@ -382,6 +667,13 @@ export function Play() {
               </label>
               <button
                 className="primary large full"
+                disabled={
+                  opponent === "maia" &&
+                  (packs.find((p) => p.id === maiaPack)?.status !== "ready" ||
+                    ![maiaElo, humanElo].every(
+                      (n) => Number.isInteger(n) && n >= 600 && n <= 2600,
+                    ))
+                }
                 onClick={() => void start().catch(fail)}
               >
                 <PlayIcon size={21} />
@@ -409,7 +701,9 @@ export function Play() {
                 {paused
                   ? l("Партия приостановлена", "Game paused")
                   : busy
-                    ? l("Stockfish обдумывает ход…", "Stockfish is thinking…")
+                    ? game.maia
+                      ? l("Maia выбирает ответ…", "Maia is choosing a reply…")
+                      : l("Stockfish обдумывает ход…", "Stockfish is thinking…")
                     : l(
                         "Твой ход. Проверь угрозы.",
                         "Your move. Check the threats.",

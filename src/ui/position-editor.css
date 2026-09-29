@@ -1,0 +1,63 @@
+.editor-palette {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.editor-palette > div {
+  display: flex;
+  gap: 3px;
+}
+.editor-palette button {
+  padding: 4px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 6px;
+}
+.editor-palette button[aria-pressed="true"] {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+.editor-palette img {
+  width: 32px;
+  height: 36px;
+  background: #d8d6ce;
+  border-radius: 3px;
+}
+.editor-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.editor-actions label {
+  flex: 1;
+  min-width: 100px;
+}
+.editor-options {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.editor-options fieldset {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+}
+.editor-options input[type="checkbox"] {
+  width: auto;
+}
+.editor-options textarea {
+  width: 100%;
+  resize: vertical;
+  overflow-wrap: anywhere;
+}
+.editor-errors {
+  color: #ffb0a9;
+  font-size: 14px;
+}
+.editor-errors p {
+  margin: 3px 0;
+}

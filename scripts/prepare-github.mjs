@@ -54,11 +54,24 @@ for (const p of [
   "smoke-portable.mjs",
   "download-big-library.py",
   "verify-big-library.py",
+  "maia-bridge.py",
+  "maia-lock.json",
+  "setup-maia.py",
+  "unpack-python.ps1",
+  "tablebase-bridge.py",
 ])
   cpSync(join(root, "scripts", p), join(out, "scripts", p));
 mkdirSync(join(out, "docs"));
 cpSync(join(root, "docs/PUBLISHING.md"), join(out, "docs/PUBLISHING.md"));
 cpSync(join(root, "docs/LIBRARY.md"), join(out, "docs/LIBRARY.md"));
+for (const file of [
+  "TRAINING.md",
+  "AUTHORING.md",
+  "ENGINES.md",
+  "OPTIONAL_TOOLS.md",
+])
+  if (existsSync(join(root, "docs", file)))
+    cpSync(join(root, "docs", file), join(out, "docs", file));
 let count = 0;
 function audit(dir) {
   for (const item of readdirSync(dir, { withFileTypes: true })) {
@@ -74,6 +87,7 @@ function audit(dir) {
           "node_modules",
           "stockfish",
           "library-packs",
+          "engine-packs",
           "__pycache__",
         ].includes(item.name)
       )
@@ -82,13 +96,15 @@ function audit(dir) {
       continue;
     }
     if (
-      /\.(pgn|enc|exe|zip|sqlite|zst|db)$/i.test(item.name) ||
+      /\.(pgn|enc|exe|dll|pyd|zip|7z|sqlite|sqlite3|zst|db|pt|pth|ckpt|safetensors|whl|onnx|pb|gz|rtbw|rtbz)$/i.test(
+        item.name,
+      ) ||
       item.name.startsWith(".env")
     )
       throw Error("Private/generated file: " + rel);
     if (statSync(path).size > 50 * 1024 * 1024)
       throw Error("Oversized Git file: " + rel);
-    if (/\.(tsx?|mjs|json|md|ya?ml|ps1)$/.test(item.name)) {
+    if (/\.(tsx?|mjs|cjs|json|md|txt|py|ya?ml|ps1)$/.test(item.name)) {
       const text = readFileSync(path, "utf8");
       if (
         /sk-(?:proj-)?[A-Za-z0-9_-]{30,}/.test(text) ||

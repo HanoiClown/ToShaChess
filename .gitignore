@@ -11,6 +11,7 @@ release/
 *.log
 .worktrees/
 .superpowers/
+docs/superpowers/
 test-results/
 playwright-report/
 
@@ -22,6 +23,7 @@ ToShaChess Portable/
 ToShaChess-GitHub/
 history/
 stockfish/
+engine-packs/
 library-packs/
 *.lnk
 api-key.enc

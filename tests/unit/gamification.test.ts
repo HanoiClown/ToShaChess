@@ -16,6 +16,16 @@ const freshDatabase = () => ({
   progress: { hanoi: emptyProgress(), sister: emptyProgress() },
   games: [] as GameRecord[],
 });
+it("course practice earns opening XP once, while watching earns none", () => {
+  const db = freshDatabase();
+  db.progress.hanoi.completed = ["course_caro_main_watch"];
+  expect(deriveGamification(db, "hanoi", now()).xp).toBe(0);
+  db.progress.hanoi.completed.push(
+    "course_caro_main_practice",
+    "course_caro_main_practice",
+  );
+  expect(deriveGamification(db, "hanoi", now()).xp).toBe(20);
+});
 const at = (daysAgo = 0) => new Date(2026, 8, 25 - daysAgo, 12).toISOString();
 const attempt = (id: string, daysAgo = 0, itemId = puzzles[0].id): Attempt => ({
   id,

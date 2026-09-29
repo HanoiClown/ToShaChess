@@ -45,13 +45,23 @@ test("real offline analysis, navigation and a portable backup preserve both prof
       page.getByText("Ходы и объяснения", { exact: true }),
     ).toBeVisible();
     await page.getByRole("button", { name: "В конец", exact: true }).click();
+    await expect(page.locator(".coach-card")).toContainText("Qh4#");
+    await expect(page.locator(".accuracy-summary")).toContainText("Точность");
+    await expect(page.locator(".move-quality-mark")).toHaveCount(1);
     await expect(page.locator(".coach-text")).toContainText("Qh4#");
     const backup = join(dir, "backup.json");
     await app.evaluate(({ dialog }, path) => {
       dialog.showSaveDialog = async () => ({ canceled: false, filePath: path });
     }, backup);
     await page.evaluate(() => window.chessApp.exportBackup());
-    const parsed = JSON.parse(readFileSync(backup, "utf8"));
+    const envelope = JSON.parse(readFileSync(backup, "utf8"));
+    expect(envelope).toMatchObject({
+      format: "toshachess-backup",
+      version: 2,
+      studies: [],
+      training: [],
+    });
+    const parsed = envelope.database;
     expect(parsed.profiles).toHaveLength(2);
     expect(parsed.games[0].analysis).toHaveLength(4);
     expect(parsed).not.toHaveProperty("apiKey");

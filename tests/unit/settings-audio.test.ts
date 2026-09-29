@@ -12,6 +12,7 @@ describe("portable volume preferences", () => {
     };
     old.settings = { sound: false, budget: 2000000, engineMs: 800 };
     expect(validateDatabase(old).settings).toEqual({
+      botQuips: true,
       sound: false,
       volume: 65,
       budget: 2000000,

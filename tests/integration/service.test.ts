@@ -6,6 +6,40 @@ import { join } from "node:path";
 import { AppService } from "../../electron/service";
 import { Store } from "../../electron/storage/store";
 import { parseGames } from "../../src/chess/game";
+it("scoped cancellation cannot cancel a newer request and profile switch rejects old answers", async () => {
+  const service = new AppService(
+    profileStore(mkdtempSync(join(tmpdir(), "chess-scoped-"))),
+    "unused",
+    () => {},
+  );
+  service.selectProfile("hanoi");
+  const pending: { resolve: (v: any) => void; signal: AbortSignal }[] = [];
+  vi.spyOn((service as any).interactive, "analyze").mockImplementation(
+    (...args: any[]) =>
+      new Promise((resolve) => pending.push({ resolve, signal: args[3] })),
+  );
+  const position = {
+    initialFen: new (await import("chess.js")).Chess().fen(),
+    moves: [],
+  };
+  const first = service
+    .analyzePosition({ requestId: "old", position })
+    .catch((e) => e.message);
+  service.selectProfile("sister");
+  const second = service.analyzePosition({ requestId: "new", position });
+  service.cancelRequest("old");
+  expect(pending[1].signal.aborted).toBe(false);
+  pending[0].resolve([]);
+  expect(await first).toBe("Cancelled");
+  pending[1].resolve([
+    { score: { cp: 0, mate: null }, pv: ["e2e4"], depth: 10 },
+  ]);
+  expect((await second)[0].pv).toEqual(["e2e4"]);
+  await expect(
+    service.analyzePosition({ requestId: "bad id!", position }),
+  ).rejects.toThrow();
+  service.dispose();
+});
 it("replaces aborted analysis without an old completion removing the new job", async () => {
   const service = new AppService(
     profileStore(mkdtempSync(join(tmpdir(), "chess-job-"))),
@@ -32,6 +66,20 @@ it("replaces aborted analysis without an old completion removing the new job", a
   complete[1]();
   await new Promise((resolve) => setTimeout(resolve, 0));
   expect(service.jobs.has(g.id)).toBe(false);
+  service.dispose();
+});
+it("editor activity is recorded for the active profile", () => {
+  const service = new AppService(
+    profileStore(mkdtempSync(join(tmpdir(), "chess-editor-"))),
+    "unused",
+    () => {},
+  );
+  service.selectProfile("hanoi");
+  expect(() => service.recordActivity("hanoi", "editor", 30)).not.toThrow();
+  expect(service.store.data.progress.hanoi.activity.at(-1)).toMatchObject({
+    section: "editor",
+    seconds: 30,
+  });
   service.dispose();
 });
 it("profile switching rejects stale saves and keeps games separate", () => {

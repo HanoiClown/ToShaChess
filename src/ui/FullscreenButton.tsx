@@ -11,6 +11,16 @@ export function FullscreenButton({
 }) {
   const [enabled, setEnabled] = useState(false);
   useEffect(() => {
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || event.defaultPrevented || !enabled || event.repeat) return;
+      if (document.querySelector("dialog[open], :popover-open, select:open")) return;
+      event.preventDefault();
+      void window.chessApp.toggleFullscreen().catch(onError);
+    };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, [enabled]);
+  useEffect(() => {
     let alive = true;
     let receivedEvent = false;
     const update = (value: boolean) => {

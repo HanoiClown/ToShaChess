@@ -1,0 +1,134 @@
+.course-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--line);
+}
+.course-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 22px 12px;
+  text-align: left;
+}
+.course-row > svg {
+  flex-shrink: 0;
+  color: var(--green);
+}
+.course-row > span {
+  flex: 1;
+}
+.course-row strong {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+.course-row span > span {
+  display: block;
+  max-width: 70ch;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.course-row small {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.course-chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  max-height: calc(100dvh - 170px);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.course-layout .review-controls {
+  margin: 0 0 12px;
+  min-height: 44px;
+}
+.course-chapters .coach-card {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.course-chapters .coach-bubble {
+  background: var(--bg);
+}
+.course-chapters h2,
+.course-chapters p {
+  margin: 0;
+}
+.course-chapters nav {
+  display: flex;
+  flex-direction: column;
+}
+.course-chapters nav button {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  text-align: left;
+  padding: 13px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.course-chapters nav button[aria-current="step"] {
+  background: var(--green-dark);
+  color: var(--green);
+}
+.course-chapters nav small {
+  color: var(--muted);
+}
+.course-ply {
+  font-variant-numeric: tabular-nums;
+}
+.course-layout {
+  align-items: start;
+}
+.course-chapters > label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.study-course-return {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.study-course-return p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 14px;
+}
+.course-model-games button {
+  display: block;
+  margin-top: 10px;
+  width: 100%;
+  text-align: left;
+}
+@media (max-width: 950px) {
+  .course-chapters {
+    max-height: none;
+  }
+}
+@media (max-width: 800px) {
+  .course-row {
+    gap: 12px;
+    padding: 16px 0;
+  }
+  .course-row small {
+    display: none;
+  }
+  .course-row strong {
+    font-size: 18px;
+  }
+}

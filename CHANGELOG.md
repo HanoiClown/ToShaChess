@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.5.2 — Panel spacing
+
+- Separate human/engine comparison and advanced tools in Review and Studies, with consistent spacing before the board and accuracy summary.
+- Preserve the same layout in all four themes, narrow windows and expanded panels.
+
+## 1.5.1 — Screenshot positions
+
+- Import PNG/JPG/WebP chess diagrams in the position editor by file, drop or paste. Recognition runs entirely offline with a bundled model and WASM runtime.
+- Detect the board automatically or crop manually, review uncertain squares, correct pieces and choose image orientation and the side to move. Unknown move history is never inferred as castling or en passant rights.
+- Reconstruct an ordinary last move or capture, compare both positions with Stockfish, explore before/after and save alternatives as a study. Special moves require manual setup.
+- Start editor practice games from the currently explored continuation.
+
+## 1.5.0 — Community training
+
+- Rebuild eight courses into 48 distinct chapters with original RU/EN move explanations, 48 error/defence episodes, three opposing replies per course and 16 real illustrative games. Preserve existing chapter IDs and progress.
+- Add personal studies with branching move trees, comments, PGN variations and reusable positions; retain separate profile ownership.
+- Add interval review and recall, defence, Maia prediction, play-out and hand-and-brain practice.
+- Add optional Maia-3 5M/23M/79M local CPU models with a portable runtime, pinned downloads, verification and cancellation. Human-move predictions remain distinct from Stockfish evaluation.
+- Add optional Lc0/custom UCI analysis, Syzygy 3–5-piece outcomes and local opening-index statistics with explicit sample coverage.
+- Ground coaching explanations in legal analysis; document cloud budget/privacy limits and preserve offline coaching.
+- Add training, authoring, engine and optional-tool guides, benchmark evidence and upstream license notices. Public exports exclude personal data, installed runtimes, model weights and indexes.
+
+## 1.4.0 — Training upgrade
+
+- Keep course navigation above the board, move changing explanations below the chapter controls, add panel padding and center responsive move-quality badges.
+
+- Add 12 bots with approximate Elo, styles, original portraits and optional local dialogue; keep coaching analysis at full strength.
+- Add coach move cards, board quality badges, side-by-side accuracy and remaining/captured material.
+- Add legal-move right-click arrows with L-shaped knight paths and square marks, cleared on moves, orientation changes, left click or Escape.
+- Add a validated position editor with FEN, analysis, exploration and games from custom starts; retain session drafts per profile.
+- Show incorrect puzzle moves, reduced-motion-aware red feedback and an optional engine refutation before retrying.
+- Add eight continuous opening courses with 32 chapters, autoplay, branches, practice and next-lesson navigation.
+- Start fullscreen; preserve RU/EN, all four themes, old profiles and existing offline packs.
+
 ## 1.3.3
 
 - Styled every native dropdown with the active green, purple, blue or red palette, selected-item markers, keyboard focus and bounded scrolling.

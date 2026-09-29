@@ -22,8 +22,10 @@ import {
   type Opening,
 } from "../library/openings";
 import { pvSan } from "../analysis/evaluate";
+import { CourseLibrary } from "./CoursePlayer";
 export function Openings() {
-  const { locale, l, nav, snapshot, profile } = useApp();
+  const [catalogue, setCatalogue] = useState<"courses" | "atlas">("courses");
+  const { locale, l, nav, snapshot, profile, playFrom } = useApp();
   const [query, setQuery] = useState(""),
     [group, setGroup] = useState("all"),
     [level, setLevel] = useState("all"),
@@ -56,6 +58,8 @@ export function Openings() {
   );
   const pages = Math.max(1, Math.ceil(filtered.length / 18)),
     p = Math.min(page, pages - 1);
+  if (catalogue === "courses")
+    return <CourseLibrary onAtlas={() => setCatalogue("atlas")} onPlayFrom={playFrom} />;
   if (selected)
     return (
       <OpeningPlayer
@@ -66,6 +70,9 @@ export function Openings() {
     );
   return (
     <>
+      <button className="secondary" onClick={() => setCatalogue("courses")}>
+        {l("Полные курсы", "Complete courses")}
+      </button>
       <button className="back-button" onClick={() => nav("learn")}>
         <ArrowLeft size={17} />
         {l("К урокам", "Back to lessons")}

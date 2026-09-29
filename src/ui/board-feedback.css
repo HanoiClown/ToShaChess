@@ -1,0 +1,60 @@
+.user-annotations {
+  color: #ef9a32;
+  opacity: 0.88;
+}
+.move-quality-mark {
+  position: absolute;
+  right: 4%;
+  top: 4%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 32%;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 1;
+  background: var(--green);
+  color: #142009;
+  pointer-events: none;
+}
+.move-quality-mark > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.move-quality-mark.blunder,
+.move-quality-mark.mistake {
+  background: #c82f29;
+  color: white;
+}
+.move-quality-mark.inaccuracy {
+  background: #edba49;
+  color: #2a2010;
+}
+.move-quality-mark.brilliant {
+  background: #36b6af;
+  color: #062b28;
+}
+.puzzle-wrong .board-frame {
+  outline: 3px solid #e95e59;
+  outline-offset: 4px;
+  animation: board-reject 260ms ease-out;
+}
+@keyframes board-reject {
+  25% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(4px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-wrong .board-frame {
+    animation: none;
+  }
+}

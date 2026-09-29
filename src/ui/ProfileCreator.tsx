@@ -3,6 +3,7 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 import type { Locale, SkillLevel, Snapshot } from "../shared/contracts";
 import { choose } from "../i18n";
 import { errorText } from "./context";
+import { LearningPreferences, defaultLearning } from "./LearningPreferences";
 
 export function ProfileCreator({
   locale,
@@ -20,6 +21,7 @@ export function ProfileCreator({
   const [rating, setRating] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [learning,setLearning]=useState(defaultLearning);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (saving) return;
@@ -40,6 +42,7 @@ export function ProfileCreator({
         name: name.trim(),
         nickname: cleanNickname,
         skillLevel,
+        learning,
         locale,
         ...(rating === "" ? {} : { rating: Number(rating) }),
       });
@@ -152,6 +155,7 @@ export function ProfileCreator({
               "Start with tactics, openings and practice. You can change your level later.",
             )}
       </p>
+      <details><summary>{l("План занятий · можно настроить позже", "Practice plan · you can change this later")}</summary><LearningPreferences value={learning} onChange={setLearning} locale={locale}/></details>
       {error && (
         <p className="profile-form-error" role="alert">
           {error}

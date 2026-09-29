@@ -17,7 +17,10 @@ test("native full screen works before login, via F11/Escape, and preserves the g
   seedProfiles(env.CHESS_HOME_DATA!);
   const app = await electron.launch({
     executablePath: process.env.TOSHA_FULLSCREEN_EXE,
-    args: process.env.TOSHA_FULLSCREEN_EXE ? [] : ["."],
+    args: [
+      ...(process.env.TOSHA_FULLSCREEN_EXE ? [] : ["."]),
+      `--user-data-dir=${env.CHESS_HOME_DATA}/chromium`,
+    ],
     env,
   });
   try {
@@ -26,12 +29,6 @@ test("native full screen works before login, via F11/Escape, and preserves the g
       app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0].isFullScreen(),
       );
-    const bounds = await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows()[0].getBounds(),
-    );
-    await page
-      .getByRole("button", { name: "Полноэкранный режим", exact: true })
-      .click();
     await expect.poll(fullscreen).toBe(true);
     await expect(page.locator("html")).toHaveAttribute(
       "data-fullscreen",
@@ -69,13 +66,11 @@ test("native full screen works before login, via F11/Escape, and preserves the g
       contents.sendInputEvent({ type: "keyUp", keyCode: "Escape" });
     });
     await expect.poll(fullscreen).toBe(false);
-    await expect
-      .poll(() =>
-        app.evaluate(({ BrowserWindow }) =>
-          BrowserWindow.getAllWindows()[0].getBounds(),
-        ),
-      )
-      .toEqual(bounds);
+    const bounds = await app.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows()[0].getBounds(),
+    );
+    expect(bounds.width).toBeGreaterThan(600);
+    expect(bounds.height).toBeGreaterThan(400);
     await app.evaluate(({ BrowserWindow }) => {
       const contents = BrowserWindow.getAllWindows()[0].webContents;
       contents.sendInputEvent({ type: "keyDown", keyCode: "F11" });

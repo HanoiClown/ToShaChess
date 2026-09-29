@@ -132,7 +132,10 @@ test("opening atlas filters gambits and saves a completed short line", async () 
     await page.locator(".profile-choice").first().click();
     await page.getByRole("button", { name: "Обучение", exact: true }).click();
     await page
-      .getByRole("button", { name: "Открыть атлас", exact: true })
+      .getByRole("button", { name: "Открыть курсы", exact: true })
+      .click();
+    await page
+      .getByRole("button", { name: "Справочник: 3 815 вариантов", exact: true })
       .click();
     await page.getByLabel("Только гамбиты").check();
     await page

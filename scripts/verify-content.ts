@@ -3,6 +3,10 @@ import { lessons } from "../src/content/lessons";
 import { puzzles } from "../src/content/puzzles";
 import { playUci } from "../src/chess/game";
 import { openings } from "../src/library/openings";
+import { courses } from "../src/content/courses";
+import { validateCourses } from "../src/library/courses";
+validateCourses(courses);
+console.log(`Verified ${courses.length} complete courses and their branches.`);
 let chapters = 0;
 for (const l of lessons) {
   for (const ch of l.chapters) {

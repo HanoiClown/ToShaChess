@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { Snapshot, Profile, Locale } from "../shared/contracts";
+import type { Snapshot, Profile, Locale, Position } from "../shared/contracts";
 import { choose, translate, type TranslationKey } from "../i18n";
 export type Route =
   | "today"
@@ -12,7 +12,11 @@ export type Route =
   | "vision"
   | "openings"
   | "endgames"
-  | "database";
+  | "database"
+  | "editor"
+  | "studies"
+  | "training";
+// Studies and drills share the user's profile, but keep their own documents.
 type Context = {
   snapshot: Snapshot;
   profile: Profile;
@@ -21,6 +25,7 @@ type Context = {
   refresh: () => Promise<void>;
   fail: (e: unknown) => void;
   reviewId: string | null;
+  playFrom: (position: Position, providerId?: "stockfish" | "maia") => void;
 };
 export const AppContext = createContext<Context | null>(null);
 export function useApp() {
@@ -38,6 +43,11 @@ export function errorText(error: unknown, locale: Locale) {
     "",
   );
   const messages: Record<string, [string, string]> = {
+    maia_pack_missing: ["Сначала установи Maia в настройках → Движки и модели.", "Install Maia in Settings → Engines & models first."],
+    maia_rating_range: ["Для Maia выбери целый уровень от 600 до 2600 по шкале Lichess.", "Choose an integer Maia level from 600 to 2600 on the Lichess scale."],
+    pack_busy: ["Дождись окончания установки или отмени её.", "Wait for the installation to finish or cancel it."],
+    insufficient_disk_space: ["Недостаточно свободного места для пакета и временных файлов. Освободи место и повтори.", "Not enough free space for the pack and temporary files. Free some space and retry."],
+    download_checksum_mismatch: ["Проверка загрузки не прошла. Повтори установку: повреждённый файл будет загружен заново.", "Download verification failed. Retry the installation to download the damaged file again."],
     nickname_taken: [
       "Этот ник уже используется. Выбери другой.",
       "This nickname is already in use. Choose another.",

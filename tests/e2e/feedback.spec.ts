@@ -4,10 +4,95 @@ import {
   _electron as electron,
   type Page,
 } from "@playwright/test";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { seedProfiles } from "../helpers/profile-fixtures";
+import { Chess } from "chess.js";
+
+test("a legal puzzle mistake animates, shows a refutation and counts only once", async () => {
+  const all = JSON.parse(
+    readFileSync("src/content/library-puzzles.json", "utf8"),
+  ) as { id: string; fen: string; line: string[]; themes: string[] }[];
+  const item = all.find(
+    (p) =>
+      p.line.length === 1 &&
+      p.themes.includes("mateIn1") &&
+      new Chess(p.fen)
+        .moves({ verbose: true })
+        .some(
+          (m) =>
+            !m.captured &&
+            !m.promotion &&
+            !m.san.includes("+") &&
+            !m.san.includes("#"),
+        ),
+  )!;
+  const wrong = new Chess(item.fen)
+    .moves({ verbose: true })
+    .find(
+      (m) =>
+        !m.captured &&
+        !m.promotion &&
+        !m.san.includes("+") &&
+        !m.san.includes("#"),
+    )!;
+  const app = await launch();
+  try {
+    const page = await app.firstWindow();
+    await page.locator(".profile-choice").first().click();
+    await page.getByRole("button", { name: "Задачи", exact: true }).click();
+    await page.getByPlaceholder("Найти задачу по ID").fill(item.id);
+    await page.locator(".library-row").click();
+    await observeFeedback(page);
+    await move(page, wrong.from + wrong.to);
+    await expect(page.locator(".puzzle-wrong")).toBeVisible();
+    expect(
+      await page.evaluate(() => (window as any).__feedback.moves),
+    ).toContain(wrong.to);
+    await expect(page.locator(".coach-card")).toContainText("→");
+    if (process.env.TOSHA_CAPTURE) {
+      mkdirSync(".impeccable/review/upgrade", { recursive: true });
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.setViewportSize({ width: 1366, height: 900 });
+      for (const theme of ["green", "purple", "blue", "red"] as const) {
+        await page.evaluate(async (theme) => {
+          const s = await window.chessApp.snapshot();
+          await window.chessApp.updateProfile({
+            ...s.database.profiles.find((x) => x.id === s.activeProfile)!,
+            theme,
+          });
+        }, theme);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await page.locator(".workspace").evaluate((e) => e.scrollTo(0, 0));
+        await page.screenshot({
+          path: `.impeccable/review/upgrade/${theme}-puzzle-error.png`,
+        });
+      }
+    }
+    await page
+      .getByRole("button", { name: "Посмотреть ответ", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Попробовать снова", exact: true }),
+    ).toBeEnabled();
+    await page
+      .getByRole("button", { name: "Попробовать снова", exact: true })
+      .click();
+    await expect(page.locator(".puzzle-wrong")).toHaveCount(0);
+    await expect(
+      page.locator(`.chessboard:visible [data-square="${wrong.from}"] img`),
+    ).toHaveCount(1);
+    const state = await page.evaluate(() => window.chessApp.snapshot());
+    expect(
+      state.database.progress.hanoi.attempts.filter(
+        (a) => a.itemId === item.id && !a.correct,
+      ),
+    ).toHaveLength(1);
+  } finally {
+    await app.close();
+  }
+});
 
 const puzzles = JSON.parse(
   readFileSync("src/content/library-puzzles.json", "utf8"),
@@ -59,8 +144,12 @@ async function move(page: Page, uci: string) {
     "aria-disabled",
     "false",
   );
-  await page.locator(`.chessboard:visible [data-square="${uci.slice(0, 2)}"]`).click();
-  await page.locator(`.chessboard:visible [data-square="${uci.slice(2, 4)}"]`).click();
+  await page
+    .locator(`.chessboard:visible [data-square="${uci.slice(0, 2)}"]`)
+    .click();
+  await page
+    .locator(`.chessboard:visible [data-square="${uci.slice(2, 4)}"]`)
+    .click();
 }
 
 test("puzzle hint reveals only the piece; player and opponent moves animate and sound separately", async () => {
@@ -79,7 +168,9 @@ test("puzzle hint reveals only the piece; player and opponent moves animate and 
     await expect(page.locator(".board-arrows")).toHaveCount(0);
     await expect(page.locator(".move-dot, .capture-ring")).toHaveCount(0);
     await expect(
-      page.locator(`.chessboard:visible [data-square="${puzzle.line[0].slice(0, 2)}"]`),
+      page.locator(
+        `.chessboard:visible [data-square="${puzzle.line[0].slice(0, 2)}"]`,
+      ),
     ).toHaveAttribute("data-hint", "true");
     await move(page, puzzle.line[0]);
     await expect(page.locator(".chessboard:visible")).toHaveAttribute(

@@ -24,7 +24,7 @@ import {
   Upload,
   Database,
 } from "lucide-react";
-import type { Snapshot, Locale } from "../shared/contracts";
+import type { Snapshot, Locale, Position } from "../shared/contracts";
 import { AppContext, errorText, type Route } from "./context";
 import { translate, choose } from "../i18n";
 import { Today } from "../screens/Today";
@@ -39,6 +39,11 @@ import { SettingsScreen } from "../screens/Settings";
 import { Vision } from "../screens/Vision";
 import { ProfileCreator } from "./ProfileCreator";
 import { FullscreenButton } from "./FullscreenButton";
+import { PositionEditor, clearEditorDrafts } from "../screens/PositionEditor";
+import { LayoutGrid } from "lucide-react";
+import { Studies } from "../screens/Studies";
+import { Training } from "../screens/Training";
+import { PlayFromDialog } from "./PlayFromDialog";
 import { configureSound, disposeSound, unlockSound } from "../audio/sounds";
 const Openings = lazy(() =>
   import("../screens/Openings").then((m) => ({ default: m.Openings })),
@@ -55,8 +60,16 @@ const routes: { id: Route; icon: typeof Home }[] = [
   { id: "vision", icon: Eye },
   { id: "database", icon: Database },
   { id: "history", icon: History },
+  { id: "editor", icon: LayoutGrid },
+  { id: "studies", icon: BookOpen },
+  { id: "training", icon: Target },
 ];
 export default function App() {
+  const [practicePosition, setPracticePosition] = useState<{
+    position: Position;
+    providerId?: "stockfish" | "maia";
+  } | null>(null);
+  const [playLaunch, setPlayLaunch] = useState("");
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null),
     [route, setRoute] = useState<Route>("today"),
     [reviewId, setReviewId] = useState<string | null>(null),
@@ -96,6 +109,10 @@ export default function App() {
     locale = profile?.locale ?? entryLocale,
     l = (ru: string, en: string) => choose(locale, ru, en);
   const routeRef = useRef(route);
+  useEffect(() => {
+    setPlayLaunch("");
+    clearEditorDrafts();
+  }, [profile?.id]);
   useEffect(() => {
     document.documentElement.dataset.theme = profile?.theme ?? "green";
   }, [profile?.id, profile?.theme]);
@@ -138,16 +155,36 @@ export default function App() {
   const fail = (e: unknown) => {
     if (!String(e).includes("Cancelled")) setError(errorText(e, locale));
   };
+  useEffect(
+    () =>
+      window.chessApp?.onBeforeClose(async () => {
+        try {
+          await flushPendingChanges();
+          return true;
+        } catch (error) {
+          fail(error);
+          return false;
+        }
+      }),
+    [locale],
+  );
   const nav = (next: Route, id?: string) => {
-    if (id) setReviewId(id);
-    setRoute(next);
+    void (async () => {
+      if (route === "studies") await flushPendingChanges();
+      if (next === "play" && id) setPlayLaunch(id);
+      if (id) setReviewId(id);
+      setRoute(next);
+    })().catch(fail);
   };
-  async function switchProfile() {
+  async function flushPendingChanges() {
     const pending: Promise<unknown>[] = [];
     window.dispatchEvent(
       new CustomEvent("chess-before-switch", { detail: pending }),
     );
     await Promise.all(pending);
+  }
+  async function switchProfile() {
+    await flushPendingChanges();
     await window.chessApp.selectProfile(null);
     setRoute("today");
     setReviewId(null);
@@ -336,7 +373,17 @@ export default function App() {
     );
   return (
     <AppContext.Provider
-      value={{ snapshot, profile, locale, nav, refresh, fail, reviewId }}
+      value={{
+        snapshot,
+        profile,
+        locale,
+        nav,
+        refresh,
+        fail,
+        reviewId,
+        playFrom: (position, providerId) =>
+          setPracticePosition({ position, providerId }),
+      }}
     >
       <div className="app-shell">
         <aside className="sidebar">
@@ -426,9 +473,16 @@ export default function App() {
           <main className="main-content">
             {route === "today" && <Today />}
             <div style={{ display: route === "play" ? "block" : "none" }}>
-              <Play key={profile.id} />
+              <Play
+                key={profile.id + playLaunch}
+                active={route === "play"}
+                gameId={playLaunch}
+              />
             </div>
             {route === "review" && <Review />}
+            {route === "editor" && <PositionEditor key={profile.id} />}
+            {route === "studies" && <Studies key={profile.id} />}
+            {route === "training" && <Training key={profile.id} />}
             {route === "learn" && <Learn />}
             <Suspense
               fallback={
@@ -448,6 +502,12 @@ export default function App() {
           </main>
         </div>
       </div>
+      {practicePosition && (
+        <PlayFromDialog
+          {...practicePosition}
+          onClose={() => setPracticePosition(null)}
+        />
+      )}
     </AppContext.Provider>
   );
 }

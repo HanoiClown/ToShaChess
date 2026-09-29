@@ -3,27 +3,66 @@ import { existsSync, mkdtempSync, cpSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname, relative, sep } from "node:path";
 import { seedLibrary } from "../tests/helpers/library-fixture.ts";
+import { tsImport } from "tsx/esm/api";
+const { createStudy, addStudyMove, selectStudyNode } = await tsImport(
+  "../src/study/tree.ts",
+  import.meta.url,
+);
+const { cardFromStudy } = await tsImport(
+  "../src/training/cards.ts",
+  import.meta.url,
+);
 const exe = resolve(process.argv[2] ?? "release/win-unpacked/ToShaChess.exe");
 if (!existsSync(exe)) throw Error("Package the app first");
 const env = { ...process.env };
 delete env.ELECTRON_RUN_AS_NODE;
 delete env.CHESS_HOME_DATA;
 delete env.TOSHACHESS_LIBRARY;
+delete env.TOSHACHESS_ENGINES;
 const temp = mkdtempSync(join(tmpdir(), "Chess Home перенос ")),
   folder = join(temp, "Chess Home");
 cpSync(dirname(exe), folder, {
   recursive: true,
   // Never copy a user's potentially huge external pack into this smoke run.
   filter: (source) =>
-    relative(dirname(exe), source).split(sep)[0] !== "library-packs",
+    !["library-packs", "engine-packs", "data"].includes(
+      relative(dirname(exe), source).split(sep)[0],
+    ),
 });
 const libraryFolder = join(folder, "library-packs");
-const launch = () =>
-  electron.launch({
+const sourcePacks = process.argv[3] ? resolve(process.argv[3]) : null;
+if (sourcePacks) {
+  for (const entry of ["maia-cpu", "maia-cpu.json"])
+    cpSync(join(sourcePacks, entry), join(folder, "engine-packs", entry), {
+      recursive: true,
+      filter: (source) =>
+        !["maia3-23m.pt", "maia3-79m.pt", "__pycache__"].includes(
+          source.split(/[\\/]/).at(-1),
+        ),
+    });
+}
+const launch = async () => {
+  const instance = await electron.launch({
     executablePath: join(folder, "ToShaChess.exe"),
     args: [],
     env,
   });
+  await instance.evaluate(({ session }) => {
+    globalThis.__offlineRequests = 0;
+    globalThis.fetch = async () => {
+      globalThis.__offlineRequests++;
+      throw Error("Offline smoke test");
+    };
+    session.defaultSession.webRequest.onBeforeRequest(
+      { urls: ["http://*/*", "https://*/*"] },
+      (_details, callback) => {
+        globalThis.__offlineRequests++;
+        callback({ cancel: true });
+      },
+    );
+  });
+  return instance;
+};
 let app = await launch();
 try {
   expect(
@@ -46,7 +85,7 @@ try {
 }
 seedLibrary(libraryFolder);
 app = await launch();
-let primaryId, secondaryId;
+let primaryId, secondaryId, studyId, cardId;
 try {
   const page = await app.firstWindow();
   const library = await page.evaluate(async () => ({
@@ -118,6 +157,39 @@ try {
   expect(primaryId).toBeTruthy();
   expect(secondaryId).toBeTruthy();
   expect(primaryId).not.toBe(secondaryId);
+  let study = createStudy({ profileId: primaryId, title: "Portable branches" });
+  study = addStudyMove(study, study.rootId, "e2e4");
+  study = addStudyMove(study, study.rootId, "d2d4");
+  study = selectStudyNode(study, study.rootId);
+  const card = cardFromStudy(study);
+  studyId = study.id;
+  cardId = card.id;
+  await page.evaluate(
+    async ({ study, card }) => {
+      await window.chessApp.saveStudy(study);
+      await window.chessApp.saveTrainingCard(card);
+    },
+    { study, card },
+  );
+  if (sourcePacks) {
+    const prediction = await page.evaluate(async () =>
+      window.chessApp.predictHuman({
+        requestId: "portable-maia",
+        position: {
+          initialFen:
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          moves: [],
+        },
+        pack: "maia-cpu",
+        selfElo: 1100,
+        opponentElo: 1100,
+      }),
+    );
+    expect(prediction.candidates.length).toBe(20);
+    expect(
+      prediction.candidates.reduce((n, m) => n + m.probability, 0),
+    ).toBeCloseTo(1, 5);
+  }
   await expect(
     page.getByRole("heading", { name: "Твой следующий ход" }),
   ).toBeVisible();
@@ -205,6 +277,10 @@ try {
     )
     .toBe(secondaryId);
   const switched = await page.evaluate(() => window.chessApp.snapshot());
+  expect(await page.evaluate(() => window.chessApp.listStudies())).toEqual([]);
+  expect(
+    await page.evaluate(() => window.chessApp.listTrainingCards()),
+  ).toEqual([]);
   expect(switched.database.profiles).toHaveLength(2);
   expect(switched.database.progress[secondaryId].vision).toHaveLength(0);
   expect(
@@ -218,6 +294,29 @@ try {
       locale: "en",
     });
   }, secondaryId);
+  const backupPath = join(temp, "profile-backup.json");
+  await app.evaluate(({ dialog }, path) => {
+    dialog.showSaveDialog = async () => ({ canceled: false, filePath: path });
+    dialog.showOpenDialog = async () => ({
+      canceled: false,
+      filePaths: [path],
+    });
+  }, backupPath);
+  expect(await page.evaluate(() => window.chessApp.exportBackup())).toBe(true);
+  const backup = JSON.parse(readFileSync(backupPath, "utf8"));
+  expect(backup.version).toBe(2);
+  expect(backup.studies).toHaveLength(1);
+  expect(backup.training).toHaveLength(1);
+  expect(backup).not.toHaveProperty("apiKey");
+  await page.evaluate(async (id) => {
+    await window.chessApp.selectProfile(id);
+    for (const s of await window.chessApp.listStudies())
+      await window.chessApp.deleteStudy(s.id);
+    for (const c of await window.chessApp.listTrainingCards())
+      await window.chessApp.deleteTrainingCard(c.id);
+    await window.chessApp.importBackup();
+  }, primaryId);
+  expect(await app.evaluate(() => globalThis.__offlineRequests)).toBe(0);
 } finally {
   await app.close();
 }
@@ -226,6 +325,15 @@ try {
   const page = await app.firstWindow();
   await page.waitForSelector(".profile-choice");
   const s = await page.evaluate(() => window.chessApp.snapshot());
+  await page.evaluate((id) => window.chessApp.selectProfile(id), primaryId);
+  expect(
+    (await page.evaluate(() => window.chessApp.listStudies())).map((s) => s.id),
+  ).toEqual([studyId]);
+  expect(
+    (await page.evaluate(() => window.chessApp.listTrainingCards())).map(
+      (c) => c.id,
+    ),
+  ).toEqual([cardId]);
   expect(s.database.profiles).toHaveLength(2);
   expect(s.database.profiles.map((profile) => profile.id).sort()).toEqual(
     [primaryId, secondaryId].sort(),
@@ -261,6 +369,11 @@ try {
       restart: "both profiles preserved",
       data: "beside exe",
       apiCalls: 0,
+      studyAndTraining:
+        "branches and review card restored from v2 backup, survived restart, isolated by profile",
+      maia: sourcePacks
+        ? "relocated CPU runtime and model, no system Python or network"
+        : "not installed",
     }),
   );
 } finally {

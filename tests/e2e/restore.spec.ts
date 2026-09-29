@@ -21,7 +21,9 @@ test("restoring a newer timed game unmounts the stale live board", async () => {
       .getByRole("button", { name: "Играть", exact: true })
       .first()
       .click();
-    await page.locator(".game-setup select").nth(2).selectOption("10");
+    await page
+      .getByLabel("Контроль времени", { exact: true })
+      .selectOption("10");
     await page
       .getByRole("button", { name: "Начать партию", exact: true })
       .click();

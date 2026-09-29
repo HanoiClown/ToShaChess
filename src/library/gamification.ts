@@ -3,6 +3,8 @@ import authoredPuzzles from "../content/puzzles.json";
 import { lessons } from "../content/lessons";
 import { openings } from "./openings";
 import { localDay } from "./daily";
+import { courses } from "../content/courses";
+import { courseProgressKey } from "./courses";
 
 // Only the small authored catalogue belongs in the initial dashboard bundle.
 // The remaining puzzle library is loaded when the puzzle screen opens.
@@ -22,7 +24,12 @@ const puzzleIds = new Set([
 const knownPuzzle = (id: string) =>
   puzzleIds.has(id) || /^lichess_[A-Za-z0-9]{5}$/.test(id);
 const lessonIds = new Set(lessons.map((item) => item.id));
-const openingIds = new Set(openings.map((item) => item.id));
+const openingIds = new Set([
+  ...openings.map((item) => item.id),
+  ...courses.flatMap((c) =>
+    c.chapters.map((ch) => courseProgressKey(c.id, ch.id, "practice")),
+  ),
+]);
 const practiceSections = new Set([
   "play",
   "review",

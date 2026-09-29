@@ -1,5 +1,29 @@
 # Большая офлайн-библиотека / Large offline library
 
+## Курсы 1.4 / Guided courses 1.4
+
+В приложение встроены 8 курсов (32 главы): гамбит Эванса, шотландский,
+Гёринга, датский, венский, королевский, Морра и защита Каро-Канн.
+Просмотр показывает непрерывную учебную линию с пояснениями; практика
+проверяет ходы выбранной стороны. У основных линий есть ответвления,
+а справа можно перейти к следующему уроку. Просмотр и практика учитываются
+отдельно. Короткие варианты справочника остаются доступны внутри раздела.
+
+These eight bundled courses contain 32 chapters with continuous study lines,
+autoplay, branches and practice. They are introductory guides, not exhaustive
+opening theory or a promise of an advantage against every reply. Their
+authored RU/EN explanations are part of ToShaChess under GPL-3.0-or-later;
+they do not copy paid lessons or videos. All lines are checked for legal moves.
+
+Opening names and families follow the existing CC0 Lichess opening data;
+reference pages include [Evans](https://lichess.org/opening/Italian_Game_Evans_Gambit),
+[Danish](https://lichess.org/opening/Danish_Gambit),
+[Göring](https://lichess.org/opening/Scotch_Game_Goring_Gambit),
+[Vienna](https://lichess.org/opening/Vienna_Game_Vienna_Gambit) and
+[Caro–Kann](https://lichess.org/opening/Caro-Kann_Defense).
+No extra download or API key is needed for these courses, bots or analysis.
+The optional multi-million-position archive below remains a separate pack.
+
 ## Русский
 
 В опорной выгрузке Lichess от 10 сентября 2026 года **6 100 952 задачи**.

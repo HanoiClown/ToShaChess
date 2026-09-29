@@ -22,13 +22,14 @@ export function Today() {
     games = snapshot.database.games
       .filter((g) => g.profileId === profile.id)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const plan = buildPlan(progress, profile.level);
+  const plan = buildPlan(progress, profile.level, profile.learning);
   const completedLessons = lessons.filter((x) =>
     progress.completed.includes(x.id),
   ).length;
   const nextLesson = lessons.find(
       (x) =>
-        x.group === (profile.level === "new" ? "basics" : "openings") &&
+        x.group ===
+          (plan.find((item) => item.section === "learn")?.theme ?? "basics") &&
         !progress.completed.includes(x.id),
     ),
     recent = games[0];
@@ -70,7 +71,10 @@ export function Today() {
         </div>
         <span className="quiet-badge">
           <Clock size={16} />
-          {l("План на 60 минут", "Your 60-minute plan")}
+          {l(
+            `План на ${profile.learning?.minutes ?? 60} минут`,
+            `Your ${profile.learning?.minutes ?? 60}-minute plan`,
+          )}
         </span>
       </div>
       <div className="today-layout">

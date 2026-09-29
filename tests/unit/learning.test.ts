@@ -45,3 +45,11 @@ it("prioritizes due personal mistakes without requiring API or past puzzle attem
     buildPlan(p, "beginner").find((x) => x.section === "puzzles")?.theme,
   ).toBe("king");
 });
+it("allocates the selected duration exactly and gives the selected goal more time",()=>{
+  for(const minutes of [15,30,60] as const){
+    const plan=buildPlan(emptyProgress(),"beginner",{minutes,goal:"tactics",explanation:"detailed"});
+    expect(plan.reduce((sum,p)=>sum+p.minutes,0)).toBe(minutes);
+    expect(plan.every(p=>p.minutes>0)).toBe(true);
+    expect(plan.find(p=>p.section==="puzzles")!.minutes).toBeGreaterThan(plan.find(p=>p.section==="learn")!.minutes);
+  }
+});

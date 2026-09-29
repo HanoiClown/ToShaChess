@@ -15,6 +15,9 @@ import type { Database, SkillLevel } from "../shared/contracts";
 import { playSound, previewSoundSettings } from "../audio/sounds";
 import { saveSettingsPatch } from "../audio/settings";
 import "./settings-audio.css";
+import { EnginePacks } from "../ui/EnginePacks";
+import { AdvancedTools } from "../ui/AdvancedTools";
+import { LearningPreferences, defaultLearning } from "../ui/LearningPreferences";
 export function SettingsScreen() {
   const { snapshot, profile, locale, l, refresh, fail } = useApp();
   const [name, setName] = useState(profile.name),
@@ -29,6 +32,7 @@ export function SettingsScreen() {
     [status, setStatus] = useState(""),
     [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState(snapshot.database.settings);
+  const [learning,setLearning]=useState(profile.learning ?? defaultLearning);
   const settingsRef = useRef(settings),
     pendingWrites = useRef(0),
     volumeDirty = useRef(false),
@@ -112,6 +116,8 @@ export function SettingsScreen() {
         <Settings size={30} />
       </div>
       <div className="settings-layout">
+        <EnginePacks locale={locale} />
+        <AdvancedTools locale={locale} api={window.chessApp.advanced}/>
         <section className="settings-section">
           <div className="section-title">
             <UserRound size={24} />
@@ -126,6 +132,7 @@ export function SettingsScreen() {
                   name: name.trim(),
                   nickname: nickname.trim() || undefined,
                   skillLevel,
+                  learning,
                   rating: rating === "" ? undefined : Number(rating),
                 })
                 .then(refresh)
@@ -207,6 +214,9 @@ export function SettingsScreen() {
               <Save size={17} />
               {l("Сохранить профиль", "Save profile")}
             </button>
+            <h3>{l("План занятий", "Practice plan")}</h3>
+            <LearningPreferences value={learning} onChange={setLearning} locale={locale}/>
+            <p className="field-help">{l("Сохраняется кнопкой «Сохранить профиль».", "Saved with the Save profile button.")}</p>
           </form>
           <fieldset className="theme-picker">
             <legend>{l("Тема приложения", "App theme")}</legend>
@@ -310,6 +320,16 @@ export function SettingsScreen() {
             {l("Звуки игры", "Game sounds")}
           </label>
           <div className="sound-settings">
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={settings.botQuips !== false}
+                onChange={(e) =>
+                  changePreference({ botQuips: e.target.checked })
+                }
+              />
+              {l("Реплики соперников", "Opponent dialogue")}
+            </label>
             <div className="volume-heading">
               <label htmlFor="game-volume">{l("Громкость", "Volume")}</label>
               <output htmlFor="game-volume">{settings.volume}%</output>

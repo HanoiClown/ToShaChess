@@ -13,11 +13,20 @@ import {
   RotateCw,
 } from "lucide-react";
 import { useApp } from "../ui/context";
+import { savePositionStudy } from "../ui/study-actions";
+import { EngineComparison } from "../ui/EngineComparison";
+import { AdvancedTools } from "../ui/AdvancedTools";
+import { reviewPosition } from "../analysis/review-position";
 import { Board, EvalBar } from "../ui/Board";
 import { MoveList, qualitySymbol } from "../ui/MoveList";
 import { boardAt, playUci, moveNames } from "../chess/game";
 import { localAdvice, pvSan, scoreText, themeFor } from "../analysis/evaluate";
 import type { CoachReply, GameRecord } from "../shared/contracts";
+import { CoachCard } from "../ui/CoachCard";
+import { AccuracySummary } from "../ui/AccuracySummary";
+import { MaterialPanel } from "../ui/MaterialPanel";
+import { gameAccuracy } from "../analysis/accuracy";
+import { materialSummary } from "../analysis/material-summary";
 export function Review() {
   const { snapshot, profile, reviewId, nav, locale, l, t, fail } = useApp();
   const games = snapshot.database.games
@@ -31,7 +40,7 @@ export function Review() {
     [reply, setReply] = useState<CoachReply | null>(null),
     [asking, setAsking] = useState(false);
   useEffect(() => {
-    setPly(game?.moves.length ? 1 : 0);
+    setPly(game?.moves.length ? Math.min(game.moves.length,(game.startPly ?? 0)+1) : 0);
     setVariant(null);
     setReply(null);
     setQuestion("");
@@ -87,20 +96,8 @@ export function Review() {
   const a = game.analysis.find((a) => a.ply === ply),
     job = snapshot.analysisJobs.includes(game.id),
     locked = game.mode === "normal" && game.result === "*";
-  const pre = boardAt(game, Math.max(0, ply - 1)),
-    display =
-      variant === null
-        ? boardAt(game, ply)
-        : boardAt(game, Math.max(0, ply - 1));
-  if (variant !== null && a) {
-    for (const u of a.before.pv.slice(0, variant)) {
-      try {
-        playUci(display, u);
-      } catch {
-        break;
-      }
-    }
-  }
+  const displayedPosition=reviewPosition(game,ply,variant), totalToAnalyze=game.moves.length-(game.startPly??0);
+  const pre = boardAt(game, Math.max(0, ply - 1)), display=boardAt(displayedPosition);
   const orientation = flipped
     ? game.playerColor === "w"
       ? "b"
@@ -143,6 +140,7 @@ export function Review() {
           </p>
         </div>
         <div className="heading-actions">
+          <button className="secondary" disabled={locked} onClick={()=>void savePositionStudy(profile.id,displayedPosition,l("Исследование партии","Game study"),`game-${game.id}`).then(s=>nav("studies",s.id)).catch(fail)}>{l("Исследовать позицию","Explore position")}</button>
           <button
             className="icon-button"
             onClick={() => setFlipped(!flipped)}
@@ -164,12 +162,18 @@ export function Review() {
             {job ? <Square size={16} /> : <ChartNoAxesCombined size={18} />}{" "}
             {job
               ? l("Остановить", "Stop")
-              : game.analysis.length === game.moves.length
+                : game.analysis.length === game.moves.length - (game.startPly ?? 0)
                 ? l("Продолжить объяснения", "Continue explanations")
                 : l("Анализировать", "Analyze")}
           </button>
         </div>
       </div>
+      {!locked && (
+        <div className="position-tools">
+          <EngineComparison position={displayedPosition} locale={locale} />
+          <AdvancedTools locale={locale} api={window.chessApp.advanced} position={displayedPosition} />
+        </div>
+      )}
       {locked ? (
         <div className="notice">
           {l(
@@ -183,6 +187,30 @@ export function Review() {
       ) : (
         <div className="game-layout review-layout">
           <section className="board-column">
+            <CoachCard
+              locale={locale}
+              san={
+                ply
+                  ? moveNames(game)[ply - 1]
+                  : l("Начальная позиция", "Starting position")
+              }
+              quality={variant === null ? a?.quality : undefined}
+              score={variant === null ? a?.after.score : undefined}
+              variant={variant !== null}
+              pending={job && !a}
+              text={
+                variant !== null
+                  ? l(
+                      "Сравни это продолжение с ходом в партии.",
+                      "Compare this continuation with the played move.",
+                    )
+                  : text.split("\n").filter(Boolean).slice(1, 2).join(" ") ||
+                    l(
+                      "Выбери ход для объяснения.",
+                      "Select a move to see its explanation.",
+                    )
+              }
+            />
             <div className="review-position-title">
               <span>
                 {variant !== null
@@ -198,11 +226,16 @@ export function Review() {
               </span>
             </div>
             <div className="board-with-eval">
-              <EvalBar score={a?.after.score} orientation={orientation} />
+              <EvalBar
+                locale={locale}
+                score={a?.after.score}
+                orientation={orientation}
+              />
               <Board
                 fen={display.fen()}
                 orientation={orientation}
                 locale={locale}
+                moveQuality={variant === null ? a?.quality : undefined}
                 lastMove={
                   variant === null
                     ? game.moves[ply - 1]
@@ -279,6 +312,11 @@ export function Review() {
               )}
             </div>
             <EvaluationChart game={game} ply={ply} select={setPly} />
+            <MaterialPanel
+              locale={locale}
+              orientation={orientation}
+              summary={materialSummary(displayedPosition)}
+            />
             <div className="chart-caption">
               <span>
                 {l(
@@ -286,14 +324,15 @@ export function Review() {
                   "White’s evaluation · click the graph to navigate",
                 )}
               </span>
-              <strong>{a ? scoreText(a.after.score) : "—"}</strong>
+              <strong>{a ? scoreText(a.after.score, locale) : "—"}</strong>
             </div>
           </section>
           <section className="side-panel review-panel">
+            <AccuracySummary locale={locale} accuracy={gameAccuracy(game)} />
             <div className="panel-title">
               <h2>{l("Ходы и объяснения", "Moves and explanations")}</h2>
               <span>
-                {game.analysis.length}/{game.moves.length}
+                {game.analysis.length}/{totalToAnalyze}
               </span>
             </div>
             {job && (
@@ -301,12 +340,12 @@ export function Review() {
                 <div className="progress-track">
                   <span
                     style={{
-                      width: `${(game.analysis.length / Math.max(1, game.moves.length)) * 100}%`,
+                      width: `${(game.analysis.length / Math.max(1, totalToAnalyze)) * 100}%`,
                     }}
                   />
                 </div>
                 <small>
-                  {game.analysis.length === game.moves.length
+                  {game.analysis.length === totalToAnalyze
                     ? l("Готовим объяснения…", "Preparing explanations…")
                     : l(
                         "Stockfish проверяет позиции…",

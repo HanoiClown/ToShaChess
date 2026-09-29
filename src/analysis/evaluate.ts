@@ -9,9 +9,10 @@ import type {
 } from "../shared/contracts";
 import { boardAt, playUci } from "../chess/game";
 import { translate, choose } from "../i18n";
-export function scoreText(s: Score) {
+export function scoreText(s: Score, locale?: Locale) {
+  if (s.mate === 0) return locale ? choose(locale, "Мат", "Checkmate") : "#";
   return s.mate !== null
-    ? `M${s.mate}`
+    ? `${s.mate < 0 ? "-" : ""}M${Math.abs(s.mate)}`
     : `${s.cp > 0 ? "+" : ""}${(s.cp / 100).toFixed(2)}`;
 }
 export function expectation(s: Score, color: Color) {
@@ -137,8 +138,8 @@ export function localAdvice(
   return [
     `${played} — ${quality}.`,
     l(
-      `Оценка за белых: ${scoreText(a.before.score)} → ${scoreText(a.after.score)}.`,
-      `White's evaluation: ${scoreText(a.before.score)} → ${scoreText(a.after.score)}.`,
+      `Оценка за белых: ${scoreText(a.before.score, "ru")} → ${scoreText(a.after.score, "ru")}.`,
+      `White's evaluation: ${scoreText(a.before.score, "en")} → ${scoreText(a.after.score, "en")}.`,
     ),
     good
       ? l(

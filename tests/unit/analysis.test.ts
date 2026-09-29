@@ -6,6 +6,9 @@ import {
   scoreText,
 } from "../../src/analysis/evaluate";
 import { parseGames } from "../../src/chess/game";
+it("places the minus sign before the mate marker", () => {
+  expect(scoreText({ cp: -100000, mate: -11 })).toBe("-M11");
+});
 it("grades black losses with the correct sign and avoids exaggerating lost positions", () => {
   expect(
     classify({ cp: 70, mate: null }, { cp: 830, mate: null }, "b", false, 20),
@@ -25,7 +28,7 @@ it("grades black losses with the correct sign and avoids exaggerating lost posit
   expect(
     classify({ cp: 0, mate: null }, { cp: -99999, mate: -1 }, "w", false, 20),
   ).toBe("blunder");
-  expect(scoreText({ cp: 0, mate: 0 })).toBe("M0");
+  expect(scoreText({ cp: 0, mate: 0 })).toBe("#");
 });
 it("produces offline explanations in both languages grounded in the played position", () => {
   const [game] = parseGames(

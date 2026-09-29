@@ -14,10 +14,18 @@ import { Board } from "../ui/Board";
 import { playUci } from "../chess/game";
 import { usePlySequence } from "../ui/usePlySequence";
 import { playSound } from "../audio/sounds";
+import { tablebaseLessons } from "../content/tablebase-lessons";
+import { createStudy, addStudyMove, selectStudyNode } from "../study/tree";
 export function Learn() {
   const { profile, locale, l, t, snapshot, fail, refresh, nav } = useApp();
   const [group, setGroup] = useState<Lesson["group"]>(
-      profile.level === "new" ? "basics" : "openings",
+      profile.learning?.goal === "basics"
+        ? "basics"
+        : profile.learning?.goal === "openings"
+          ? "openings"
+          : profile.level === "new"
+            ? "basics"
+            : "openings",
     ),
     [selected, setSelected] = useState<string | null>(null),
     [chapter, setChapter] = useState(0),
@@ -33,6 +41,33 @@ export function Learn() {
     setIndex(0);
     setHint(false);
     setFeedback("");
+  }
+  async function openTableLesson(id: string, alternative = false) {
+    const lesson = tablebaseLessons.find((item) => item.id === id)!;
+    const chosen =
+      alternative && lesson.alternative ? lesson.alternative : lesson;
+    let study = createStudy({
+      profileId: profile.id,
+      title: chosen.title[locale],
+      initialFen: chosen.initialFen,
+      sourceKey: `tablebase-${id}${alternative ? "-alternative" : ""}`,
+    });
+    study.nodes[study.rootId].explanation = {
+      short: lesson.goal,
+      detail: {
+        ru: lesson.hint.ru + "\n\n" + chosen.explanation.ru,
+        en: lesson.hint.en + "\n\n" + chosen.explanation.en,
+      },
+      sources: [
+        { label: "Syzygy · WDL/DTZ", url: "https://syzygy-tables.info/" },
+      ],
+    };
+    if (!alternative)
+      for (const move of lesson.sampleLine)
+        study = addStudyMove(study, study.selectedNodeId, move, "lesson");
+    study = selectStudyNode(study, study.rootId);
+    await window.chessApp.saveStudy(study);
+    nav("studies", study.id);
   }
   if (!lesson)
     return (
@@ -66,24 +101,61 @@ export function Learn() {
             </button>
           ))}
         </div>
+        {group === "endgames" && (
+          <section className="settings-section">
+            <h2>
+              {l("Понять точный результат", "Understand an exact result")}
+            </h2>
+            <p>
+              {l(
+                "Три учебных позиции с объяснениями. В исследовании открой «Дополнительные инструменты» и проверь любой свой ход в таблицах Syzygy.",
+                "Three explained positions. In a study, open Advanced tools and check your own moves against Syzygy tablebases.",
+              )}
+            </p>
+            {tablebaseLessons.map((item) => (
+              <div className="pack-row" key={item.id}>
+                <h3>{item.title[locale]}</h3>
+                <p>{item.goal[locale]}</p>
+                <div className="study-actions">
+                  <button
+                    className="secondary"
+                    onClick={() => void openTableLesson(item.id).catch(fail)}
+                  >
+                    {l("Исследовать", "Explore")}
+                  </button>
+                  {item.alternative && (
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        void openTableLesson(item.id, true).catch(fail)
+                      }
+                    >
+                      {item.alternative.title[locale]}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
         {group === "openings" && (
           <div className="library-banner">
             <div>
               <h2>
                 {l(
-                  "Атлас: 3 815 дебютных вариантов",
-                  "Atlas: 3,815 opening lines",
+                  "8 курсов и 3 815 дебютных вариантов",
+                  "8 courses and 3,815 opening lines",
                 )}
               </h2>
               <p>
                 {l(
-                  "Поиск, семейства, гамбиты и тренировка по памяти. Ниже — уроки с объяснениями.",
-                  "Search, families, gambits and memory practice. Guided lessons follow below.",
+                  "Смотри полные линии, изучай ответы соперника и закрепляй их на доске. Справочник вариантов доступен внутри.",
+                  "Watch complete lines, explore replies and practise on the board. The opening reference is available inside.",
                 )}
               </p>
             </div>
             <button className="primary" onClick={() => nav("openings")}>
-              {l("Открыть атлас", "Open atlas")}
+              {l("Открыть курсы", "Open courses")}
               <ArrowRight size={18} />
             </button>
           </div>

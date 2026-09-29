@@ -1,6 +1,16 @@
-import { useState, useLayoutEffect, useRef } from "react";
+import { useState, useLayoutEffect, useRef, useEffect, useId } from "react";
 import { Chess, type Square } from "chess.js";
-import type { Color, Locale, Score } from "../shared/contracts";
+import type { Color, Locale, Score, Quality } from "../shared/contracts";
+import {
+  toggleMark,
+  squareAt,
+  legalArrow,
+  arrowPoints,
+  type BoardMark,
+} from "./board-annotations";
+import { qualitySymbol } from "./MoveList";
+import { translate } from "../i18n";
+import "./board-feedback.css";
 import { scoreText } from "../analysis/evaluate";
 import { boardTransition, travelOffset } from "../chess/board-transition";
 import { playSound } from "../audio/sounds";
@@ -10,6 +20,7 @@ type Props = {
   onMove?: (uci: string) => void;
   disabled?: boolean;
   lastMove?: string;
+  moveQuality?: Quality;
   arrow?: string;
   hintSquare?: string;
   locale?: Locale;
@@ -24,6 +35,7 @@ export function Board({
   onMove,
   disabled = false,
   lastMove,
+  moveQuality,
   arrow,
   hintSquare,
   locale = "ru",
@@ -33,6 +45,36 @@ export function Board({
   onSquare,
 }: Props) {
   const boardRef = useRef<HTMLDivElement>(null);
+  const markerId = useId().replaceAll(":", "");
+  const [marks, setMarks] = useState<BoardMark[]>([]);
+  const gesture = useRef<Square | null>(null);
+  const clearMarks = () => {
+    gesture.current = null;
+    setMarks([]);
+  };
+  useEffect(() => {
+    clearMarks();
+  }, [fen, orientation]);
+  useEffect(
+    () =>
+      window.chessApp?.onFullscreen((enabled) => {
+        if (!enabled) clearMarks();
+      }),
+    [],
+  );
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") clearMarks();
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, []);
+  const pointerSquare = (e: { clientX: number; clientY: number }) => {
+    const r = boardRef.current?.getBoundingClientRect();
+    return r
+      ? squareAt(e.clientX - r.left, e.clientY - r.top, r.width, orientation)
+      : null;
+  };
   const previous = useRef({ fen, orientation, showPieces });
   const [selected, setSelected] = useState<Square | null>(null),
     [promotion, setPromotion] = useState<{ from: Square; to: Square } | null>(
@@ -108,6 +150,7 @@ export function Board({
     return true;
   }
   function select(square: Square) {
+    clearMarks();
     if (!disabled && onSquare) {
       onSquare(square);
       return;
@@ -148,6 +191,34 @@ export function Board({
         role="group"
         aria-label={locale === "ru" ? "Шахматная доска" : "Chessboard"}
         aria-disabled={disabled}
+        onContextMenu={(e) => e.preventDefault()}
+        onPointerDown={(e) => {
+          if (e.button === 0) clearMarks();
+          if (e.button !== 2 || promotion) return;
+          e.preventDefault();
+          gesture.current = pointerSquare(e);
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }}
+        onPointerUp={(e) => {
+          if (e.button !== 2) return;
+          const from = gesture.current,
+            to = pointerSquare(e);
+          gesture.current = null;
+          if (
+            from &&
+            to &&
+            (from === to || (showPieces && legalArrow(c, from, to)))
+          )
+            setMarks((old) => toggleMark(old, { from, to }));
+          if (e.currentTarget.hasPointerCapture(e.pointerId))
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        }}
+        onPointerCancel={() => {
+          gesture.current = null;
+        }}
+        onLostPointerCapture={() => {
+          gesture.current = null;
+        }}
       >
         {[...ranks].flatMap((rank, row) =>
           [...files].map((file, col) => {
@@ -190,6 +261,27 @@ export function Board({
                     }}
                   />
                 )}
+                {moveQuality && lastMove?.slice(2, 4) === square && (
+                  <span
+                    className={`move-quality-mark ${moveQuality}`}
+                    title={translate(locale, moveQuality)}
+                    aria-label={translate(locale, moveQuality)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <text
+                        x="12"
+                        y="12"
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fill="currentColor"
+                        fontSize="15"
+                        fontWeight="900"
+                      >
+                        {qualitySymbol[moveQuality]}
+                      </text>
+                    </svg>
+                  </span>
+                )}
                 {hintSquare === square && (
                   <span
                     className="hint-source-ring"
@@ -213,6 +305,62 @@ export function Board({
             );
           }),
         )}
+        {marks.length > 0 && (
+          <svg
+            className="board-arrows user-annotations"
+            viewBox="0 0 100 100"
+            aria-hidden="true"
+          >
+            <defs>
+              <marker
+                id={`${markerId}-user`}
+                markerWidth="3"
+                markerHeight="3"
+                refX="2.3"
+                refY="1.5"
+                orient="auto"
+              >
+                <path d="M0,0 L3,1.5 L0,3Z" fill="currentColor" />
+              </marker>
+            </defs>
+            {marks.map((m) => {
+              const a = arrowXY(m.from),
+                b = arrowXY(m.to);
+              return m.from === m.to ? (
+                <circle
+                  key={m.from + m.to}
+                  cx={a.x}
+                  cy={a.y}
+                  r="5.3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                />
+              ) : c.get(m.from)?.type === "n" ? (
+                <polyline
+                  key={m.from + m.to}
+                  points={arrowPoints(m.from, m.to, orientation, true)}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                  markerEnd={`url(#${markerId}-user)`}
+                />
+              ) : (
+                <line
+                  key={m.from + m.to}
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  markerEnd={`url(#${markerId}-user)`}
+                />
+              );
+            })}
+          </svg>
+        )}
         {from && to && (
           <svg
             className="board-arrows"
@@ -221,7 +369,7 @@ export function Board({
           >
             <defs>
               <marker
-                id="arrowhead"
+                id={`${markerId}-engine`}
                 markerWidth="3"
                 markerHeight="3"
                 refX="2"
@@ -231,15 +379,19 @@ export function Board({
                 <path d="M0,0 L3,1.5 L0,3Z" fill="#f5ac38" />
               </marker>
             </defs>
-            <line
-              x1={from.x}
-              y1={from.y}
-              x2={to.x}
-              y2={to.y}
+            <polyline
+              points={arrowPoints(
+                arrow!.slice(0, 2) as Square,
+                arrow!.slice(2, 4) as Square,
+                orientation,
+                c.get(arrow!.slice(0, 2) as Square)?.type === "n",
+              )}
+              fill="none"
+              strokeLinejoin="round"
               stroke="#f5ac38"
               strokeWidth="2.2"
               strokeOpacity=".86"
-              markerEnd="url(#arrowhead)"
+              markerEnd={`url(#${markerId}-engine)`}
             />
           </svg>
         )}
@@ -281,18 +433,20 @@ export function Board({
 export function EvalBar({
   score,
   orientation = "w",
+  locale,
 }: {
   score?: Score;
   orientation?: Color;
+  locale?: Locale;
 }) {
   const amount = score ? Math.max(3, Math.min(97, 50 + score.cp / 12)) : 50;
   return (
     <div
       className={`eval-bar ${orientation === "b" ? "inverted" : ""}`}
-      title={score ? scoreText(score) : "—"}
+      title={score ? scoreText(score, locale) : "—"}
     >
       <div style={{ height: `${100 - amount}%` }} />
-      <span>{score ? scoreText(score) : "—"}</span>
+      <span>{score ? scoreText(score, locale) : "—"}</span>
     </div>
   );
 }

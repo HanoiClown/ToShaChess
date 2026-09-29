@@ -28,6 +28,14 @@ import { puzzles } from "../src/content/puzzles";
 import { visionSettingsSchema, visionResultSchema } from "./storage/schema";
 import type { VisionResult, VisionSettings } from "../src/shared/contracts";
 import { randomUUID } from "node:crypto";
+import { bots } from "../src/bots/catalog";
+import { selectBotMove } from "./engine/bot-policy";
+import { StudyStore } from "./storage/studies";
+import { TrainingStore } from "./storage/training";
+import { MaiaProvider, sampleHumanMove } from "./engine/maia";
+import type { PackManager } from "./packs/manager";
+import type { PackId } from "../src/shared/packs";
+import type { StudyDocument } from "../src/study/tree";
 import type {
   GameRecord,
   Profile,
@@ -50,8 +58,27 @@ export class AppService {
   private interactive: UciEngine;
   private background: UciEngine;
   private interactiveAbort: AbortController | null = null;
+  private scoped = new Map<string, AbortController>();
   jobs = new Map<string, AbortController>();
   readonly cloud: CloudCoach;
+  readonly studies: StudyStore;
+  readonly training: TrainingStore;
+  trainingOwner() { return this.owner(); }
+  packs?: PackManager;
+  private maia = new Map<PackId, MaiaProvider>();
+  releaseMaia() { for (const provider of this.maia.values()) provider.dispose(); this.maia.clear(); }
+  async predictHuman(input: { requestId: string; position: Position; pack: PackId; selfElo: number; opponentElo: number }) {
+    if (!this.packs) throw Error("maia_pack_missing");
+    if (![input?.selfElo, input?.opponentElo].every((n) => Number.isInteger(n) && n >= 600 && n <= 2600)) throw Error("maia_rating_range");
+    const config = this.packs.config(input.pack);
+    const request = this.beginRequest(input);
+    try {
+      let provider = this.maia.get(input.pack);
+      if (!provider) { provider = new MaiaProvider(config); this.maia.set(input.pack, provider); }
+      const result = await provider.predict(input.position, { selfElo: input.selfElo, opponentElo: input.opponentElo }, request.abort.signal);
+      request.check(); return result;
+    } finally { request.done(); }
+  }
   constructor(
     readonly store: Store,
     path: string,
@@ -60,7 +87,17 @@ export class AppService {
     this.interactive = new UciEngine(path);
     this.background = new UciEngine(path);
     this.cloud = new CloudCoach(store, () => this.apiKey);
+    this.studies = new StudyStore(store.dir);
+    this.training = new TrainingStore(store.dir);
   }
+  listStudies(sourceKey?: string) {
+    if (sourceKey !== undefined && (typeof sourceKey !== "string" || sourceKey.length > 200)) throw Error("invalid_study");
+    return this.studies.list(this.owner(), sourceKey);
+  }
+  saveStudy(study: StudyDocument) {
+    return this.studies.save(this.owner(), study);
+  }
+  deleteStudy(id: string) { this.studies.delete(this.owner(), id); }
   snapshot() {
     return {
       database: this.store.data,
@@ -157,6 +194,7 @@ export class AppService {
   }
   saveGame(input: GameRecord) {
     const g = gameSchema.parse(input);
+    if ((g.startPly ?? 0) > g.moves.length) throw Error("invalid_game");
     if (g.profileId !== this.owner()) throw Error("wrong_profile");
     boardAt(g);
     const existing = this.store.data.games.find((x) => x.id === g.id);
@@ -197,7 +235,8 @@ export class AppService {
     const owner = this.owner(),
       name =
         playerName ??
-        (this.store.data.profiles.find((p) => p.id === owner)!.nickname || this.store.data.profiles.find((p) => p.id === owner)!.name);
+        (this.store.data.profiles.find((p) => p.id === owner)!.nickname ||
+          this.store.data.profiles.find((p) => p.id === owner)!.name);
     const games = parseGames(text, owner, name);
     let added = 0,
       skipped = 0;
@@ -260,6 +299,9 @@ export class AppService {
         "openings",
         "endgames",
         "database",
+        "editor",
+        "studies",
+        "training",
       ].includes(section)
     )
       throw Error("invalid_activity");
@@ -313,8 +355,120 @@ export class AppService {
     return this.snapshot();
   }
   cancelEngine() {
+    for (const abort of this.scoped.values()) abort.abort();
+    this.scoped.clear();
     this.interactiveAbort?.abort();
     this.interactiveAbort = null;
+  }
+  cancelRequest(requestId: string) {
+    this.scoped.get(requestId)?.abort();
+    this.scoped.delete(requestId);
+  }
+  private beginRequest(input: { requestId: string; position: Position }) {
+    const owner = this.owner();
+    if (
+      !input ||
+      typeof input.requestId !== "string" ||
+      !/^[-\w]{1,100}$/.test(input.requestId) ||
+      !input.position ||
+      typeof input.position.initialFen !== "string" ||
+      input.position.initialFen.length > 200 ||
+      !Array.isArray(input.position.moves) ||
+      input.position.moves.length > 4000 ||
+      input.position.moves.some(
+        (u) =>
+          typeof u !== "string" || !/^[a-h][1-8][a-h][1-8][qrbn]?$/.test(u),
+      )
+    )
+      throw Error("invalid_position");
+    const board = boardAt(input.position);
+    this.cancelRequest(input.requestId);
+    const abort = new AbortController();
+    this.scoped.set(input.requestId, abort);
+    const check = () => {
+      if (abort.signal.aborted || owner !== this.activeProfile)
+        throw Error("Cancelled");
+    };
+    const done = () => {
+      if (this.scoped.get(input.requestId) === abort)
+        this.scoped.delete(input.requestId);
+    };
+    return { board, abort, check, done };
+  }
+  async analyzePosition(input: { requestId: string; position: Position }) {
+    const r = this.beginRequest(input);
+    try {
+      const lines = await this.interactive.analyze(
+        input.position,
+        700,
+        3,
+        r.abort.signal,
+      );
+      r.check();
+      return lines;
+    } finally {
+      r.done();
+    }
+  }
+  async botMove(input: {
+    requestId: string;
+    position: Position;
+    botId: string;
+    maia?: GameRecord["maia"];
+    strong?: boolean;
+  }) {
+    if (input?.maia) {
+      if (!Number.isFinite(input.maia.temperature) || input.maia.temperature < 0.5 || input.maia.temperature > 1.5) throw Error("invalid_bot");
+      const prediction = await this.predictHuman({ ...input, ...input.maia });
+      return { move: sampleHumanMove(prediction, { temperature: input.maia.temperature }) };
+    }
+    if (input?.strong === true) {
+      const r = this.beginRequest(input);
+      try {
+        if (r.board.isGameOver()) throw Error("game_over");
+        const lines = await this.interactive.analyze(input.position, 1500, 1, r.abort.signal);
+        r.check(); if (!lines[0]?.pv[0]) throw Error("no_legal_move");
+        return { move: lines[0].pv[0], line: lines[0] };
+      } finally { r.done(); }
+    }
+    const bot = bots.find((b) => b.id === input?.botId);
+    if (!bot) throw Error("invalid_bot");
+    const r = this.beginRequest(input);
+    try {
+      if (r.board.isGameOver()) throw Error("game_over");
+      const lines = await this.interactive.analyze(
+        input.position,
+        bot.thinkMs,
+        8,
+        r.abort.signal,
+      );
+      r.check();
+      if (bot.mistakeRate > 0 && Math.random() < bot.mistakeRate) {
+        const legal = r.board
+          .moves({ verbose: true })
+          .map((m) => m.from + m.to + (m.promotion ?? ""));
+        for (let i = 0; i < 2 && legal.length; i++) {
+          const u = legal.splice(
+            Math.floor(Math.random() * legal.length),
+            1,
+          )[0];
+          if (lines.some((l) => l.pv[0] === u)) continue;
+          const child = await this.interactive.analyze(
+            { ...input.position, moves: [...input.position.moves, u] },
+            100,
+            1,
+            r.abort.signal,
+          );
+          r.check();
+          if (child[0]) lines.push({ ...child[0], pv: [u, ...child[0].pv] });
+        }
+      }
+      const line = selectBotMove(input.position, lines, bot, Math.random);
+      r.check();
+      return { move: line.pv[0], line };
+    } finally {
+      r.done();
+    }
   }
   async engine(position: Position, level?: number) {
     const owner = this.owner();
@@ -378,13 +532,14 @@ export class AppService {
   }
   private async runAnalysis(game: GameRecord, abort: AbortController) {
     const ms = this.store.data.settings.engineMs;
+    const start = game.startPly ?? 0;
     let beforeLines = await this.background.analyze(
-      { initialFen: game.initialFen, moves: [] },
+      { initialFen: game.initialFen, moves: game.moves.slice(0,start) },
       ms,
       3,
       abort.signal,
     );
-    for (let i = 0; i < game.moves.length; i++) {
+    for (let i = start; i < game.moves.length; i++) {
       if (abort.signal.aborted) throw Error("Cancelled");
       const cached = this.getGame(game.id, game.profileId).analysis.find(
         (a) => a.ply === i + 1,
@@ -567,6 +722,8 @@ export class AppService {
     }
   }
   dispose() {
+    this.releaseMaia();
+    this.packs?.dispose();
     this.cancelEngine();
     for (const c of this.jobs.values()) c.abort();
     this.interactive.dispose();

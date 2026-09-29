@@ -1,6 +1,6 @@
 {
   "name": "toshachess",
-  "version": "1.3.3",
+  "version": "1.5.2",
   "private": true,
   "description": "Open-source offline chess training with Stockfish",
   "author": "HanoiClown",
@@ -33,6 +33,28 @@
       "package.json"
     ],
     "extraResources": [
+      {
+        "from": "docs",
+        "to": "docs",
+        "filter": [
+          "TRAINING.md",
+          "AUTHORING.md",
+          "ENGINES.md",
+          "OPTIONAL_TOOLS.md",
+          "LIBRARY.md"
+        ]
+      },
+      {
+        "from": "scripts",
+        "to": "scripts",
+        "filter": [
+          "maia-bridge.py",
+          "maia-lock.json",
+          "setup-maia.py",
+          "unpack-python.ps1",
+          "tablebase-bridge.py"
+        ]
+      },
       {
         "from": "stockfish",
         "to": "stockfish",
@@ -68,8 +90,10 @@
   },
   "dependencies": {
     "@fontsource/nunito-sans": "^5.3.0",
+    "@scoriiu/fenshot": "0.1.4",
     "chess.js": "^1.4.0",
     "lucide-react": "^1.48.0",
+    "onnxruntime-web": "1.26.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "zod": "^4.6.5"

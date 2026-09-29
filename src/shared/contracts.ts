@@ -23,6 +23,7 @@ export type Analysis = {
 };
 export type SkillLevel = "new" | "beginner" | "intermediate" | "advanced";
 export type CreateProfileInput = {
+  learning?: Profile["learning"];
   name: string;
   nickname: string;
   skillLevel: SkillLevel;
@@ -30,6 +31,17 @@ export type CreateProfileInput = {
   locale: Locale;
 };
 export type Profile = {
+  opponent?: {
+    provider: "stockfish" | "maia";
+    botId: string;
+    color: Color;
+    maia: NonNullable<GameRecord["maia"]>;
+  };
+  learning?: {
+    minutes: 15 | 30 | 60;
+    goal: "basics" | "tactics" | "openings" | "balanced";
+    explanation: "short" | "detailed";
+  };
   theme?: "green" | "purple" | "blue" | "red";
   id: string;
   name: string;
@@ -100,6 +112,17 @@ export type GameRecord = {
   explanations: Partial<Record<Locale, Record<string, string>>>;
   clock?: { w: number; b: number; increment: number };
   level?: number;
+  botId?: string;
+  botRating?: number;
+  /** Imported position history is preserved, but accuracy starts after this ply. */
+  startPly?: number;
+  strongStockfish?: boolean;
+  maia?: {
+    pack: import("./packs").PackId;
+    selfElo: number;
+    opponentElo: number;
+    temperature: number;
+  };
 };
 export type Usage = {
   id: string;
@@ -118,6 +141,7 @@ export type Database = {
     sound: boolean;
     volume: number;
     engineMs: number;
+    botQuips?: boolean;
   };
   archiveImported: boolean;
 };
@@ -132,6 +156,45 @@ export type Snapshot = {
 };
 export type CoachReply = { source: "local" | "openai"; text: string };
 export interface DesktopApi {
+  onBeforeClose(callback: () => Promise<boolean>): () => void;
+  advanced: import("./optional-tools").AdvancedToolsApi;
+  listTrainingCards(): Promise<import("../training/types").TrainingCard[]>;
+  saveTrainingCard(
+    card: import("../training/types").TrainingCard,
+  ): Promise<import("../training/types").TrainingCard>;
+  reviewTrainingCard(
+    input: import("../training/types").TrainingReviewInput,
+  ): Promise<import("../training/types").TrainingCard>;
+  postponeTrainingCard(
+    id: string,
+  ): Promise<import("../training/types").TrainingCard>;
+  deleteTrainingCard(id: string): Promise<void>;
+  packs(): Promise<import("./packs").PackState[]>;
+  onPacks(callback: () => void): () => void;
+  installPack(
+    id: import("./packs").PackId,
+  ): Promise<import("./packs").PackState[]>;
+  verifyPack(
+    id: import("./packs").PackId,
+  ): Promise<import("./packs").PackState[]>;
+  cancelPack(id: import("./packs").PackId): Promise<void>;
+  removePack(
+    id: import("./packs").PackId,
+  ): Promise<import("./packs").PackState[]>;
+  predictHuman(input: {
+    requestId: string;
+    position: Position;
+    pack: import("./packs").PackId;
+    selfElo: number;
+    opponentElo: number;
+  }): Promise<import("./engine-providers").HumanPrediction>;
+  listStudies(
+    sourceKey?: string,
+  ): Promise<import("../study/tree").StudyDocument[]>;
+  saveStudy(
+    study: import("../study/tree").StudyDocument,
+  ): Promise<import("../study/tree").StudyDocument>;
+  deleteStudy(id: string): Promise<void>;
   getFullscreen(): Promise<boolean>;
   toggleFullscreen(): Promise<void>;
   onFullscreen(callback: (enabled: boolean) => void): () => void;
@@ -156,6 +219,18 @@ export interface DesktopApi {
   analyze(id: string): Promise<void>;
   cancelAnalysis(id: string): Promise<void>;
   engine(position: Position, level?: number): Promise<EngineLine[]>;
+  analyzePosition(input: {
+    requestId: string;
+    position: Position;
+  }): Promise<EngineLine[]>;
+  botMove(input: {
+    requestId: string;
+    position: Position;
+    botId: string;
+    maia?: GameRecord["maia"];
+    strong?: boolean;
+  }): Promise<{ move: string; line?: EngineLine }>;
+  cancelRequest(requestId: string): Promise<void>;
   cancelEngine(): Promise<void>;
   coach(id: string, ply: number, question?: string): Promise<CoachReply>;
   attempt(attempt: Attempt): Promise<Snapshot>;
