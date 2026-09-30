@@ -1,6 +1,14 @@
 .user-annotations {
-  color: #ef9a32;
+  --annotation-own: #ef9a32;
+  --annotation-opponent: #e65054;
+  color: var(--annotation-own);
   opacity: 0.88;
+}
+.user-annotations .annotation-own {
+  color: var(--annotation-own);
+}
+.user-annotations .annotation-opponent {
+  color: var(--annotation-opponent);
 }
 .move-quality-mark {
   position: absolute;

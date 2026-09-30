@@ -43,6 +43,12 @@ test("right drag marks a line and left click clears it without a move", async ()
       await p.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await p.mouse.up({ button: "right" });
     }
+    await rightDrag("e7", "e5");
+    await expect(board.locator(".user-annotations line")).toHaveCSS(
+      "stroke",
+      "rgb(230, 80, 84)",
+    );
+    await rightDrag("e7", "e5");
     for (const [from, to] of [
       ["a1", "b2"],
       ["c1", "c3"],
@@ -96,6 +102,11 @@ test("right drag marks a line and left click clears it without a move", async ()
     expect(Number(await line.getAttribute("y1"))).toBeLessThan(
       Number(await line.getAttribute("y2")),
     );
+    await expect(line).toHaveCSS("stroke", "rgb(239, 154, 50)");
+    await rightDrag("e7", "e5");
+    await expect(
+      board.locator('.user-annotations line[data-from="e7"]'),
+    ).toHaveCSS("stroke", "rgb(230, 80, 84)");
     await p
       .getByRole("button", { name: "Перевернуть доску", exact: true })
       .click();

@@ -12,6 +12,8 @@
 
 ПКМ рисует планы за любой цвет, независимо от очереди хода и занятых полей. Например, можно отметить d2–d3 и затем c1–g5 до реального хода пешкой. Форма движения остаётся правильной: слон — по диагонали, ладья — по вертикали или горизонтали, конь — буквой Г. Стрелка показывает намерение, а не гарантирует легальность в текущей позиции. ЛКМ или Escape очищает метки.
 
+Свои планы оранжевые, планы соперника красные. В игре цвет привязан к выбранной стороне и не меняется при перевороте доски. В разборе и исследованиях оранжевым обозначается сторона снизу, красным — сверху. Для цепочки нарисуй e2–e4, затем начни следующую стрелку с пустого e4 до e5. Можно строить несколько продолжений из одной точки. Каждое звено сохраняет тип и цвет фигуры; пешка после первого хода продвигается на одно поле. Если несколько планов заканчиваются на одном поле, продолжение относится к последней нарисованной стрелке. Повтори стрелку, чтобы удалить её и зависимые звенья; остальные планы останутся.
+
 ### Выбрать помощь для позиции
 
 Обычный разбор и проверка позиции используют Stockfish автоматически. В «Изучить позицию глубже» выбери вопрос: «Как ответит человек» использует Maia; «Как играли в похожих партиях» показывает местную статистику; «Точный исход окончания» использует таблицы Syzygy; «Получить второе мнение» запускает подключённый дополнительный движок. У каждого режима есть пояснение. Установка пакетов и настройка моделей доступны через «Открыть настройки инструментов» или «Настройки → Дополнительные возможности анализа».
@@ -53,6 +55,8 @@ The main menu has four sections: Today, Play, Learn and Analysis. Learn contains
 Select a game move or open the best continuation, then move a piece on the board. Play either side, step backwards, try another move and ask Stockfish about the displayed position. Clicking a move in a returned line opens that position; step forward to see the rest. Return to game closes the temporary variation. Saved game moves, accuracy and explanations stay intact. Use Explore position to keep the current line as a study.
 
 Right-drag draws plans for either color, ignoring turn and occupied squares. For example, mark d2–d3 and c1–g5 before moving the pawn. Arrows keep the piece's movement shape: bishops diagonal, rooks straight and knights L-shaped. An arrow expresses a plan, not proof that the move is legal now. Left click or Escape clears marks.
+
+Your plans are orange and the opponent's are red. During play, colors follow your chosen side even when the board is flipped. In review and studies, orange belongs to the bottom side and red to the top. To draw a chain, mark e2–e4, then drag from the empty e4 square to e5. Multiple continuations can branch from one point. Each step retains the piece's type and color; a pawn advances one square after its first move. When several arrows reach the same square, a new continuation follows the most recently drawn one. Redraw an arrow to remove it and its dependent steps while keeping unrelated plans.
 
 ### Choose help for a position
 

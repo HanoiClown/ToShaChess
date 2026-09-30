@@ -19,6 +19,8 @@ import {
   legalArrow,
   planningArrow,
   arrowPoints,
+  togglePlanningMark,
+  type BoardMark,
 } from "../../src/ui/board-annotations";
 test("arrows obey legal chess moves, blockers, turn and check", () => {
   const start = new Chess();
@@ -134,4 +136,179 @@ test("planning pawn arrows follow each color's direction and starting rank", () 
   expect(planningArrow(board, "d5", "d4")).toBe(true);
   expect(planningArrow(board, "d4", "d6")).toBe(false);
   expect(planningArrow(board, "d5", "d3")).toBe(false);
+});
+
+test("chained pawn and knight plans retain the piece and never change the board", () => {
+  const board = new Chess(),
+    before = board.fen();
+  let marks: BoardMark[] = [];
+  for (const [from, to] of [
+    ["e2", "e4"],
+    ["e4", "e5"],
+    ["e5", "d6"],
+    ["d7", "d5"],
+    ["d5", "d4"],
+    ["g8", "f6"],
+    ["f6", "e4"],
+  ] as const)
+    marks = togglePlanningMark(board, marks, { from, to });
+  expect(marks).toEqual([
+    { from: "e2", to: "e4", piece: { type: "p", color: "w" } },
+    { from: "e4", to: "e5", piece: { type: "p", color: "w" }, parent: "e2e4" },
+    { from: "e5", to: "d6", piece: { type: "p", color: "w" }, parent: "e4e5" },
+    { from: "d7", to: "d5", piece: { type: "p", color: "b" } },
+    { from: "d5", to: "d4", piece: { type: "p", color: "b" }, parent: "d7d5" },
+    { from: "g8", to: "f6", piece: { type: "n", color: "b" } },
+    { from: "f6", to: "e4", piece: { type: "n", color: "b" }, parent: "g8f6" },
+  ]);
+  expect(board.fen()).toBe(before);
+  expect(board.history()).toEqual([]);
+});
+
+test("removing a plan removes its descendants but preserves alternatives and circles", () => {
+  const board = new Chess();
+  let marks: BoardMark[] = [];
+  for (const [from, to] of [
+    ["g1", "f3"],
+    ["f3", "g5"],
+    ["g5", "e6"],
+    ["f3", "e5"],
+    ["g1", "h3"],
+    ["b1", "c3"],
+    ["f3", "f3"],
+  ] as const)
+    marks = togglePlanningMark(board, marks, { from, to });
+  const before = JSON.stringify(marks);
+  const branchRemoved = togglePlanningMark(board, marks, {
+    from: "f3",
+    to: "g5",
+  });
+  expect(branchRemoved.map(({ from, to }) => from + to)).toEqual([
+    "g1f3",
+    "f3e5",
+    "g1h3",
+    "b1c3",
+    "f3f3",
+  ]);
+  const rootRemoved = togglePlanningMark(board, branchRemoved, {
+    from: "g1",
+    to: "f3",
+  });
+  expect(rootRemoved.map(({ from, to }) => from + to)).toEqual([
+    "g1h3",
+    "b1c3",
+    "f3f3",
+  ]);
+  expect(JSON.stringify(marks)).toBe(before);
+  expect(
+    togglePlanningMark(board, rootRemoved, { from: "f3", to: "f3" }).map(
+      ({ from, to }) => from + to,
+    ),
+  ).toEqual(["g1h3", "b1c3"]);
+});
+
+test("a virtual source still rejects impossible shapes and pawn double steps away from home", () => {
+  const board = new Chess();
+  let marks: BoardMark[] = [];
+  for (const [from, to] of [
+    ["e2", "e4"],
+    ["d7", "d5"],
+    ["g1", "f3"],
+    ["c1", "g5"],
+    ["a1", "a4"],
+    ["h4", "h4"],
+  ] as const)
+    marks = togglePlanningMark(board, marks, { from, to });
+  for (const [from, to] of [
+    ["e4", "e6"],
+    ["e4", "e3"],
+    ["d5", "d3"],
+    ["d5", "d6"],
+    ["f3", "f5"],
+    ["g5", "g6"],
+    ["a4", "b5"],
+    ["h4", "h5"],
+    ["c4", "c5"],
+  ] as const)
+    expect(
+      togglePlanningMark(board, marks, { from, to }),
+      `${from}-${to}`,
+    ).toEqual(marks);
+});
+
+test("an incoming capture plan takes precedence over the board occupant", () => {
+  const board = new Chess();
+  const capture = togglePlanningMark(board, [], { from: "c1", to: "h6" });
+  const continuation = togglePlanningMark(board, capture, {
+    from: "h6",
+    to: "g7",
+  });
+  const afterCapture = togglePlanningMark(board, continuation, {
+    from: "g7",
+    to: "h8",
+  });
+  expect(afterCapture.at(-1)).toEqual({
+    from: "g7",
+    to: "h8",
+    piece: { type: "b", color: "w" },
+    parent: "h6g7",
+  });
+  expect(
+    togglePlanningMark(board, afterCapture, { from: "g7", to: "g6" }),
+  ).toEqual(afterCapture);
+  expect(board.get("g7")).toEqual({ type: "p", color: "b" });
+});
+
+test("the newest incoming arrow determines an ambiguous endpoint and circles do not replace it", () => {
+  const board = new Chess();
+  let marks: BoardMark[] = [];
+  for (const [from, to] of [
+    ["e2", "e4"],
+    ["g8", "f6"],
+    ["f6", "e4"],
+    ["e4", "e4"],
+  ] as const)
+    marks = togglePlanningMark(board, marks, { from, to });
+  expect(togglePlanningMark(board, marks, { from: "e4", to: "e5" })).toEqual(
+    marks,
+  );
+  const knight = togglePlanningMark(board, marks, { from: "e4", to: "c5" });
+  expect(knight.at(-1)).toEqual({
+    from: "e4",
+    to: "c5",
+    piece: { type: "n", color: "b" },
+    parent: "f6e4",
+  });
+  const removed = togglePlanningMark(board, knight, { from: "f6", to: "e4" });
+  expect(removed.map(({ from, to }) => from + to)).toEqual([
+    "e2e4",
+    "g8f6",
+    "e4e4",
+  ]);
+  expect(
+    togglePlanningMark(board, removed, { from: "e4", to: "e5" }).at(-1),
+  ).toEqual({
+    from: "e4",
+    to: "e5",
+    piece: { type: "p", color: "w" },
+    parent: "e2e4",
+  });
+});
+
+test("existing arrows can be removed even when a newer incoming plan changes their geometry", () => {
+  const board = new Chess();
+  let marks: BoardMark[] = [];
+  for (const [from, to] of [
+    ["e2", "e4"],
+    ["e4", "e5"],
+    ["e5", "e6"],
+    ["g8", "f6"],
+    ["f6", "e4"],
+  ] as const)
+    marks = togglePlanningMark(board, marks, { from, to });
+  expect(
+    togglePlanningMark(board, marks, { from: "e4", to: "e5" }).map(
+      ({ from, to }) => from + to,
+    ),
+  ).toEqual(["e2e4", "g8f6", "f6e4"]);
 });

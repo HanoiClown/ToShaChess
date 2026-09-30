@@ -1,6 +1,12 @@
-import type { Chess, Square } from "chess.js";
+import type { Chess, PieceSymbol, Square } from "chess.js";
 import type { Color } from "../shared/contracts";
-export type BoardMark = { from: Square; to: Square };
+type PlanningPiece = { type: PieceSymbol; color: Color };
+export type BoardMark = {
+  from: Square;
+  to: Square;
+  piece?: PlanningPiece;
+  parent?: string;
+};
 export function legalArrow(board: Chess, from: Square, to: Square): boolean {
   return board
     .moves({ square: from, verbose: true })
@@ -9,7 +15,14 @@ export function legalArrow(board: Chess, from: Square, to: Square): boolean {
 /** A plan follows the piece's shape, independent of the current position's legality. */
 export function planningArrow(board: Chess, from: Square, to: Square): boolean {
   const piece = board.get(from);
-  if (!piece || from === to) return false;
+  return !!piece && planningShape(piece, from, to);
+}
+function planningShape(
+  piece: PlanningPiece,
+  from: Square,
+  to: Square,
+): boolean {
+  if (from === to) return false;
   const file = to.charCodeAt(0) - from.charCodeAt(0),
     rank = Number(to[1]) - Number(from[1]),
     dx = Math.abs(file),
@@ -64,6 +77,59 @@ export function arrowPoints(
 export function toggleMark(marks: BoardMark[], mark: BoardMark): BoardMark[] {
   const same = (m: BoardMark) => m.from === mark.from && m.to === mark.to;
   return marks.some(same) ? marks.filter((m) => !same(m)) : [...marks, mark];
+}
+export function togglePlanningMark(
+  board: Chess,
+  marks: BoardMark[],
+  mark: { from: Square; to: Square },
+): BoardMark[] {
+  const key = mark.from + mark.to,
+    circle = mark.from === mark.to;
+  if (marks.some((item) => item.from + item.to === key)) {
+    const removed = new Set([key]);
+    if (!circle) {
+      const children = new Map<string, string[]>();
+      for (const item of marks) {
+        if (!item.parent || item.from === item.to) continue;
+        const siblings = children.get(item.parent) ?? [];
+        siblings.push(item.from + item.to);
+        children.set(item.parent, siblings);
+      }
+      const pending = [key];
+      for (let index = 0; index < pending.length; index++) {
+        for (const child of children.get(pending[index]) ?? []) {
+          if (removed.has(child)) continue;
+          removed.add(child);
+          pending.push(child);
+        }
+      }
+    }
+    return marks.filter((item) => !removed.has(item.from + item.to));
+  }
+
+  let incoming: BoardMark | undefined;
+  for (let index = marks.length - 1; index >= 0; index--) {
+    const item = marks[index];
+    if (item.from !== item.to && item.to === mark.from) {
+      incoming = item;
+      break;
+    }
+  }
+  // Legacy root arrows may not yet carry the piece's identity.
+  const source = incoming
+      ? (incoming.piece ?? board.get(incoming.from))
+      : board.get(mark.from),
+    piece = source ? { type: source.type, color: source.color } : undefined;
+  if (circle) return [...marks, { ...mark, ...(piece ? { piece } : {}) }];
+  if (!piece || !planningShape(piece, mark.from, mark.to)) return marks;
+  return [
+    ...marks,
+    {
+      ...mark,
+      piece,
+      ...(incoming ? { parent: incoming.from + incoming.to } : {}),
+    },
+  ];
 }
 export function squareAt(
   x: number,

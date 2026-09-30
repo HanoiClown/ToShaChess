@@ -4,7 +4,7 @@ import type { Color, Locale, Score, Quality } from "../shared/contracts";
 import {
   toggleMark,
   squareAt,
-  planningArrow,
+  togglePlanningMark,
   arrowPoints,
   type BoardMark,
 } from "./board-annotations";
@@ -17,6 +17,7 @@ import { playSound } from "../audio/sounds";
 type Props = {
   fen: string;
   orientation?: Color;
+  annotationSide?: Color;
   onMove?: (uci: string) => void;
   disabled?: boolean;
   lastMove?: string;
@@ -32,6 +33,7 @@ type Props = {
 export function Board({
   fen,
   orientation = "w",
+  annotationSide = orientation,
   onMove,
   disabled = false,
   lastMove,
@@ -204,12 +206,12 @@ export function Board({
           const from = gesture.current,
             to = pointerSquare(e);
           gesture.current = null;
-          if (
-            from &&
-            to &&
-            (from === to || (showPieces && planningArrow(c, from, to)))
-          )
-            setMarks((old) => toggleMark(old, { from, to }));
+          if (from && to && (showPieces || from === to))
+            setMarks((old) =>
+              showPieces
+                ? togglePlanningMark(c, old, { from, to })
+                : toggleMark(old, { from, to }),
+            );
           if (e.currentTarget.hasPointerCapture(e.pointerId))
             e.currentTarget.releasePointerCapture(e.pointerId);
         }}
@@ -312,23 +314,38 @@ export function Board({
             aria-hidden="true"
           >
             <defs>
-              <marker
-                id={`${markerId}-user`}
-                markerWidth="3"
-                markerHeight="3"
-                refX="2.3"
-                refY="1.5"
-                orient="auto"
-              >
-                <path d="M0,0 L3,1.5 L0,3Z" fill="currentColor" />
-              </marker>
+              {(["own", "opponent"] as const).map((side) => (
+                <marker
+                  key={side}
+                  id={`${markerId}-user-${side}`}
+                  className={`annotation-${side}`}
+                  markerWidth="3"
+                  markerHeight="3"
+                  refX="2.3"
+                  refY="1.5"
+                  orient="auto"
+                >
+                  <path d="M0,0 L3,1.5 L0,3Z" fill="currentColor" />
+                </marker>
+              ))}
             </defs>
             {marks.map((m) => {
               const a = arrowXY(m.from),
-                b = arrowXY(m.to);
+                b = arrowXY(m.to),
+                side =
+                  m.piece && m.piece.color !== annotationSide
+                    ? "opponent"
+                    : "own",
+                markProps = {
+                  className: `annotation-${side}`,
+                  "data-from": m.from,
+                  "data-to": m.to,
+                  "data-color": m.piece?.color,
+                };
               return m.from === m.to ? (
                 <circle
                   key={m.from + m.to}
+                  {...markProps}
                   cx={a.x}
                   cy={a.y}
                   r="5.3"
@@ -336,26 +353,28 @@ export function Board({
                   stroke="currentColor"
                   strokeWidth="1.3"
                 />
-              ) : c.get(m.from)?.type === "n" ? (
+              ) : m.piece?.type === "n" ? (
                 <polyline
                   key={m.from + m.to}
+                  {...markProps}
                   points={arrowPoints(m.from, m.to, orientation, true)}
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.8"
                   strokeLinejoin="round"
-                  markerEnd={`url(#${markerId}-user)`}
+                  markerEnd={`url(#${markerId}-user-${side})`}
                 />
               ) : (
                 <line
                   key={m.from + m.to}
+                  {...markProps}
                   x1={a.x}
                   y1={a.y}
                   x2={b.x}
                   y2={b.y}
                   stroke="currentColor"
                   strokeWidth="1.8"
-                  markerEnd={`url(#${markerId}-user)`}
+                  markerEnd={`url(#${markerId}-user-${side})`}
                 />
               );
             })}

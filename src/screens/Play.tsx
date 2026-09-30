@@ -459,6 +459,7 @@ export function Play({
             <Board
               fen={display.fen()}
               orientation={orientation}
+              annotationSide={game?.playerColor ?? color}
               locale={locale}
               lastMove={game?.moves[view - 1]}
               arrow={hint?.pv[0]}
@@ -476,8 +477,8 @@ export function Play({
           {playerBar(orientation)}
           <small className="muted">
             {l(
-              "ПКМ: стрелка или отметка клетки. ЛКМ очищает отметки.",
-              "Right-click: draw an arrow or mark a square. Left-click clears marks.",
+              "ПКМ: рисуй стрелки и продолжай их с конца предыдущей. Планы соперника — красные. ЛКМ очищает метки.",
+              "Right-drag to draw arrows and continue from their endpoints. Opponent plans are red. Left-click clears marks.",
             )}
           </small>
           <MaterialPanel

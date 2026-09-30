@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.1 — Colored plans and chained arrows
+
+- Draw opponent plans in red and your own in orange. During play the colors follow the player's side even after flipping the board; studies use the side at the bottom as the reference.
+- Continue a plan from an earlier arrow's endpoint without moving the actual piece. Chained arrows retain the piece's color and movement shape, including L-shaped knight paths, and can branch into alternative plans.
+- Redrawing an arrow removes that step and its dependent continuations while preserving unrelated plans. Left-click or Escape clears all marks.
+
 ## 1.6.0 — Simpler navigation and hands-on game review
 
 - Reduce the main menu to Today, Play, Learn and Analysis. Lessons, puzzles, board vision and practice share the learning section; games, review, studies, the editor and the archive share analysis.

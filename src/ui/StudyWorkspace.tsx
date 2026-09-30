@@ -191,6 +191,11 @@ export function StudyWorkspace({
             ? "Исследуй любые легальные ходы за обе стороны. Исходный урок и партия не меняются."
             : "Explore any legal move for either side. The original lesson and game stay unchanged."}
         </p>
+        <p className="study-note">
+          {ru
+            ? "ПКМ: рисуй план по шагам, продолжая стрелку с её конца. Красные стрелки — за сторону сверху, оранжевые — снизу. ЛКМ или Escape очищает метки."
+            : "Right-drag to plan step by step, continuing from an arrow's endpoint. Red arrows belong to the top side, orange to the bottom. Left-click or Escape clears marks."}
+        </p>
       </section>
       <section
         className="side-panel study-panel scroll-panel"
