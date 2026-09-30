@@ -17,6 +17,7 @@ import { saveSettingsPatch } from "../audio/settings";
 import "./settings-audio.css";
 import { EnginePacks } from "../ui/EnginePacks";
 import { AdvancedTools } from "../ui/AdvancedTools";
+import { TOOL_SETTINGS_INTENT } from "../ui/PositionTools";
 import {
   LearningPreferences,
   defaultLearning,
@@ -35,6 +36,17 @@ export function SettingsScreen() {
     [status, setStatus] = useState(""),
     [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState(snapshot.database.settings);
+  const extensionsRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (sessionStorage.getItem(TOOL_SETTINGS_INTENT) !== "open") return;
+    sessionStorage.removeItem(TOOL_SETTINGS_INTENT);
+    const panel = extensionsRef.current;
+    if (panel) {
+      panel.open = true;
+      panel.querySelector("summary")?.focus({ preventScroll: true });
+      panel.scrollIntoView({ block: "start" });
+    }
+  }, []);
   const [learning, setLearning] = useState(profile.learning ?? defaultLearning);
   const settingsRef = useRef(settings),
     pendingWrites = useRef(0),
@@ -119,8 +131,6 @@ export function SettingsScreen() {
         <Settings size={30} />
       </div>
       <div className="settings-layout">
-        <EnginePacks locale={locale} />
-        <AdvancedTools locale={locale} api={window.chessApp.advanced} />
         <section className="settings-section">
           <div className="section-title">
             <UserRound size={24} />
@@ -595,6 +605,21 @@ export function SettingsScreen() {
             <code className="data-path">{snapshot.dataPath}</code>
           </details>
         </section>
+        <details className="settings-extensions" ref={extensionsRef}>
+          <summary>
+            {l("Дополнительные возможности анализа", "More analysis options")}
+          </summary>
+          <p>
+            {l(
+              "Основной анализ Stockfish уже готов к работе. Здесь можно добавить человеческие ответы Maia, таблицы окончаний и другие движки.",
+              "Stockfish is ready for standard analysis. Add Maia human replies, endgame tables and other engines here.",
+            )}
+          </p>
+          <div className="settings-extensions-content">
+            <EnginePacks locale={locale} />
+            <AdvancedTools locale={locale} api={window.chessApp.advanced} />
+          </div>
+        </details>
       </div>
       {status && (
         <div className="notice good-text" role="status">

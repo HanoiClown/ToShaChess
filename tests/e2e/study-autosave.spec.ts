@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import { test, expect, _electron as electron } from "@playwright/test";
 import {
   mkdtempSync,
@@ -26,9 +27,7 @@ test("leaving a personal study immediately flushes its last edit before switchin
   try {
     const page = await app.firstWindow();
     await page.locator(".profile-choice").first().click();
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
+    await navigateSection(page, "Исследования");
     await page
       .getByRole("button", { name: "Новое исследование", exact: true })
       .click();
@@ -48,9 +47,7 @@ test("leaving a personal study immediately flushes its last edit before switchin
       .getByRole("button", { name: "Сменить профиль", exact: true })
       .click();
     await page.locator(".profile-choice").first().click();
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
+    await navigateSection(page, "Исследования");
     await expect(
       page.getByLabel("Личная заметка", { exact: true }),
     ).toHaveValue("Последнее изменение перед выходом");
@@ -83,9 +80,7 @@ test("leaving a personal study immediately flushes its last edit before switchin
     await expect(
       page.getByRole("heading", { name: "Твой следующий ход", exact: true }),
     ).toBeVisible();
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
+    await navigateSection(page, "Исследования");
     await expect(
       page.getByLabel("Личная заметка", { exact: true }),
     ).toHaveValue("Сохранить после временного сбоя");

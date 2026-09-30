@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import { seedProfiles } from "../helpers/profile-fixtures";
 import { test, expect, _electron as electron } from "@playwright/test";
 import {
@@ -47,7 +48,7 @@ test("themes, favorites, daily five and PGN-folder import persist per profile", 
       }
     }
     expect(backgrounds.size).toBe(4);
-    await page.getByRole("button", { name: "Задачи", exact: true }).click();
+    await navigateSection(page, "Задачи");
     await page.getByRole("button", { name: /Пять задач дня/ }).click();
     await expect(page.locator(".library-row")).toHaveCount(5);
     await page.locator(".library-row").first().click();
@@ -73,7 +74,7 @@ test("themes, favorites, daily five and PGN-folder import persist per profile", 
       .click();
     await page.locator(".profile-choice").nth(1).click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "green");
-    await page.getByRole("button", { name: "Задачи", exact: true }).click();
+    await navigateSection(page, "Задачи");
     await page.getByRole("button", { name: /Избранное/ }).click();
     await expect(page.locator(".library-row")).toHaveCount(0);
     expect(
@@ -117,7 +118,7 @@ test("themes, favorites, daily five and PGN-folder import persist per profile", 
       await app.evaluate(({ BrowserWindow }) =>
         BrowserWindow.getAllWindows()[0].setSize(1100, 760),
       );
-      await page.getByRole("button", { name: "Puzzles", exact: true }).click();
+      await navigateSection(page, "Puzzles");
       await page.getByRole("button", { name: /Daily five/ }).click();
       await page.screenshot({
         path: resolve(".impeccable/review/themes/blue-daily-small.png"),

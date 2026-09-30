@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { seedProfiles } from "../helpers/profile-fixtures";
 import { createTrainingCard } from "../../src/training/cards";
 import { START } from "../../src/chess/game";
+import { navigateSection } from "../helpers/navigation";
 test("personal practice retains spaced reviews and handbrain enforces piece type", async () => {
   const env: Record<string, string> = {
     ...Object.fromEntries(
@@ -35,10 +36,7 @@ test("personal practice retains spaced reviews and handbrain enforces piece type
       source: { kind: "study", id: "test" },
     });
     await p.evaluate((card) => window.chessApp.saveTrainingCard(card), card);
-    await p
-      .getByRole("button", { name: "Практика", exact: true })
-      .first()
-      .click();
+    await navigateSection(p, "Практика");
     await p.getByRole("button", { name: /Проверка центра/ }).click();
     await p.locator('[data-square="e2"]:visible').click();
     await p.locator('[data-square="e4"]:visible').click();

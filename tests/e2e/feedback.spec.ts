@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import {
   test,
   expect,
@@ -41,7 +42,7 @@ test("a legal puzzle mistake animates, shows a refutation and counts only once",
   try {
     const page = await app.firstWindow();
     await page.locator(".profile-choice").first().click();
-    await page.getByRole("button", { name: "Задачи", exact: true }).click();
+    await navigateSection(page, "Задачи");
     await page.getByPlaceholder("Найти задачу по ID").fill(item.id);
     await page.locator(".library-row").click();
     await observeFeedback(page);
@@ -135,7 +136,7 @@ async function observeFeedback(page: Page) {
   });
 }
 async function openPuzzle(page: Page) {
-  await page.getByRole("button", { name: "Задачи", exact: true }).click();
+  await navigateSection(page, "Задачи");
   await page.getByPlaceholder("Найти задачу по ID").fill(puzzle.id);
   await page.locator(".library-row").click();
 }

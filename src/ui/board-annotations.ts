@@ -6,6 +6,35 @@ export function legalArrow(board: Chess, from: Square, to: Square): boolean {
     .moves({ square: from, verbose: true })
     .some((move) => move.to === to);
 }
+/** A plan follows the piece's shape, independent of the current position's legality. */
+export function planningArrow(board: Chess, from: Square, to: Square): boolean {
+  const piece = board.get(from);
+  if (!piece || from === to) return false;
+  const file = to.charCodeAt(0) - from.charCodeAt(0),
+    rank = Number(to[1]) - Number(from[1]),
+    dx = Math.abs(file),
+    dy = Math.abs(rank);
+  switch (piece.type) {
+    case "r":
+      return dx === 0 || dy === 0;
+    case "b":
+      return dx === dy;
+    case "q":
+      return dx === 0 || dy === 0 || dx === dy;
+    case "n":
+      return (dx === 1 && dy === 2) || (dx === 2 && dy === 1);
+    case "k":
+      return dx <= 1 && dy <= 1;
+    case "p": {
+      const forward = piece.color === "w" ? 1 : -1,
+        startRank = piece.color === "w" ? "2" : "7";
+      return (
+        (rank === forward && dx <= 1) ||
+        (dx === 0 && from[1] === startRank && rank === 2 * forward)
+      );
+    }
+  }
+}
 export function arrowPoints(
   from: Square,
   to: Square,

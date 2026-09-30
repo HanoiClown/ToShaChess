@@ -8,12 +8,11 @@ import {
 import { StudyWorkspace } from "../ui/StudyWorkspace";
 import { engineRequest } from "../shared/engine-requests";
 import { cardFromStudy } from "../training/cards";
-import { EngineComparison } from "../ui/EngineComparison";
-import { AdvancedTools } from "../ui/AdvancedTools";
+import { PositionTools } from "../ui/PositionTools";
 import { addStudyMove } from "../study/tree";
 import { StudySaveQueue } from "../study/save-queue";
 export function Studies() {
-  const { profile, locale, l, reviewId, playFrom, fail } = useApp();
+  const { profile, locale, l, reviewId, playFrom, fail, nav } = useApp();
   const [list, setList] = useState<StudyDocument[]>([]),
     [study, setStudy] = useState<StudyDocument | null>(null),
     [status, setStatus] = useState("");
@@ -153,27 +152,16 @@ export function Studies() {
                 return request.current.analyze(position);
               }}
               analysisTools={
-                <div className="position-tools">
-                  <EngineComparison
-                    position={getStudyPosition(study)}
-                    locale={locale}
-                  />
-                  <AdvancedTools
-                    locale={locale}
-                    api={window.chessApp.advanced}
-                    position={getStudyPosition(study)}
-                    onPlayMove={(uci) =>
-                      change(
-                        addStudyMove(
-                          study,
-                          study.selectedNodeId,
-                          uci,
-                          "engine",
-                        ),
-                      )
-                    }
-                  />
-                </div>
+                <PositionTools
+                  locale={locale}
+                  position={getStudyPosition(study)}
+                  onOpenSettings={() => nav("settings")}
+                  onPlayMove={(uci) =>
+                    change(
+                      addStudyMove(study, study.selectedNodeId, uci, "engine"),
+                    )
+                  }
+                />
               }
             />
           </div>

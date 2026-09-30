@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -45,9 +46,7 @@ test("empty public install creates users, plays offline pack and records earned 
     ).toBeVisible();
     const owner = (await page.evaluate(() => window.chessApp.snapshot()))
       .activeProfile!;
-    await page
-      .getByRole("button", { name: "Большая база", exact: true })
-      .click();
+    await navigateSection(page, "Большая база");
     await expect(page.locator(".database-summary")).toContainText("Задачи: 1");
     await page
       .locator(".database-filters select")
@@ -79,12 +78,10 @@ test("empty public install creates users, plays offline pack and records earned 
     await page.locator(".growth-details summary").click();
     await page.locator(".growth-panel").scrollIntoViewIfNeeded();
     await capture("02-earned-progress");
-    await page.getByRole("button", { name: "Задачи", exact: true }).click();
+    await navigateSection(page, "Задачи");
     await page.getByRole("button", { name: /Избранное/ }).click();
     await expect(page.locator(".library-row")).toHaveCount(1);
-    await page
-      .getByRole("button", { name: "Большая база", exact: true })
-      .click();
+    await navigateSection(page, "Большая база");
     await page
       .getByRole("button", { name: "Архив партий", exact: true })
       .click();

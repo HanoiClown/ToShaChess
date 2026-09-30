@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import { seedProfiles } from "../helpers/profile-fixtures";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync, readFileSync } from "node:fs";
@@ -19,7 +20,7 @@ test("library filters, complete multi-move puzzle and coordinate results stay pr
   try {
     const page = await app.firstWindow();
     await page.locator(".profile-choice").first().click();
-    await page.getByRole("button", { name: "Задачи", exact: true }).click();
+    await navigateSection(page, "Задачи");
     await expect(
       page.getByRole("heading", { name: "Библиотека тактики" }),
     ).toBeVisible();
@@ -56,9 +57,7 @@ test("library filters, complete multi-move puzzle and coordinate results stay pr
           ).length,
       )
       .toBe(1);
-    await page
-      .getByRole("button", { name: "Видение доски", exact: true })
-      .click();
+    await navigateSection(page, "Видение доски");
     await page.getByLabel("Показывать буквы и цифры по краям").uncheck();
     await expect(page.locator(".vision-layout .rank-label")).toHaveCount(0);
     await page.getByLabel("Сторона доски").selectOption("b");
@@ -103,9 +102,7 @@ test("library filters, complete multi-move puzzle and coordinate results stay pr
       .getByRole("button", { name: "Сменить профиль", exact: true })
       .click();
     await page.locator(".profile-choice").nth(1).click();
-    await page
-      .getByRole("button", { name: "Видение доски", exact: true })
-      .click();
+    await navigateSection(page, "Видение доски");
     await expect(
       page.getByLabel("Показывать буквы и цифры по краям"),
     ).toBeChecked();

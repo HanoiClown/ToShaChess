@@ -9,9 +9,13 @@ import type { PackId } from "../shared/packs";
 export function EngineComparison({
   position,
   locale,
+  embedded = false,
+  onOpenSettings,
 }: {
   position: Position;
   locale: Locale;
+  embedded?: boolean;
+  onOpenSettings?: () => void;
 }) {
   const ru = locale === "ru",
     { packs } = useEnginePacks(),
@@ -21,6 +25,15 @@ export function EngineComparison({
     [lines, setLines] = useState<EngineLine[]>([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (
+      packs.length &&
+      !packs.some((p) => p.id === pack && p.status === "ready")
+    ) {
+      const ready = packs.find((p) => p.status === "ready");
+      if (ready) setPack(ready.id);
+    }
+  }, [packs, pack]);
   const requests = useRef<ReturnType<typeof engineRequest>[]>([]),
     generation = useRef(0),
     key = position.initialFen + "|" + position.moves.join(" ");
@@ -67,34 +80,26 @@ export function EngineComparison({
       return uci;
     }
   };
+  const Container = embedded ? "div" : "details";
   return (
-    <details className="settings-section comparison-panel">
-      <summary>
-        {ru
-          ? "Человек и движок · сравнить ответы"
-          : "Human and engine · compare replies"}
-      </summary>
+    <Container
+      className={`comparison-panel ${embedded ? "tool-content" : "settings-section"}`}
+    >
+      {!embedded && (
+        <summary>
+          {ru
+            ? "Человек и движок · сравнить ответы"
+            : "Human and engine · compare replies"}
+        </summary>
+      )}
       <p>
         {ru
-          ? "Maia оценивает вероятность человеческого хода. Stockfish ищет сильные продолжения. Вероятность и качество хода — разные величины."
-          : "Maia estimates how likely a human move is. Stockfish searches for strong continuations. Move probability and move quality are different measures."}
+          ? "Узнай, какой ход может выбрать игрок заданного уровня. Полезно для поиска ловушек и типичных ошибок. Maia покажет вероятные ответы, Stockfish — сильные продолжения."
+          : "See what a player at this level might choose. Useful for studying traps and typical mistakes. Maia suggests likely replies; Stockfish finds strong continuations."}
       </p>
       <div className="pack-actions">
         <label>
-          {ru ? "Модель" : "Model"}
-          <select
-            value={pack}
-            onChange={(e) => setPack(e.target.value as PackId)}
-          >
-            {packs.map((p) => (
-              <option value={p.id} key={p.id} disabled={p.status !== "ready"}>
-                {p.title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {ru ? "Уровень Lichess обеих сторон" : "Lichess level for both sides"}
+          {ru ? "Уровень игрока · Lichess" : "Player level · Lichess"}
           <input
             type="number"
             min={600}
@@ -125,11 +130,37 @@ export function EngineComparison({
               : "Compare"}
         </button>
       </div>
+      <details className="tool-model-settings">
+        <summary>{ru ? "Настройка модели" : "Model settings"}</summary>
+        <label>
+          {ru ? "Модель" : "Model"}
+          <select
+            value={pack}
+            onChange={(e) => setPack(e.target.value as PackId)}
+          >
+            {packs.map((p) => (
+              <option value={p.id} key={p.id} disabled={p.status !== "ready"}>
+                {p.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <p className="field-help">
+          {ru
+            ? "Уровень применяется к обеим сторонам. Для начала достаточно модели 5M; более крупные модели требуют больше памяти."
+            : "The level applies to both sides. The 5M model is enough to start; larger models need more memory."}
+        </p>
+      </details>
       {!packs.some((p) => p.status === "ready") && (
         <p className="field-help">
           {ru
-            ? "Для вероятностей установи Maia в настройках. Обычный анализ Stockfish доступен отдельно."
-            : "Install Maia in Settings for probabilities. Standard Stockfish analysis is available separately."}
+            ? "Установи Maia в настройках инструментов, чтобы увидеть вероятные ответы."
+            : "Install Maia in tool settings to see likely replies."}
+          {onOpenSettings && (
+            <button className="text-button" onClick={onOpenSettings}>
+              {ru ? "Открыть настройки инструментов" : "Open tool settings"}
+            </button>
+          )}
         </p>
       )}
       {error && (
@@ -155,7 +186,8 @@ export function EngineComparison({
               <tr key={i}>
                 <td>{pvSan(boardAt(position).fen(), line.pv.slice(0, 6))}</td>
                 <td>
-                  {scoreText(line.score)} · {ru ? "гл." : "depth"} {line.depth}
+                  {scoreText(line.score, locale)} · {ru ? "гл." : "depth"}{" "}
+                  {line.depth}
                 </td>
               </tr>
             ))}
@@ -185,6 +217,13 @@ export function EngineComparison({
           </tbody>
         </table>
       )}
-    </details>
+      {human && (
+        <p className="field-help">
+          {ru
+            ? "Проценты — прогноз выбора хода моделью Maia. Высокая вероятность не означает, что ход сильный."
+            : "Percentages predict a player's choice using Maia. A likely move can still be a mistake."}
+        </p>
+      )}
+    </Container>
   );
 }

@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 import { useApp } from "../ui/context";
 import { savePositionStudy } from "../ui/study-actions";
-import { EngineComparison } from "../ui/EngineComparison";
-import { AdvancedTools } from "../ui/AdvancedTools";
+import { PositionTools } from "../ui/PositionTools";
 import { reviewPosition } from "../analysis/review-position";
+import { useReviewExploration } from "../analysis/review-exploration";
+import "../ui/review-exploration.css";
 import { Board, EvalBar } from "../ui/Board";
 import { MoveList, qualitySymbol } from "../ui/MoveList";
 import { boardAt, playUci, moveNames } from "../chess/game";
@@ -41,6 +42,38 @@ export function Review() {
     [question, setQuestion] = useState(""),
     [reply, setReply] = useState<CoachReply | null>(null),
     [asking, setAsking] = useState(false);
+  const a = game?.analysis.find((a) => a.ply === ply),
+    locked = game?.mode === "normal" && game.result === "*";
+  const sourcePosition = game ? reviewPosition(game, ply, variant) : undefined;
+  const exploration = useReviewExploration(
+    sourcePosition,
+    `${game?.id}|${ply}|${variant}|${variant === null ? "" : a?.before.pv.join(" ")}|${sourcePosition?.initialFen}|${sourcePosition?.moves.join(" ")}`,
+    !!game && !locked,
+  );
+  function selectPly(next: number) {
+    exploration.close();
+    setPly(next);
+  }
+  function selectVariant(next: number | null) {
+    exploration.close();
+    setVariant(next);
+  }
+  function tryMove(uci: string) {
+    try {
+      exploration.move(uci);
+    } catch (error) {
+      fail(error);
+    }
+  }
+  useEffect(() => {
+    const panel = panelRef.current;
+    if (
+      exploration.scratch &&
+      panel &&
+      getComputedStyle(panel).overflowY === "auto"
+    )
+      panel.scrollTo({ top: 0 });
+  }, [exploration.scratch]);
   useEffect(() => {
     setPly(
       game?.moves.length
@@ -60,24 +93,38 @@ export function Review() {
   }, [ply, locale]);
   useEffect(() => {
     function key(e: KeyboardEvent) {
+      const target = e.target as HTMLElement;
       if (
-        ["INPUT", "TEXTAREA", "SELECT"].includes(
-          (e.target as HTMLElement).tagName,
-        )
+        ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+        target.isContentEditable ||
+        target.closest("nav")
       )
         return;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
-        setPly((x) => Math.max(0, x - 1));
+        if (exploration.scratch)
+          exploration.seek(exploration.scratch.cursor - 1);
+        else if (variant !== null) selectVariant(Math.max(0, variant - 1));
+        else selectPly(Math.max(0, ply - 1));
       }
       if (e.key === "ArrowRight") {
         e.preventDefault();
-        setPly((x) => Math.min(game?.moves.length ?? 0, x + 1));
+        if (exploration.scratch)
+          exploration.seek(exploration.scratch.cursor + 1);
+        else if (variant !== null)
+          selectVariant(Math.min(a?.before.pv.length ?? 0, variant + 1));
+        else selectPly(Math.min(game?.moves.length ?? 0, ply + 1));
       }
     }
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
-  }, [game?.moves.length]);
+  }, [
+    game?.moves.length,
+    ply,
+    variant,
+    a?.before.pv.length,
+    exploration.scratch,
+  ]);
   if (!game)
     return (
       <div className="empty-state">
@@ -99,13 +146,21 @@ export function Review() {
         </button>
       </div>
     );
-  const a = game.analysis.find((a) => a.ply === ply),
-    job = snapshot.analysisJobs.includes(game.id),
-    locked = game.mode === "normal" && game.result === "*";
-  const displayedPosition = reviewPosition(game, ply, variant),
+  const job = snapshot.analysisJobs.includes(game.id);
+  const displayedPosition = exploration.position,
     totalToAnalyze = game.moves.length - (game.startPly ?? 0);
   const pre = boardAt(game, Math.max(0, ply - 1)),
     display = boardAt(displayedPosition);
+  const scratch = exploration.scratch;
+  const displayScore =
+    exploration.lines[0]?.score ??
+    (scratch
+      ? undefined
+      : variant === null
+        ? a?.after.score
+        : variant === 0
+          ? a?.before.score
+          : undefined);
   const orientation = flipped
     ? game.playerColor === "w"
       ? "b"
@@ -212,70 +267,131 @@ export function Review() {
                   ? moveNames(game)[ply - 1]
                   : l("Начальная позиция", "Starting position")
               }
-              quality={variant === null ? a?.quality : undefined}
-              score={variant === null ? a?.after.score : undefined}
-              variant={variant !== null}
-              pending={job && !a}
+              quality={!scratch && variant === null ? a?.quality : undefined}
+              score={displayScore}
+              variant={!!scratch || variant !== null}
+              pending={!scratch && job && !a}
               text={
-                variant !== null
+                scratch
                   ? l(
-                      "Сравни это продолжение с ходом в партии.",
-                      "Compare this continuation with the played move.",
+                      "Пробуй ответы за обе стороны и проверяй позицию Stockfish.",
+                      "Try replies for either side and check the position with Stockfish.",
                     )
-                  : text.split("\n").filter(Boolean).slice(1, 2).join(" ") ||
-                    l(
-                      "Выбери ход для объяснения.",
-                      "Select a move to see its explanation.",
-                    )
+                  : variant !== null
+                    ? l(
+                        "Сравни это продолжение с ходом в партии.",
+                        "Compare this continuation with the played move.",
+                      )
+                    : text.split("\n").filter(Boolean).slice(1, 2).join(" ") ||
+                      l(
+                        "Выбери ход для объяснения.",
+                        "Select a move to see its explanation.",
+                      )
               }
             />
             <div className="review-position-title">
               <span>
-                {variant !== null
-                  ? l("Лучшее продолжение", "Best continuation")
-                  : ply
-                    ? `${Math.ceil(ply / 2)}. ${moveNames(game)[ply - 1]}`
-                    : l("Начальная позиция", "Starting position")}
+                {scratch
+                  ? l("Твой вариант", "Your variation")
+                  : variant !== null
+                    ? l("Лучшее продолжение", "Best continuation")
+                    : ply
+                      ? `${Math.ceil(ply / 2)}. ${moveNames(game)[ply - 1]}`
+                      : l("Начальная позиция", "Starting position")}
               </span>
               <span className="muted">
-                {a
-                  ? `Stockfish · ${l("глубина", "depth")} ${a.after.depth}`
-                  : "Stockfish 19"}
+                {scratch
+                  ? display.turn() === "w"
+                    ? l("Ход белых", "White to move")
+                    : l("Ход чёрных", "Black to move")
+                  : a
+                    ? `Stockfish · ${l("глубина", "depth")} ${variant === 0 ? a.before.depth : a.after.depth}`
+                    : "Stockfish 19"}
               </span>
             </div>
             <div className="board-with-eval">
               <EvalBar
                 locale={locale}
-                score={a?.after.score}
+                score={displayScore}
                 orientation={orientation}
               />
               <Board
                 fen={display.fen()}
                 orientation={orientation}
                 locale={locale}
-                moveQuality={variant === null ? a?.quality : undefined}
-                lastMove={
-                  variant === null
-                    ? game.moves[ply - 1]
-                    : variant
-                      ? a?.before.pv[variant - 1]
-                      : undefined
+                onMove={tryMove}
+                moveQuality={
+                  !scratch && variant === null ? a?.quality : undefined
                 }
-                arrow={variant === 0 ? a?.best : undefined}
+                lastMove={
+                  scratch
+                    ? displayedPosition.moves.at(-1)
+                    : variant === null
+                      ? game.moves[ply - 1]
+                      : variant
+                        ? a?.before.pv[variant - 1]
+                        : undefined
+                }
+                arrow={!scratch && variant === 0 ? a?.best : undefined}
               />
             </div>
-            <div className="review-controls">
-              {variant !== null ? (
+            <div
+              className={`review-controls${scratch ? " review-scratch-controls" : ""}`}
+            >
+              {scratch ? (
                 <>
                   <button
                     className="secondary"
-                    onClick={() => setVariant(null)}
+                    onClick={() => selectVariant(null)}
                   >
                     {l("Вернуться к партии", "Back to game")}
                   </button>
                   <button
                     className="icon-button"
-                    onClick={() => setVariant(Math.max(0, variant - 1))}
+                    aria-label={l(
+                      "Назад в варианте",
+                      "Previous variation move",
+                    )}
+                    disabled={scratch.cursor === 0}
+                    onClick={() => exploration.seek(scratch.cursor - 1)}
+                  >
+                    <ChevronLeft />
+                  </button>
+                  <span>
+                    {scratch.cursor} / {scratch.moves.length}
+                  </span>
+                  <button
+                    className="icon-button"
+                    aria-label={l("Вперёд в варианте", "Next variation move")}
+                    disabled={scratch.cursor === scratch.moves.length}
+                    onClick={() => exploration.seek(scratch.cursor + 1)}
+                  >
+                    <ChevronRight />
+                  </button>
+                  <button
+                    className="text-button"
+                    disabled={!scratch.moves.length}
+                    onClick={exploration.reset}
+                  >
+                    {l("Сбросить вариант", "Reset variation")}
+                  </button>
+                </>
+              ) : variant !== null ? (
+                <>
+                  <button
+                    className="secondary"
+                    onClick={() => selectVariant(null)}
+                  >
+                    {l("Вернуться к партии", "Back to game")}
+                  </button>
+                  <button
+                    className="icon-button"
+                    aria-label={l(
+                      "Назад в лучшем варианте",
+                      "Previous best-line move",
+                    )}
+                    disabled={variant === 0}
+                    onClick={() => selectVariant(Math.max(0, variant - 1))}
                   >
                     <ChevronLeft />
                   </button>
@@ -284,8 +400,13 @@ export function Review() {
                   </span>
                   <button
                     className="icon-button"
+                    aria-label={l(
+                      "Вперёд в лучшем варианте",
+                      "Next best-line move",
+                    )}
+                    disabled={variant >= (a?.before.pv.length ?? 0)}
                     onClick={() =>
-                      setVariant(
+                      selectVariant(
                         Math.min(a?.before.pv.length ?? 0, variant + 1),
                       )
                     }
@@ -298,14 +419,14 @@ export function Review() {
                   <button
                     className="icon-button"
                     aria-label={l("В начало", "First position")}
-                    onClick={() => setPly(0)}
+                    onClick={() => selectPly(0)}
                   >
                     <ChevronsLeft />
                   </button>
                   <button
                     className="icon-button"
                     aria-label={l("Назад", "Previous")}
-                    onClick={() => setPly(Math.max(0, ply - 1))}
+                    onClick={() => selectPly(Math.max(0, ply - 1))}
                   >
                     <ChevronLeft />
                   </button>
@@ -315,21 +436,29 @@ export function Review() {
                   <button
                     className="icon-button"
                     aria-label={l("Вперёд", "Next")}
-                    onClick={() => setPly(Math.min(game.moves.length, ply + 1))}
+                    onClick={() =>
+                      selectPly(Math.min(game.moves.length, ply + 1))
+                    }
                   >
                     <ChevronRight />
                   </button>
                   <button
                     className="icon-button"
                     aria-label={l("В конец", "Last position")}
-                    onClick={() => setPly(game.moves.length)}
+                    onClick={() => selectPly(game.moves.length)}
                   >
                     <ChevronsRight />
                   </button>
                 </>
               )}
             </div>
-            <EvaluationChart game={game} ply={ply} select={setPly} />
+            <p className="review-try-note">
+              {l(
+                "Перетащи фигуру или нажми на неё и на поле назначения. Можно ходить за обе стороны; партия не изменится.",
+                "Drag a piece, or select it and its destination. Play either side; the saved game stays unchanged.",
+              )}
+            </p>
+            <EvaluationChart game={game} ply={ply} select={selectPly} />
             <MaterialPanel
               locale={locale}
               orientation={orientation}
@@ -351,6 +480,106 @@ export function Review() {
             tabIndex={0}
             aria-label={l("Разбор и объяснения", "Analysis and explanations")}
           >
+            <section
+              className="review-exploration"
+              aria-label={l("Позиция на доске", "Position on the board")}
+            >
+              <div className="review-exploration-heading">
+                <h2>{l("Позиция на доске", "Position on the board")}</h2>
+                <button
+                  className="secondary"
+                  disabled={!exploration.busy && display.isGameOver()}
+                  onClick={() =>
+                    exploration.busy
+                      ? exploration.cancel()
+                      : void exploration.analyze()
+                  }
+                >
+                  {exploration.busy ? (
+                    <Square size={16} />
+                  ) : (
+                    <ChartNoAxesCombined size={17} />
+                  )}
+                  {exploration.busy
+                    ? l("Остановить проверку", "Stop checking")
+                    : l("Проверить позицию", "Check position")}
+                </button>
+              </div>
+              <p className="muted" role="status">
+                {exploration.busy
+                  ? l(
+                      "Stockfish проверяет позицию на доске…",
+                      "Stockfish is checking the position on the board…",
+                    )
+                  : exploration.failed
+                    ? l(
+                        "Не удалось проверить позицию. Попробуй ещё раз — вариант остался на доске.",
+                        "Could not check this position. Try again; your variation is still on the board.",
+                      )
+                    : display.isCheckmate()
+                      ? l(
+                          "Мат. Вернись на ход назад, чтобы попробовать другой ответ.",
+                          "Checkmate. Go back a move to try another reply.",
+                        )
+                      : display.isGameOver()
+                        ? l(
+                            "Ничья в этой позиции. Вернись на ход назад, чтобы продолжить разбор.",
+                            "This position is drawn. Go back a move to continue exploring.",
+                          )
+                        : l(
+                            "Stockfish · оценка за белых. Нажми на ход продолжения, чтобы открыть его на доске.",
+                            "Stockfish · White’s evaluation. Select a continuation move to play it on the board.",
+                          )}
+              </p>
+              {!!exploration.lines.length && (
+                <div className="review-exploration-lines">
+                  {exploration.lines.map((line, lineIndex) => {
+                    const board = boardAt(displayedPosition);
+                    const moves: { uci: string; san: string }[] = [];
+                    for (const uci of line.pv.slice(0, 20)) {
+                      try {
+                        moves.push({ uci, san: playUci(board, uci).san });
+                      } catch {
+                        break;
+                      }
+                    }
+                    return (
+                      <div className="review-engine-line" key={lineIndex}>
+                        <div className="review-engine-line-meta">
+                          <strong className="review-engine-score">
+                            {scoreText(line.score, locale)}
+                          </strong>
+                          <small>
+                            {l("Глубина", "Depth")} {line.depth}
+                          </small>
+                        </div>
+                        <div className="review-engine-moves">
+                          {moves.map((move, index) => (
+                            <button
+                              className="text-button"
+                              key={`${index}-${move.uci}`}
+                              aria-label={`${l("Продолжение", "Continuation")} ${lineIndex + 1}, ${l("ход", "move")} ${index + 1}: ${move.san}`}
+                              onClick={() => {
+                                try {
+                                  exploration.follow(
+                                    moves.map((m) => m.uci),
+                                    index + 1,
+                                  );
+                                } catch (error) {
+                                  fail(error);
+                                }
+                              }}
+                            >
+                              {move.san}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
             <AccuracySummary locale={locale} accuracy={gameAccuracy(game)} />
             <div className="panel-title">
               <h2>{l("Ходы и объяснения", "Moves and explanations")}</h2>
@@ -380,7 +609,7 @@ export function Review() {
             <MoveList
               game={game}
               selected={ply}
-              onSelect={setPly}
+              onSelect={selectPly}
               locale={locale}
             />
             <div className="coach-area">
@@ -396,8 +625,12 @@ export function Review() {
                   </strong>
                   <small>
                     {l(
-                      "Понимай идею каждого хода",
-                      "Understand the idea behind each move",
+                      scratch
+                        ? "Объяснение выбранного хода в партии"
+                        : "Понимай идею каждого хода",
+                      scratch
+                        ? "Explanation of the selected game move"
+                        : "Understand the idea behind each move",
                     )}
                   </small>
                 </div>
@@ -423,7 +656,7 @@ export function Review() {
                   )}
                   <button
                     className="secondary full"
-                    onClick={() => setVariant(0)}
+                    onClick={() => selectVariant(0)}
                   >
                     <Play size={16} />
                     {l("Показать лучший вариант", "Show the best line")}
@@ -484,11 +717,11 @@ export function Review() {
               </small>
             </div>
             <div className="position-tools">
-              <EngineComparison position={displayedPosition} locale={locale} />
-              <AdvancedTools
-                locale={locale}
-                api={window.chessApp.advanced}
+              <PositionTools
                 position={displayedPosition}
+                locale={locale}
+                onPlayMove={tryMove}
+                onOpenSettings={() => nav("settings")}
               />
             </div>
           </section>
@@ -514,7 +747,7 @@ export function Review() {
                 .sort((a, b) => b.loss - a.loss)
                 .slice(0, 3)
                 .map((x) => (
-                  <button key={x.ply} onClick={() => setPly(x.ply)}>
+                  <button key={x.ply} onClick={() => selectPly(x.ply)}>
                     <span className={`quality-dot ${x.quality}`}>
                       {qualitySymbol[x.quality]}
                     </span>

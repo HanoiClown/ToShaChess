@@ -52,12 +52,17 @@ export function AdvancedTools({
   api,
   position,
   onPlayMove,
+  focus = "all",
+  onOpenSettings,
 }: {
   locale: Locale;
   api: AdvancedToolsApi;
   position?: Position;
   onPlayMove?: (uci: string) => void;
+  focus?: "all" | "search" | "tablebase" | "explorer";
+  onOpenSettings?: () => void;
 }) {
+  const embedded = focus !== "all";
   const ru = locale === "ru",
     l = (a: string, b: string) => (ru ? a : b);
   const [config, setConfig] = useState<OptionalEngineConfig | null>(null);
@@ -78,6 +83,11 @@ export function AdvancedTools({
     mounted = useRef(true),
     activeRequest = useRef<string | null>(null);
   const key = position ? positionId(position) : "";
+  const pieceCount = position
+    ? boardAt(position).board().flat().filter(Boolean).length
+    : 0;
+  const endingEligible =
+    !!position && (pieceCount <= 5 || boardAt(position).isGameOver());
   const positionRef = useRef(position);
   positionRef.current = position;
 
@@ -245,8 +255,8 @@ export function AdvancedTools({
           "Install the Maia CPU pack, which includes the local Python runtime used to read tables.",
         ),
         tables_missing: l(
-          "Установите таблицы ниже или выберите свою папку Syzygy.",
-          "Install the tables below or choose your Syzygy directory.",
+          "Установите таблицы или выберите свою папку Syzygy в настройках инструментов.",
+          "Install the tables or choose your Syzygy directory in tool settings.",
         ),
         missing_table: l(
           "Для этой позиции не хватает файлов WDL или DTZ. Проверьте полный пакет.",
@@ -264,19 +274,29 @@ export function AdvancedTools({
       }) as Record<string, string>
     )[value ?? ""] ?? "";
 
+  const Container = embedded ? "div" : "details";
   return (
-    <details className="advanced-tools">
-      <summary>
-        <strong>{l("Дополнительные инструменты", "Advanced tools")}</strong>
-        <ChevronDown size={20} aria-hidden="true" />
-      </summary>
+    <Container className={`advanced-tools ${embedded ? "tool-content" : ""}`}>
+      {!embedded && (
+        <summary>
+          <strong>
+            {l(
+              "Настройка дополнительных инструментов",
+              "Configure optional tools",
+            )}
+          </strong>
+          <ChevronDown size={20} aria-hidden="true" />
+        </summary>
+      )}
       <div className="advanced-body">
-        <p className="advanced-muted">
-          {l(
-            "Отдельный движок, статистика местного архива и точные таблицы окончаний. Все вычисления проходят на этом компьютере.",
-            "An additional engine, statistics from your local archive, and endgame tablebases. All calculations run on this computer.",
-          )}
-        </p>
+        {!embedded && (
+          <p className="advanced-muted">
+            {l(
+              "Отдельный движок, статистика местного архива и точные таблицы окончаний. Все вычисления проходят на этом компьютере.",
+              "An additional engine, statistics from your local archive, and endgame tablebases. All calculations run on this computer.",
+            )}
+          </p>
+        )}
         {error && (
           <div className="advanced-error" role="alert">
             <strong>
@@ -300,48 +320,92 @@ export function AdvancedTools({
         {notice && <p role="status">{notice}</p>}
         {position && (
           <section className="advanced-section">
-            <h3>{l("Текущая позиция", "Current position")}</h3>
-            <div className="advanced-actions">
-              <button
-                type="button"
-                className="secondary"
-                disabled={!config || busy.search}
-                onClick={() => void inspect("search")}
-              >
-                <Play size={17} aria-hidden="true" />
-                {busy.search
-                  ? l("Анализ…", "Searching…")
-                  : config
-                    ? config.name
-                    : l("Сначала выберите движок", "Choose an engine below")}
-              </button>
-              {busy.search && (
-                <button
-                  type="button"
-                  className="secondary"
-                  onClick={() => {
-                    if (activeRequest.current)
-                      void action("cancel", () =>
-                        api.cancel(activeRequest.current!),
-                      );
-                  }}
-                >
-                  <Pause size={17} aria-hidden="true" />
-                  {l("Остановить", "Stop")}
-                </button>
-              )}
-              <button
-                type="button"
-                className="secondary"
-                disabled={busy.tablebase}
-                onClick={() => void inspect("tablebase")}
-              >
-                {busy.tablebase
-                  ? l("Проверка…", "Probing…")
-                  : l("Проверить окончание", "Probe endgame")}
-              </button>
-            </div>
-            {search && (
+            {!embedded && <h3>{l("Текущая позиция", "Current position")}</h3>}
+            {focus === "search" && (
+              <p>
+                {l(
+                  "Сравни идеи другого движка с обычным анализом Stockfish. Это может помочь найти альтернативный план в сложной позиции.",
+                  "Compare another engine's ideas with the standard Stockfish analysis to look for a different plan in a complex position.",
+                )}
+              </p>
+            )}
+            {focus === "tablebase" && (
+              <p>
+                {l(
+                  "Узнай точный исход при правильной игре, когда на доске осталось мало фигур. Таблицы Syzygy показывают выигрыш, ничью или поражение.",
+                  "Find the exact outcome with correct play when few pieces remain. Syzygy tables show a win, draw or loss.",
+                )}
+              </p>
+            )}
+            {focus === "search" && !config && (
+              <p className="field-help">
+                {l(
+                  "Подключи дополнительный движок в настройках инструментов.",
+                  "Connect an additional engine in tool settings.",
+                )}
+              </p>
+            )}
+            {focus === "tablebase" && !endingEligible && (
+              <p className="field-help">
+                {l(
+                  "Нужна позиция с 3–5 фигурами, включая королей. Сейчас на доске",
+                  "Choose a position with 3–5 pieces, including kings. Pieces currently on the board:",
+                )}{" "}
+                {pieceCount}.
+              </p>
+            )}
+            {(focus === "all" ||
+              focus === "search" ||
+              focus === "tablebase") && (
+              <div className="advanced-actions">
+                {(focus === "all" || (focus === "search" && config)) && (
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={!config || busy.search}
+                    onClick={() => void inspect("search")}
+                  >
+                    <Play size={17} aria-hidden="true" />
+                    {busy.search
+                      ? l("Анализ…", "Searching…")
+                      : config
+                        ? config.name
+                        : l(
+                            "Сначала выберите движок",
+                            "Choose an engine below",
+                          )}
+                  </button>
+                )}
+                {busy.search && (
+                  <button
+                    type="button"
+                    className="secondary"
+                    onClick={() => {
+                      if (activeRequest.current)
+                        void action("cancel", () =>
+                          api.cancel(activeRequest.current!),
+                        );
+                    }}
+                  >
+                    <Pause size={17} aria-hidden="true" />
+                    {l("Остановить", "Stop")}
+                  </button>
+                )}
+                {(focus === "all" || focus === "tablebase") && (
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={busy.tablebase || !endingEligible}
+                    onClick={() => void inspect("tablebase")}
+                  >
+                    {busy.tablebase
+                      ? l("Проверка…", "Probing…")
+                      : l("Проверить окончание", "Probe endgame")}
+                  </button>
+                )}
+              </div>
+            )}
+            {(focus === "all" || focus === "search") && search && (
               <div className="advanced-result" aria-live="polite">
                 <h4>
                   {search.provider.name}
@@ -385,7 +449,7 @@ export function AdvancedTools({
                 </p>
               </div>
             )}
-            {ending && (
+            {(focus === "all" || focus === "tablebase") && ending && (
               <div className="advanced-result" aria-live="polite">
                 <h4>
                   Syzygy ·{" "}
@@ -456,46 +520,56 @@ export function AdvancedTools({
                 )}
               </div>
             )}
-            <div className="advanced-actions">
-              <label className="advanced-field">
-                <span>
-                  {l(
-                    "Средний рейтинг обоих игроков",
-                    "Average rating of both players",
-                  )}
-                </span>
-                <select
-                  value={ratingBand}
-                  onChange={(e) => {
-                    setRatingBand(e.target.value as ExplorerRatingBand);
-                    setExplorer(null);
-                    generation.current++;
-                  }}
+            {focus === "explorer" && (
+              <p>
+                {l(
+                  "Посмотри, какие продолжения встречались в загруженных партиях и как они заканчивались. Фильтр помогает сравнить игроков похожего уровня.",
+                  "See which continuations occurred in downloaded games and how they ended. Filter by rating to compare players at a similar level.",
+                )}
+              </p>
+            )}
+            {(focus === "all" || focus === "explorer") && (
+              <div className="advanced-actions">
+                <label className="advanced-field">
+                  <span>
+                    {l(
+                      "Средний рейтинг обоих игроков",
+                      "Average rating of both players",
+                    )}
+                  </span>
+                  <select
+                    value={ratingBand}
+                    onChange={(e) => {
+                      setRatingBand(e.target.value as ExplorerRatingBand);
+                      setExplorer(null);
+                      generation.current++;
+                    }}
+                  >
+                    <option value="all">
+                      {l("Любой рейтинг", "All ratings")}
+                    </option>
+                    <option value="under1000">&lt; 1000</option>
+                    <option value="1000-1599">1000–1599</option>
+                    <option value="1600-2199">1600–2199</option>
+                    <option value="2200plus">2200+</option>
+                    <option value="unknown">
+                      {l("Без рейтинга", "Unknown rating")}
+                    </option>
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busy.explorer}
+                  onClick={() => void inspect("explorer")}
                 >
-                  <option value="all">
-                    {l("Любой рейтинг", "All ratings")}
-                  </option>
-                  <option value="under1000">&lt; 1000</option>
-                  <option value="1000-1599">1000–1599</option>
-                  <option value="1600-2199">1600–2199</option>
-                  <option value="2200plus">2200+</option>
-                  <option value="unknown">
-                    {l("Без рейтинга", "Unknown rating")}
-                  </option>
-                </select>
-              </label>
-              <button
-                type="button"
-                className="secondary"
-                disabled={busy.explorer}
-                onClick={() => void inspect("explorer")}
-              >
-                {busy.explorer
-                  ? l("Читаем индекс…", "Reading index…")
-                  : l("Ходы в местной базе", "Moves in local archive")}
-              </button>
-            </div>
-            {explorer && (
+                  {busy.explorer
+                    ? l("Читаем индекс…", "Reading index…")
+                    : l("Ходы в местной базе", "Moves in local archive")}
+                </button>
+              </div>
+            )}
+            {(focus === "all" || focus === "explorer") && explorer && (
               <div className="advanced-result" aria-live="polite">
                 <h4>{l("Дебютная статистика", "Opening statistics")}</h4>
                 <p className="advanced-muted">
@@ -509,8 +583,8 @@ export function AdvancedTools({
                 {explorer.status.state === "error" ? (
                   <p>
                     {l(
-                      "База изменилась или индекс недоступен. Перестройте индекс ниже.",
-                      "The archive changed or the index is unavailable. Rebuild the index below.",
+                      "База изменилась или индекс недоступен. Перестройте индекс в настройках инструментов.",
+                      "The archive changed or the index is unavailable. Rebuild the index in tool settings.",
                     )}
                   </p>
                 ) : !explorer.games ? (
@@ -583,379 +657,396 @@ export function AdvancedTools({
             )}
           </section>
         )}
-        <details className="advanced-section" open={!position}>
-          <summary>
-            <h3>{l("Выбор движка", "Choose an engine")}</h3>
-          </summary>
-          <p>
-            {config
-              ? `${config.name} · ${stateLabel(engineStatus?.state ?? "idle")}`
-              : l(
-                  "Дополнительный движок не выбран.",
-                  "No additional engine selected.",
-                )}
-          </p>
-          <div className="advanced-actions">
-            <button
-              type="button"
-              className="secondary"
-              disabled={busy.config}
-              onClick={() => void choose("lc0")}
-            >
-              <FolderOpen size={17} aria-hidden="true" />
-              {l("Выбрать Lc0", "Choose Lc0")}
-            </button>
-            <button
-              type="button"
-              className="secondary"
-              disabled={busy.config}
-              onClick={() => void choose("custom")}
-            >
-              {l("Другой UCI-движок", "Other UCI engine")}
-            </button>
-          </div>
-          {draft && (
-            <div className="advanced-config">
-              <label className="advanced-field">
-                <span>{l("Название", "Name")}</span>
-                <input
-                  value={draft.name}
-                  maxLength={80}
-                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                />
-              </label>
-              <p className="advanced-path">{draft.executable}</p>
-              {draft.id === "lc0" && (
-                <>
-                  <div className="advanced-actions">
-                    <button
-                      type="button"
-                      className="secondary"
-                      disabled={busy.config}
-                      onClick={() =>
-                        void action("config", async () => {
-                          const path = await api.chooseNetwork();
-                          if (path)
-                            setDraft((old) =>
-                              old ? { ...old, networkPath: path } : old,
-                            );
-                        })
-                      }
-                    >
-                      {l("Выбрать сеть Lc0", "Choose Lc0 network")}
-                    </button>
-                    <span className="advanced-path">
-                      {draft.networkPath
-                        ? basename(draft.networkPath)
-                        : l("Сеть не выбрана", "No network selected")}
-                    </span>
-                  </div>
-                  <label className="advanced-field">
-                    <span>{l("Вычисления", "Compute backend")}</span>
-                    <select
-                      value={draft.backend ?? "cpu"}
-                      onChange={(e) =>
-                        setDraft({
-                          ...draft,
-                          backend: e.target.value as "cpu" | "cuda",
-                        })
-                      }
-                    >
-                      <option value="cpu">CPU · DNNL/BLAS</option>
-                      <option value="cuda">
-                        NVIDIA CUDA ·{" "}
-                        {l(
-                          "требует совместимой сборки",
-                          "requires compatible build",
-                        )}
-                      </option>
-                    </select>
-                  </label>
-                  <p className="advanced-muted">
-                    {l(
-                      "CPU работает без видеокарты. Для CUDA выберите соответствующую сборку Lc0. Сеть выбирается отдельно: размер, совместимость и лицензия зависят от её автора.",
-                      "CPU works without a graphics card. CUDA requires a compatible Lc0 build. Choose a network separately: size, compatibility, and license depend on its author.",
+        {embedded && onOpenSettings && (
+          <button
+            className="text-button tool-settings-link"
+            onClick={onOpenSettings}
+          >
+            {l("Открыть настройки инструментов", "Open tool settings")}
+          </button>
+        )}
+        {!embedded && (
+          <>
+            <details className="advanced-section">
+              <summary>
+                <h3>{l("Выбор движка", "Choose an engine")}</h3>
+              </summary>
+              <p>
+                {config
+                  ? `${config.name} · ${stateLabel(engineStatus?.state ?? "idle")}`
+                  : l(
+                      "Дополнительный движок не выбран.",
+                      "No additional engine selected.",
                     )}
-                  </p>
-                </>
-              )}
+              </p>
               <div className="advanced-actions">
                 <button
                   type="button"
-                  className="primary"
-                  disabled={
-                    busy.config ||
-                    !draft.name.trim() ||
-                    (draft.id === "lc0" && !draft.networkPath)
-                  }
+                  className="secondary"
+                  disabled={busy.config}
+                  onClick={() => void choose("lc0")}
+                >
+                  <FolderOpen size={17} aria-hidden="true" />
+                  {l("Выбрать Lc0", "Choose Lc0")}
+                </button>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busy.config}
+                  onClick={() => void choose("custom")}
+                >
+                  {l("Другой UCI-движок", "Other UCI engine")}
+                </button>
+              </div>
+              {draft && (
+                <div className="advanced-config">
+                  <label className="advanced-field">
+                    <span>{l("Название", "Name")}</span>
+                    <input
+                      value={draft.name}
+                      maxLength={80}
+                      onChange={(e) =>
+                        setDraft({ ...draft, name: e.target.value })
+                      }
+                    />
+                  </label>
+                  <p className="advanced-path">{draft.executable}</p>
+                  {draft.id === "lc0" && (
+                    <>
+                      <div className="advanced-actions">
+                        <button
+                          type="button"
+                          className="secondary"
+                          disabled={busy.config}
+                          onClick={() =>
+                            void action("config", async () => {
+                              const path = await api.chooseNetwork();
+                              if (path)
+                                setDraft((old) =>
+                                  old ? { ...old, networkPath: path } : old,
+                                );
+                            })
+                          }
+                        >
+                          {l("Выбрать сеть Lc0", "Choose Lc0 network")}
+                        </button>
+                        <span className="advanced-path">
+                          {draft.networkPath
+                            ? basename(draft.networkPath)
+                            : l("Сеть не выбрана", "No network selected")}
+                        </span>
+                      </div>
+                      <label className="advanced-field">
+                        <span>{l("Вычисления", "Compute backend")}</span>
+                        <select
+                          value={draft.backend ?? "cpu"}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              backend: e.target.value as "cpu" | "cuda",
+                            })
+                          }
+                        >
+                          <option value="cpu">CPU · DNNL/BLAS</option>
+                          <option value="cuda">
+                            NVIDIA CUDA ·{" "}
+                            {l(
+                              "требует совместимой сборки",
+                              "requires compatible build",
+                            )}
+                          </option>
+                        </select>
+                      </label>
+                      <p className="advanced-muted">
+                        {l(
+                          "CPU работает без видеокарты. Для CUDA выберите соответствующую сборку Lc0. Сеть выбирается отдельно: размер, совместимость и лицензия зависят от её автора.",
+                          "CPU works without a graphics card. CUDA requires a compatible Lc0 build. Choose a network separately: size, compatibility, and license depend on its author.",
+                        )}
+                      </p>
+                    </>
+                  )}
+                  <div className="advanced-actions">
+                    <button
+                      type="button"
+                      className="primary"
+                      disabled={
+                        busy.config ||
+                        !draft.name.trim() ||
+                        (draft.id === "lc0" && !draft.networkPath)
+                      }
+                      onClick={() =>
+                        void action("config", async () => {
+                          await api.configureEngine(draft);
+                          setConfig(draft);
+                          setNotice(
+                            l(
+                              "Движок выбран. Запустите анализ позиции для проверки.",
+                              "Engine selected. Analyze a position to check it.",
+                            ),
+                          );
+                        })
+                      }
+                    >
+                      {l("Сохранить движок", "Save engine")}
+                    </button>
+                  </div>
+                </div>
+              )}
+              {config && (
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busy.config}
                   onClick={() =>
                     void action("config", async () => {
-                      await api.configureEngine(draft);
-                      setConfig(draft);
-                      setNotice(
-                        l(
-                          "Движок выбран. Запустите анализ позиции для проверки.",
-                          "Engine selected. Analyze a position to check it.",
-                        ),
-                      );
+                      await api.configureEngine(null);
+                      setConfig(null);
+                      setDraft(null);
+                      setSearch(null);
                     })
                   }
                 >
-                  {l("Сохранить движок", "Save engine")}
+                  {l(
+                    "Отключить дополнительный движок",
+                    "Disable additional engine",
+                  )}
                 </button>
-              </div>
-            </div>
-          )}
-          {config && (
-            <button
-              type="button"
-              className="secondary"
-              disabled={busy.config}
-              onClick={() =>
-                void action("config", async () => {
-                  await api.configureEngine(null);
-                  setConfig(null);
-                  setDraft(null);
-                  setSearch(null);
-                })
-              }
-            >
-              {l(
-                "Отключить дополнительный движок",
-                "Disable additional engine",
               )}
-            </button>
-          )}
-        </details>
-        <details className="advanced-section" open={!position}>
-          <summary>
-            <h3>{l("Локальные пакеты", "Local packs")}</h3>
-          </summary>
-          <p className="advanced-muted">
-            {l(
-              "Загрузка начинается только по кнопке. После установки интернет для этих инструментов не нужен.",
-              "Downloads begin only when requested. Installed tools work offline.",
-            )}
-          </p>
-          {!packs.length && (
-            <p>{l("Читаем список пакетов…", "Loading packs…")}</p>
-          )}
-          {packs.map((pack) => (
-            <div className="advanced-pack" key={pack.id}>
-              <div className="advanced-pack-title">
-                <strong>{pack.title}</strong>
-                <span>{stateLabel(pack.status)}</span>
-              </div>
+            </details>
+            <details className="advanced-section">
+              <summary>
+                <h3>{l("Локальные пакеты", "Local packs")}</h3>
+              </summary>
               <p className="advanced-muted">
-                {l("Загрузка", "Download")}: {bytes(pack.downloadBytes, locale)}
-                {pack.installedBytes > 0
-                  ? ` · ${l("На диске", "On disk")}: ${bytes(pack.installedBytes, locale)}`
-                  : ""}
+                {l(
+                  "Загрузка начинается только по кнопке. После установки интернет для этих инструментов не нужен.",
+                  "Downloads begin only when requested. Installed tools work offline.",
+                )}
               </p>
-              <p className="advanced-muted">
-                {pack.license} ·{" "}
-                <a href={pack.source} target="_blank" rel="noreferrer">
-                  {l("Источник и условия", "Source and terms")}
-                </a>
-              </p>
-              {pack.status === "installing" && (
-                <progress
-                  value={Math.min(pack.bytes, pack.downloadBytes)}
-                  max={Math.max(1, pack.downloadBytes)}
-                  aria-label={`${pack.title}: ${l("выполнение", "progress")}`}
-                />
+              {!packs.length && (
+                <p>{l("Читаем список пакетов…", "Loading packs…")}</p>
               )}
-              {pack.message && <p className="advanced-path">{pack.message}</p>}
+              {packs.map((pack) => (
+                <div className="advanced-pack" key={pack.id}>
+                  <div className="advanced-pack-title">
+                    <strong>{pack.title}</strong>
+                    <span>{stateLabel(pack.status)}</span>
+                  </div>
+                  <p className="advanced-muted">
+                    {l("Загрузка", "Download")}:{" "}
+                    {bytes(pack.downloadBytes, locale)}
+                    {pack.installedBytes > 0
+                      ? ` · ${l("На диске", "On disk")}: ${bytes(pack.installedBytes, locale)}`
+                      : ""}
+                  </p>
+                  <p className="advanced-muted">
+                    {pack.license} ·{" "}
+                    <a href={pack.source} target="_blank" rel="noreferrer">
+                      {l("Источник и условия", "Source and terms")}
+                    </a>
+                  </p>
+                  {pack.status === "installing" && (
+                    <progress
+                      value={Math.min(pack.bytes, pack.downloadBytes)}
+                      max={Math.max(1, pack.downloadBytes)}
+                      aria-label={`${pack.title}: ${l("выполнение", "progress")}`}
+                    />
+                  )}
+                  {pack.message && (
+                    <p className="advanced-path">{pack.message}</p>
+                  )}
+                  <div className="advanced-actions">
+                    {pack.status === "installing" ? (
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() =>
+                          void action(`cancel-${pack.id}`, () =>
+                            api.cancelOptionalPack(pack.id),
+                          )
+                        }
+                      >
+                        {l("Приостановить", "Pause")}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="secondary"
+                          disabled={busy[pack.id]}
+                          onClick={() =>
+                            void action(pack.id, () =>
+                              api.installOptionalPack(pack.id),
+                            )
+                          }
+                        >
+                          {pack.status === "ready"
+                            ? l("Переустановить", "Reinstall")
+                            : pack.status === "cancelled"
+                              ? l("Продолжить загрузку", "Resume download")
+                              : l("Установить", "Install")}
+                        </button>
+                        {pack.status === "ready" && (
+                          <button
+                            type="button"
+                            className="secondary"
+                            disabled={busy[pack.id]}
+                            onClick={() =>
+                              void action(pack.id, () =>
+                                api.verifyOptionalPack(pack.id),
+                              )
+                            }
+                          >
+                            {l("Проверить файлы", "Verify files")}
+                          </button>
+                        )}
+                        {pack.status !== "missing" && (
+                          <button
+                            type="button"
+                            className="secondary"
+                            disabled={busy[pack.id]}
+                            onClick={() =>
+                              void action(pack.id, () =>
+                                api.removeOptionalPack(pack.id),
+                              )
+                            }
+                          >
+                            {l("Удалить пакет", "Remove pack")}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                className="secondary"
+                disabled={busy.tables}
+                onClick={() =>
+                  void action("tables", async () => {
+                    const path = await api.chooseTablebaseDirectory();
+                    if (path) {
+                      setEnding(null);
+                      setNotice(
+                        `${l("Папка таблиц", "Tablebase directory")}: ${path}`,
+                      );
+                    }
+                  })
+                }
+              >
+                <FolderOpen size={17} aria-hidden="true" />
+                {l("Своя папка Syzygy", "Use own Syzygy directory")}
+              </button>
+            </details>
+            <details className="advanced-section">
+              <summary>
+                <h3>{l("Индекс дебютов", "Opening index")}</h3>
+              </summary>
+              <p className="advanced-muted">
+                {l(
+                  "Считается по уже установленному архиву партий в фоновом процессе. Частичный индекс можно использовать и дополнять. Максимум на диске — около 1 GiB.",
+                  "Built from your installed game archive in a background process. Partial indexes can be used and expanded. Disk usage is capped at about 1 GiB.",
+                )}
+              </p>
+              {index && (
+                <p aria-live="polite">
+                  {stateLabel(index.state)} ·{" "}
+                  {index.processedGames.toLocaleString(locale)} /{" "}
+                  {index.availableGames.toLocaleString(locale)}{" "}
+                  {l("обработано", "processed")} ·{" "}
+                  {index.indexedGames.toLocaleString(locale)}{" "}
+                  {l("подходящих партий", "usable games")}
+                  {index.skippedGames
+                    ? ` · ${index.skippedGames.toLocaleString(locale)} ${l("пропущено", "skipped")}`
+                    : ""}
+                </p>
+              )}
+              {index?.error && <p className="advanced-path">{index.error}</p>}
+              <div className="advanced-limit-fields">
+                <label className="advanced-field">
+                  <span>{l("Лимит партий", "Game limit")}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10000000}
+                    step={1000}
+                    value={maxGames}
+                    onChange={(e) => setMaxGames(e.target.value)}
+                    disabled={index?.state === "building"}
+                  />
+                </label>
+                <label className="advanced-field">
+                  <span>{l("Первые полные ходы", "First full moves")}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={fullMoves}
+                    onChange={(e) => setFullMoves(e.target.value)}
+                    disabled={index?.state === "building"}
+                  />
+                </label>
+              </div>
               <div className="advanced-actions">
-                {pack.status === "installing" ? (
+                {index?.state === "building" ? (
                   <button
                     type="button"
                     className="secondary"
                     onClick={() =>
-                      void action(`cancel-${pack.id}`, () =>
-                        api.cancelOptionalPack(pack.id),
-                      )
+                      void action("cancel-index", () => api.cancelExplorer())
                     }
                   >
-                    {l("Приостановить", "Pause")}
+                    {l("Приостановить индексирование", "Pause indexing")}
                   </button>
                 ) : (
                   <>
                     <button
                       type="button"
                       className="secondary"
-                      disabled={busy[pack.id]}
+                      disabled={busy.index || !validLimits}
                       onClick={() =>
-                        void action(pack.id, () =>
-                          api.installOptionalPack(pack.id),
-                        )
+                        void action("index", async () => {
+                          setIndex(
+                            await api.buildExplorer({
+                              maxGames: Number(maxGames),
+                              maxPly: Number(fullMoves) * 2,
+                            }),
+                          );
+                        })
                       }
                     >
-                      {pack.status === "ready"
-                        ? l("Переустановить", "Reinstall")
-                        : pack.status === "cancelled"
-                          ? l("Продолжить загрузку", "Resume download")
-                          : l("Установить", "Install")}
+                      {l("Построить / продолжить", "Build / resume")}
                     </button>
-                    {pack.status === "ready" && (
+                    {Boolean(index?.processedGames) && (
                       <button
                         type="button"
                         className="secondary"
-                        disabled={busy[pack.id]}
+                        disabled={busy.index || !validLimits}
                         onClick={() =>
-                          void action(pack.id, () =>
-                            api.verifyOptionalPack(pack.id),
-                          )
+                          void action("index", async () => {
+                            setIndex(
+                              await api.buildExplorer({
+                                maxGames: Number(maxGames),
+                                maxPly: Number(fullMoves) * 2,
+                                rebuild: true,
+                              }),
+                            );
+                            setExplorer(null);
+                          })
                         }
                       >
-                        {l("Проверить файлы", "Verify files")}
-                      </button>
-                    )}
-                    {pack.status !== "missing" && (
-                      <button
-                        type="button"
-                        className="secondary"
-                        disabled={busy[pack.id]}
-                        onClick={() =>
-                          void action(pack.id, () =>
-                            api.removeOptionalPack(pack.id),
-                          )
-                        }
-                      >
-                        {l("Удалить пакет", "Remove pack")}
+                        <RefreshCw size={17} aria-hidden="true" />
+                        {l("Перестроить с нуля", "Rebuild index")}
                       </button>
                     )}
                   </>
                 )}
               </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            className="secondary"
-            disabled={busy.tables}
-            onClick={() =>
-              void action("tables", async () => {
-                const path = await api.chooseTablebaseDirectory();
-                if (path) {
-                  setEnding(null);
-                  setNotice(
-                    `${l("Папка таблиц", "Tablebase directory")}: ${path}`,
-                  );
-                }
-              })
-            }
-          >
-            <FolderOpen size={17} aria-hidden="true" />
-            {l("Своя папка Syzygy", "Use own Syzygy directory")}
-          </button>
-        </details>
-        <details className="advanced-section" open={!position}>
-          <summary>
-            <h3>{l("Индекс дебютов", "Opening index")}</h3>
-          </summary>
-          <p className="advanced-muted">
-            {l(
-              "Считается по уже установленному архиву партий в фоновом процессе. Частичный индекс можно использовать и дополнять. Максимум на диске — около 1 GiB.",
-              "Built from your installed game archive in a background process. Partial indexes can be used and expanded. Disk usage is capped at about 1 GiB.",
-            )}
-          </p>
-          {index && (
-            <p aria-live="polite">
-              {stateLabel(index.state)} ·{" "}
-              {index.processedGames.toLocaleString(locale)} /{" "}
-              {index.availableGames.toLocaleString(locale)}{" "}
-              {l("обработано", "processed")} ·{" "}
-              {index.indexedGames.toLocaleString(locale)}{" "}
-              {l("подходящих партий", "usable games")}
-              {index.skippedGames
-                ? ` · ${index.skippedGames.toLocaleString(locale)} ${l("пропущено", "skipped")}`
-                : ""}
-            </p>
-          )}
-          {index?.error && <p className="advanced-path">{index.error}</p>}
-          <div className="advanced-limit-fields">
-            <label className="advanced-field">
-              <span>{l("Лимит партий", "Game limit")}</span>
-              <input
-                type="number"
-                min={1}
-                max={10000000}
-                step={1000}
-                value={maxGames}
-                onChange={(e) => setMaxGames(e.target.value)}
-                disabled={index?.state === "building"}
-              />
-            </label>
-            <label className="advanced-field">
-              <span>{l("Первые полные ходы", "First full moves")}</span>
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={fullMoves}
-                onChange={(e) => setFullMoves(e.target.value)}
-                disabled={index?.state === "building"}
-              />
-            </label>
-          </div>
-          <div className="advanced-actions">
-            {index?.state === "building" ? (
-              <button
-                type="button"
-                className="secondary"
-                onClick={() =>
-                  void action("cancel-index", () => api.cancelExplorer())
-                }
-              >
-                {l("Приостановить индексирование", "Pause indexing")}
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={busy.index || !validLimits}
-                  onClick={() =>
-                    void action("index", async () => {
-                      setIndex(
-                        await api.buildExplorer({
-                          maxGames: Number(maxGames),
-                          maxPly: Number(fullMoves) * 2,
-                        }),
-                      );
-                    })
-                  }
-                >
-                  {l("Построить / продолжить", "Build / resume")}
-                </button>
-                {Boolean(index?.processedGames) && (
-                  <button
-                    type="button"
-                    className="secondary"
-                    disabled={busy.index || !validLimits}
-                    onClick={() =>
-                      void action("index", async () => {
-                        setIndex(
-                          await api.buildExplorer({
-                            maxGames: Number(maxGames),
-                            maxPly: Number(fullMoves) * 2,
-                            rebuild: true,
-                          }),
-                        );
-                        setExplorer(null);
-                      })
-                    }
-                  >
-                    <RefreshCw size={17} aria-hidden="true" />
-                    {l("Перестроить с нуля", "Rebuild index")}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </details>
+            </details>
+          </>
+        )}
       </div>
-    </details>
+    </Container>
   );
 }

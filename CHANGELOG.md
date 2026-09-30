@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0 — Simpler navigation and hands-on game review
+
+- Reduce the main menu to Today, Play, Learn and Analysis. Lessons, puzzles, board vision and practice share the learning section; games, review, studies, the editor and the archive share analysis.
+- Try legal moves for either side directly on the game-review board. Step through a temporary variation, branch from an earlier move, ask Stockfish about the displayed position, or return to the original game. Saved game moves, accuracy and explanations stay intact.
+- Draw planning arrows for either color, including development plans behind currently blocked lines. Arrows follow the piece's movement shape, knights use an L, and actual board moves still obey all chess rules.
+- Choose optional tools by the question they answer: likely human replies, historical game statistics, exact endgame outcomes or a second engine opinion. Model choices and engine installation sit in expandable settings, with a direct setup link when needed.
+- Preserve both languages, all four themes, local profiles and existing libraries. Add navigation, exploration and planning-arrow regression coverage.
+
 ## 1.5.3 — Reachable analysis and clearer panels
 
 - Restore wheel and keyboard scrolling in study, game-review and lesson panels; keep one page scroll in narrow windows.

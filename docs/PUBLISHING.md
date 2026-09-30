@@ -1,4 +1,4 @@
-# Публикация ToShaChess 1.5.3 / Publishing
+# Публикация ToShaChess 1.6.0 / Publishing
 
 Публикуй подготовленный чистый исходный экспорт, а не всю рабочую папку. Частная Git-история, данные профилей и установленные пакеты не должны попадать в публичный репозиторий. Эта инструкция не означает, что публикация уже разрешена или выполнена: создание удалённого репозитория, push и release выполняются после согласования с владельцем.
 
@@ -11,7 +11,7 @@
 ```powershell
 git init -b main
 git add .
-git commit -m "Initial public ToShaChess 1.5.3 source"
+git commit -m "Initial public ToShaChess 1.6.0 source"
 git remote add origin https://github.com/YOUR_USERNAME/ToShaChess.git
 git push -u origin main
 ```
@@ -22,7 +22,7 @@ git push -u origin main
 
 Перед релизом проверь typecheck, тесты, контент, сборку и переносимую копию. Команды приведены в README. Ошибки необязательных runtime-тестов нельзя скрывать: отсутствие установленного пакета должно быть явным пропуском. Workflow Windows проверяет push и создаёт Actions artifact; он не публикует GitHub Release автоматически. Запуск workflow на GitHub подтверждается только фактическим результатом, а не локальной проверкой.
 
-Для версии 1.5.3 используй tag v1.5.3 и проверенный чистый ZIP приложения. Чистая сборка предлагает создать профиль и не содержит заранее сохранённых пользователей. Публичный ZIP готовится из release/win-unpacked, не из установленной папки с прогрессом. Сохраняй лицензии и соответствующие исходники распространяемых компонентов, включая Stockfish. Включи Private vulnerability reporting, если принимаешь закрытые отчёты.
+Для версии 1.6.0 используй tag v1.6.0 и проверенный чистый ZIP приложения. Чистая сборка предлагает создать профиль и не содержит заранее сохранённых пользователей. Публичный ZIP готовится из release/win-unpacked, не из установленной папки с прогрессом. Сохраняй лицензии и соответствующие исходники распространяемых компонентов, включая Stockfish. Включи Private vulnerability reporting, если принимаешь закрытые отчёты.
 
 ## Границы пакетов и лицензий
 
@@ -40,6 +40,6 @@ The built app includes the fenshot screenshot model and ONNX WASM runtime from p
 
 Run npm run prepare:github only after integration and verification. It creates a fresh ToShaChess-GitHub source folder, audits its allowlisted content and refuses to overwrite an existing folder. It does not initialize Git, create a commit, configure a remote or publish. Review the result before creating a fresh public repository; updates to an existing public repository belong in its normal branch/PR workflow.
 
-Version 1.5.3 uses tag v1.5.3 after approval and a verified clean application ZIP. GitHub Actions artifacts are not automatically published releases. Preserve component licenses and corresponding source obligations. Exclude profiles, private PGN, keys, downloaded packs, runtimes, weights and derived indexes from source exports. Publish their loaders and documentation instead. Lc0 network rights are separate from the engine GPL, and the CPU package makes no GPU promise.
+Version 1.6.0 uses tag v1.6.0 after approval and a verified clean application ZIP. GitHub Actions artifacts are not automatically published releases. Preserve component licenses and corresponding source obligations. Exclude profiles, private PGN, keys, downloaded packs, runtimes, weights and derived indexes from source exports. Publish their loaders and documentation instead. Lc0 network rights are separate from the engine GPL, and the CPU package makes no GPU promise.
 
 Personal migration includes data, library-packs and engine-packs with the closed application; profile backups omit the latter two. Transfer and reselect custom external engines/networks separately. Consult [engine installation and measurements](ENGINES.md), [optional tools](OPTIONAL_TOOLS.md) and [third-party notices](../THIRD_PARTY_NOTICES.md).

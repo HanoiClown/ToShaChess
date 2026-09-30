@@ -45,13 +45,16 @@ test("right drag marks a line and left click clears it without a move", async ()
     }
     for (const [from, to] of [
       ["a1", "b2"],
-      ["a1", "a4"],
       ["c1", "c3"],
       ["g1", "g3"],
     ]) {
       await rightDrag(from, to);
       await expect(board.locator(".user-annotations")).toHaveCount(0);
     }
+    await rightDrag("a1", "a4");
+    await expect(board.locator(".user-annotations line")).toHaveCount(1);
+    await rightDrag("a1", "a4");
+    await expect(board.locator(".user-annotations")).toHaveCount(0);
     await rightDrag("g1", "f3");
     await expect(board.locator(".user-annotations polyline")).toHaveAttribute(
       "points",

@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -44,7 +45,7 @@ test("capture new surfaces in the retained four themes and both window sizes", a
         path: `.impeccable/review/upgrade/${theme}-bots.png`,
       });
     }
-    await p.getByRole("button", { name: "Конструктор", exact: true }).click();
+    await navigateSection(p, "Конструктор");
     await p.locator(".workspace").evaluate((e) => e.scrollTo(0, 0));
     await p.screenshot({ path: ".impeccable/review/upgrade/red-editor.png" });
     await p.setViewportSize({ width: 780, height: 620 });
@@ -74,10 +75,7 @@ test("capture new surfaces in the retained four themes and both window sizes", a
           ),
       )
       .toBe(4);
-    await p
-      .getByRole("button", { name: "Разбор", exact: true })
-      .first()
-      .click();
+    await navigateSection(p, "Разбор");
     await p.getByRole("button", { name: "В конец", exact: true }).click();
     await p.locator(".workspace").evaluate((e) => e.scrollTo(0, 0));
     await p.screenshot({ path: ".impeccable/review/upgrade/red-review.png" });

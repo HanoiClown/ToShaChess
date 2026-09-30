@@ -11,21 +11,24 @@ import {
   Swords,
   ChartNoAxesCombined,
   BookOpen,
-  Target,
-  History,
   Settings,
   Users,
   ChevronRight,
   X,
   ShieldCheck,
   Languages,
-  Eye,
   UserPlus,
   Upload,
-  Database,
 } from "lucide-react";
 import type { Snapshot, Locale, Position } from "../shared/contracts";
 import { AppContext, errorText, type Route } from "./context";
+import {
+  activeLocalRoute,
+  navigationGroup,
+  primaryNavigation,
+  sectionNavigation,
+} from "./navigation";
+import "./navigation.css";
 import { translate, choose } from "../i18n";
 import { Today } from "../screens/Today";
 import { Play } from "../screens/Play";
@@ -40,7 +43,6 @@ import { Vision } from "../screens/Vision";
 import { ProfileCreator } from "./ProfileCreator";
 import { FullscreenButton } from "./FullscreenButton";
 import { PositionEditor, clearEditorDrafts } from "../screens/PositionEditor";
-import { LayoutGrid } from "lucide-react";
 import { Studies } from "../screens/Studies";
 import { Training } from "../screens/Training";
 import { PlayFromDialog } from "./PlayFromDialog";
@@ -51,19 +53,12 @@ const Openings = lazy(() =>
 const DatabaseScreen = lazy(() =>
   import("../screens/Database").then((m) => ({ default: m.DatabaseScreen })),
 );
-const routes: { id: Route; icon: typeof Home }[] = [
-  { id: "today", icon: Home },
-  { id: "play", icon: Swords },
-  { id: "review", icon: ChartNoAxesCombined },
-  { id: "learn", icon: BookOpen },
-  { id: "puzzles", icon: Target },
-  { id: "vision", icon: Eye },
-  { id: "database", icon: Database },
-  { id: "history", icon: History },
-  { id: "editor", icon: LayoutGrid },
-  { id: "studies", icon: BookOpen },
-  { id: "training", icon: Target },
-];
+const navigationIcons = {
+  today: Home,
+  play: Swords,
+  learn: BookOpen,
+  analysis: ChartNoAxesCombined,
+};
 export default function App() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const [practicePosition, setPracticePosition] = useState<{
@@ -218,6 +213,9 @@ export default function App() {
     (snapshot?.notice !== dismissedNotice &&
       snapshot?.notice &&
       errorText(snapshot.notice, locale));
+  const activeGroup = navigationGroup(route),
+    activeSection = activeLocalRoute(route),
+    sections = activeGroup ? sectionNavigation[activeGroup] : [];
   if (!snapshot)
     return (
       <div className="launch-screen">
@@ -394,24 +392,34 @@ export default function App() {
             <img src="./pieces/wP.svg" alt="" />
             ToSha<span>Chess</span>
           </div>
-          <nav>
-            {routes.map(({ id, icon: Icon }) => (
-              <button
-                key={id}
-                aria-label={translate(locale, id)}
-                title={translate(locale, id)}
-                className={
-                  route === id ||
-                  (id === "learn" && ["openings", "endgames"].includes(route))
-                    ? "nav-link active"
-                    : "nav-link"
-                }
-                onClick={() => nav(id)}
-              >
-                <Icon size={23} />
-                <span>{translate(locale, id)}</span>
-              </button>
-            ))}
+          <nav
+            className="primary-navigation"
+            aria-label={l("Главная навигация", "Main navigation")}
+          >
+            {primaryNavigation.map(({ id, route: destination, label }) => {
+              const Icon = navigationIcons[id];
+              return (
+                <button
+                  key={id}
+                  aria-label={label[locale]}
+                  title={label[locale]}
+                  aria-current={
+                    activeGroup === id
+                      ? route === destination
+                        ? "page"
+                        : "true"
+                      : undefined
+                  }
+                  className={
+                    activeGroup === id ? "nav-link active" : "nav-link"
+                  }
+                  onClick={() => nav(destination)}
+                >
+                  <Icon size={23} aria-hidden="true" />
+                  <span>{label[locale]}</span>
+                </button>
+              );
+            })}
           </nav>
           <div className="sidebar-bottom">
             <div className="engine-status">
@@ -422,6 +430,7 @@ export default function App() {
               className={`nav-link ${route === "settings" ? "active" : ""}`}
               aria-label={translate(locale, "settings")}
               title={translate(locale, "settings")}
+              aria-current={route === "settings" ? "page" : undefined}
               onClick={() => nav("settings")}
             >
               <Settings size={21} />
@@ -474,6 +483,33 @@ export default function App() {
             </div>
           )}
           <main className="main-content">
+            {sections.length > 0 && (
+              <nav
+                className="section-navigation"
+                aria-label={
+                  activeGroup === "learn"
+                    ? l("Разделы обучения", "Learning sections")
+                    : l("Разделы анализа", "Analysis sections")
+                }
+              >
+                {sections.map(({ route: destination, label }) => (
+                  <button
+                    key={destination}
+                    className="section-link"
+                    aria-current={
+                      activeSection === destination
+                        ? route === destination
+                          ? "page"
+                          : "true"
+                        : undefined
+                    }
+                    onClick={() => nav(destination)}
+                  >
+                    {label[locale]}
+                  </button>
+                ))}
+              </nav>
+            )}
             {route === "today" && <Today />}
             <div style={{ display: route === "play" ? "block" : "none" }}>
               <Play

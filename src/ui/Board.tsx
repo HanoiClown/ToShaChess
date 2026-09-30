@@ -4,7 +4,7 @@ import type { Color, Locale, Score, Quality } from "../shared/contracts";
 import {
   toggleMark,
   squareAt,
-  legalArrow,
+  planningArrow,
   arrowPoints,
   type BoardMark,
 } from "./board-annotations";
@@ -207,7 +207,7 @@ export function Board({
           if (
             from &&
             to &&
-            (from === to || (showPieces && legalArrow(c, from, to)))
+            (from === to || (showPieces && planningArrow(c, from, to)))
           )
             setMarks((old) => toggleMark(old, { from, to }));
           if (e.currentTarget.hasPointerCapture(e.pointerId))

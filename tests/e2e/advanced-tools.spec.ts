@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import {
   test,
   expect,
@@ -94,13 +95,39 @@ async function offline(app: ElectronApplication) {
   ).toEqual([]);
 }
 
-async function openAdvanced(page: Page) {
+async function openAdvanced(
+  page: Page,
+  surface: "settings" | "position",
+  purpose: "search" | "explorer" | "tablebase" = "search",
+) {
+  // The study loads asynchronously after navigation. Wait for the requested
+  // surface instead of treating a not-yet-mounted toolbox as Settings.
+  if (surface === "position") {
+    const toolbox = page.locator(".position-toolbox");
+    await expect(toolbox).toBeVisible();
+    if (!(await toolbox.evaluate((e) => (e as HTMLDetailsElement).open)))
+      await toolbox.locator(":scope > summary").click();
+    await toolbox
+      .locator(".position-toolbox-body > label select")
+      .selectOption(purpose);
+    const panel = toolbox.locator(".advanced-tools");
+    await expect(panel).toBeVisible();
+    return panel;
+  }
+  const extensions = page.locator(".settings-extensions");
+  await expect(extensions).toBeVisible();
+  if (!(await extensions.evaluate((e) => (e as HTMLDetailsElement).open)))
+    await extensions.locator(":scope > summary").click();
   const panel = page.locator(".advanced-tools");
   await expect(panel).toBeVisible();
   if (
     !(await panel.evaluate((element) => (element as HTMLDetailsElement).open))
   )
     await panel.locator(":scope > summary").click();
+  for (const section of await panel.locator(".advanced-section").all()) {
+    if (!(await section.evaluate((e) => (e as HTMLDetailsElement).open)))
+      await section.locator(":scope > summary").click();
+  }
   return panel;
 }
 
@@ -117,7 +144,7 @@ async function captureSettings(page: Page) {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.getByRole("button", { name: label, exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-    await (await openAdvanced(page)).scrollIntoViewIfNeeded();
+    await (await openAdvanced(page, "settings")).scrollIntoViewIfNeeded();
     await page.screenshot({
       path: `.impeccable/review/community/advanced-${theme}-ru-1440.png`,
       fullPage: true,
@@ -125,7 +152,7 @@ async function captureSettings(page: Page) {
     await page.getByRole("button", { name: "EN", exact: true }).click();
     await page.setViewportSize({ width: 720, height: 960 });
     await expect(page.locator(".advanced-tools > summary")).toContainText(
-      "Advanced tools",
+      "Configure optional tools",
     );
     await page.locator(".advanced-tools").scrollIntoViewIfNeeded();
     expect(
@@ -146,7 +173,7 @@ test("empty optional packages stay missing, offer explicit installation, and nev
   const { app, page } = await launch();
   try {
     await page.getByRole("button", { name: "Настройки", exact: true }).click();
-    const panel = await openAdvanced(page);
+    const panel = await openAdvanced(page, "settings");
     await expect(panel.locator(".advanced-pack")).toHaveCount(2);
     for (const name of ["Syzygy", "Lc0"]) {
       const row = panel.locator(".advanced-pack").filter({ hasText: name });
@@ -159,24 +186,23 @@ test("empty optional packages stay missing, offer explicit installation, and nev
     await expect(panel.locator("progress")).toHaveCount(0);
     await expect(panel.locator(".advanced-result")).toHaveCount(0);
     await captureSettings(page);
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
+    await navigateSection(page, "Исследования");
+    await page.locator(".position-toolbox > summary").click();
     const comparison = page.locator(".comparison-panel");
-    await comparison.locator(":scope > summary").click();
-    await expect(comparison).toContainText("Для вероятностей установи Maia");
+    await expect(comparison).toContainText("Установи Maia");
     await expect(
       comparison.getByRole("button", { name: "Сравнить", exact: true }),
     ).toBeDisabled();
     await expect(comparison.locator("table")).toHaveCount(0);
     expect(await comparison.innerText()).not.toMatch(/\d+(?:[.,]\d+)?%/);
-    const studyPanel = await openAdvanced(page);
+    const studyPanel = await openAdvanced(page, "position");
+    await expect(studyPanel).toContainText("Подключи дополнительный движок");
     await expect(
       studyPanel.getByRole("button", {
-        name: "Сначала выберите движок",
+        name: "Открыть настройки инструментов",
         exact: true,
       }),
-    ).toBeDisabled();
+    ).toBeVisible();
     await offline(app);
   } finally {
     await app.close();
@@ -192,10 +218,8 @@ test("real local Syzygy shows WDL and DTZ, then recognises the played queen mate
   );
   const { app, page } = await launch({ installed: true, fen: queenFen });
   try {
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
-    const panel = await openAdvanced(page);
+    await navigateSection(page, "Исследования");
+    const panel = await openAdvanced(page, "position", "tablebase");
     await panel
       .getByRole("button", { name: "Проверить окончание", exact: true })
       .click();
@@ -245,10 +269,8 @@ test("installed opening index displays actual local sample counts through the po
   test.skip(!expected, "Installed index contains no starting-position sample");
   const { app, page } = await launch({ installed: true, library: true });
   try {
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
-    const panel = await openAdvanced(page);
+    await navigateSection(page, "Исследования");
+    const panel = await openAdvanced(page, "position", "explorer");
     await panel
       .getByRole("button", { name: "Ходы в местной базе", exact: true })
       .click();
@@ -304,7 +326,7 @@ test("native-selected Lc0 and network produce real CPU analysis through Electron
       [lc0, network],
     );
     await page.getByRole("button", { name: "Настройки", exact: true }).click();
-    let panel = await openAdvanced(page);
+    let panel = await openAdvanced(page, "settings");
     await panel
       .getByRole("button", { name: "Выбрать Lc0", exact: true })
       .click();
@@ -327,10 +349,8 @@ test("native-selected Lc0 and network produce real CPU analysis through Electron
       networkPath: network,
       backend: "cpu",
     });
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
-    panel = await openAdvanced(page);
+    await navigateSection(page, "Исследования");
+    panel = await openAdvanced(page, "position");
     await panel
       .getByRole("button", { name: "Lc0 UI regression", exact: true })
       .click();

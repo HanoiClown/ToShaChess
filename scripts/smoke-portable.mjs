@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, cpSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname, relative, sep } from "node:path";
 import { seedLibrary } from "../tests/helpers/library-fixture.ts";
+import { navigateSection } from "../tests/helpers/navigation.ts";
 import { tsImport } from "tsx/esm/api";
 const { createStudy, addStudyMove, selectStudyNode } = await tsImport(
   "../src/study/tree.ts",
@@ -236,16 +237,14 @@ try {
     .toBe(4);
   if (resolve(result.path) !== resolve(join(folder, "data")))
     throw Error("Data is not portable");
-  await page.getByRole("button", { name: "Задачи", exact: true }).click();
+  await navigateSection(page, "Задачи");
   await expect(
     page.getByRole("heading", { name: "Библиотека тактики" }),
   ).toBeVisible();
   await page.getByRole("button", { name: /^Все задачи/ }).click();
   await page.getByPlaceholder("Найти задачу по ID").fill("lichess_");
   await expect(page.locator(".library-row").first()).toBeVisible();
-  await page
-    .getByRole("button", { name: "Видение доски", exact: true })
-    .click();
+  await navigateSection(page, "Видение доски");
   await page.getByLabel("Показывать буквы и цифры по краям").uncheck();
   await page
     .getByRole("button", { name: "Начать тренировку", exact: true })

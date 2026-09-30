@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -21,9 +22,7 @@ async function launch() {
 test("study analysis remains reachable by wheel and keyboard, with tools beside the board", async () => {
   const { app, page } = await launch();
   try {
-    await page
-      .getByRole("button", { name: "Исследования", exact: true })
-      .click();
+    await navigateSection(page, "Исследования");
     await page
       .getByRole("button", { name: "Новое исследование", exact: true })
       .click();
@@ -46,7 +45,12 @@ test("study analysis remains reachable by wheel and keyboard, with tools beside 
     expect(resultBox.y + resultBox.height).toBeLessThanOrEqual(
       panelBox.y + panelBox.height,
     );
+    await expect(panel.locator(".position-toolbox")).toHaveCount(1);
+    await panel.locator(".position-toolbox > summary").click();
     await expect(panel.locator(".comparison-panel")).toHaveCount(1);
+    await panel
+      .locator(".position-toolbox-body > label select")
+      .selectOption("tablebase");
     await expect(panel.locator(".advanced-tools")).toHaveCount(1);
     await panel.evaluate((e) => {
       e.scrollTop = 0;

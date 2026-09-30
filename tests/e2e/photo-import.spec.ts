@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import {
   test,
   expect,
@@ -27,7 +28,7 @@ async function launch() {
   // Keep the fixture representative of a small hosted Windows runner.
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.locator(".profile-choice").first().click();
-  await page.getByRole("button", { name: "Конструктор", exact: true }).click();
+  await navigateSection(page, "Конструктор");
   return { app, page };
 }
 
@@ -224,7 +225,7 @@ test("image paste, theme persistence, profile privacy and play from the reconstr
       .getByRole("button", { name: "Сменить профиль", exact: true })
       .click();
     await p.locator(".profile-choice").nth(1).click();
-    await p.getByRole("button", { name: "Конструктор", exact: true }).click();
+    await navigateSection(p, "Конструктор");
     await p
       .getByRole("button", { name: "Импорт по фото", exact: true })
       .click();

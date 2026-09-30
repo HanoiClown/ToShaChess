@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { seedProfiles } from "../helpers/profile-fixtures";
 import { courses } from "../../src/content/courses";
+import { navigateSection } from "../helpers/navigation";
 
 test("course controls stay above the board across short and long explanations; badges fit their circles", async () => {
   const env: Record<string, string> = {
@@ -97,10 +98,7 @@ test("course controls stay above the board across short and long explanations; b
             .analysis.length,
       )
       .toBe(4);
-    await p
-      .getByRole("button", { name: "Review", exact: true })
-      .first()
-      .click();
+    await navigateSection(p, "Review");
     await p.getByRole("button", { name: "Last position", exact: true }).click();
     const mark = p.locator(".move-quality-mark");
     await expect(mark.locator("svg")).toBeVisible();

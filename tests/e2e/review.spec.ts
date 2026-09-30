@@ -3,6 +3,7 @@ import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { navigateSection } from "../helpers/navigation";
 test("real offline analysis, navigation and a portable backup preserve both profiles", async () => {
   const dir = mkdtempSync(join(tmpdir(), "chess-review-")),
     env: Record<string, string> = Object.fromEntries(
@@ -37,10 +38,7 @@ test("real offline analysis, navigation and a portable backup preserve both prof
         { timeout: 20000 },
       )
       .toBe(4);
-    await page
-      .getByRole("button", { name: "Разбор", exact: true })
-      .first()
-      .click();
+    await navigateSection(page, "Разбор");
     await expect(
       page.getByText("Ходы и объяснения", { exact: true }),
     ).toBeVisible();

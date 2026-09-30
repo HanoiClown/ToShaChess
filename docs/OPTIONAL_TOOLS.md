@@ -1,14 +1,18 @@
 # Дополнительные локальные инструменты / Optional local tools
 
-В настройках, исследованиях и разборе партии есть сворачиваемый раздел «Дополнительные инструменты». Он не запускает анализ и не скачивает пакеты без нажатия пользователя. Stockfish, прогноз Maia, статистика партий и таблицы окончаний остаются разными источниками информации.
+В разборе партии и исследованиях откройте «Изучить позицию глубже» и выберите задачу: «Как ответит человек», «Как играли в похожих партиях», «Точный исход окончания» или «Получить второе мнение». На экране появляются только инструменты для выбранной задачи. Для обычной проверки позиции достаточно Stockfish.
 
-The collapsible Advanced tools section is available in Settings, Studies, and Review. Analysis and downloads start only on request. Stockfish analysis, Maia predictions, game frequencies, and tablebase outcomes are separate results.
+Установка пакетов и выбор файлов находятся в «Настройки → Дополнительные возможности анализа». Ссылка «Открыть настройки инструментов» ведёт прямо к этому разделу. Анализ и загрузки начинаются только по нажатию пользователя. Stockfish, прогноз Maia, статистика партий и таблицы окончаний показывают разные виды информации.
+
+In Review and Studies, open **Explore this position further** and choose a task: **How a human might reply**, **What happened in other games**, **Exact endgame outcome**, or **Get a second opinion**. Only the relevant controls appear. Stockfish is sufficient for an ordinary position check.
+
+Package installation and file selection are under **Settings → More analysis options**. **Open tool settings** takes you directly there. Analysis and downloads start only on request. Stockfish evaluations, Maia predictions, game frequencies, and tablebase outcomes are separate results.
 
 ## Lc0 и пользовательский UCI-движок
 
 1. Установите пакет Lc0 CPU или выберите свой исполняемый UCI-файл через системный диалог.
 2. Для Lc0 отдельно выберите файл сети. CPU использует backend `blas` из сборки DNNL; для NVIDIA CUDA нужна соответствующая сборка движка и совместимая сеть.
-3. Сохраните выбор и запустите анализ текущей позиции. Приложение показывает имя движка, его ответ `id name`, выбранную сеть, время поиска, оценку за белых и легальное продолжение.
+3. Сохраните выбор. В разборе или исследовании выберите «Изучить позицию глубже → Получить второе мнение» и запустите анализ текущей позиции. Приложение показывает имя движка, его ответ `id name`, выбранную сеть, время поиска, оценку за белых и легальное продолжение.
 
 Choose a local executable through the native picker. Lc0 also requires an explicitly chosen network and backend. No engine silently replaces another on failure. A searched evaluation is requested: an advertised `OwnBook` is disabled so engines such as Arasan do not return an unscored book move.
 

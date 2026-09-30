@@ -1,3 +1,4 @@
+import { navigateSection } from "../helpers/navigation";
 import { test, expect, _electron as electron } from "@playwright/test";
 import { mkdtempSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -55,7 +56,7 @@ test("editor keeps invalid FEN from replacing setup and plays from a valid posit
   try {
     const p = await app.firstWindow();
     await p.locator(".profile-choice").first().click();
-    await p.getByRole("button", { name: "Конструктор", exact: true }).click();
+    await navigateSection(p, "Конструктор");
     await p
       .getByRole("button", { name: "Очистить доску", exact: true })
       .click();
@@ -70,7 +71,7 @@ test("editor keeps invalid FEN from replacing setup and plays from a valid posit
       .getByRole("button", { name: "Сегодня", exact: true })
       .first()
       .click();
-    await p.getByRole("button", { name: "Конструктор", exact: true }).click();
+    await navigateSection(p, "Конструктор");
     await expect(p.locator(".setup-board img")).toHaveCount(3);
     await p.getByLabel("FEN", { exact: true }).fill("broken");
     await p.getByRole("button", { name: "Импорт FEN", exact: true }).click();
@@ -105,7 +106,7 @@ test("editor keeps invalid FEN from replacing setup and plays from a valid posit
       .getByRole("button", { name: "Сменить профиль", exact: true })
       .click();
     await p.locator(".profile-choice").first().click();
-    await p.getByRole("button", { name: "Конструктор", exact: true }).click();
+    await navigateSection(p, "Конструктор");
     await p.getByRole("button", { name: "Играть отсюда", exact: true }).click();
     await p
       .getByRole("button", { name: "Сменить профиль", exact: true })

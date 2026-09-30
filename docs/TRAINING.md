@@ -2,6 +2,20 @@
 
 ## Русский
 
+### Найти нужный режим
+
+В основном меню четыре раздела: «Сегодня», «Играть», «Обучение» и «Анализ». В обучении доступны уроки, задачи, видение доски и личная практика. В анализе — мои партии, разбор, исследования, конструктор и база партий. Внутри каждого раздела переключай режимы кнопками над заголовком страницы.
+
+### Проверить свой вариант во время разбора
+
+Выбери ход партии или открой лучшее продолжение и просто передвинь фигуру на доске. Можно играть за обе стороны, возвращаться назад, пробовать другой ход и проверять текущую позицию Stockfish. Нажатие на ход в найденном продолжении показывает эту позицию, следующие ходы доступны стрелкой вперёд. «Вернуться к партии» закрывает временный вариант. Исходные ходы, точность и объяснения партии сохраняются. Чтобы оставить вариант на будущее, нажми «Исследовать позицию».
+
+ПКМ рисует планы за любой цвет, независимо от очереди хода и занятых полей. Например, можно отметить d2–d3 и затем c1–g5 до реального хода пешкой. Форма движения остаётся правильной: слон — по диагонали, ладья — по вертикали или горизонтали, конь — буквой Г. Стрелка показывает намерение, а не гарантирует легальность в текущей позиции. ЛКМ или Escape очищает метки.
+
+### Выбрать помощь для позиции
+
+Обычный разбор и проверка позиции используют Stockfish автоматически. В «Изучить позицию глубже» выбери вопрос: «Как ответит человек» использует Maia; «Как играли в похожих партиях» показывает местную статистику; «Точный исход окончания» использует таблицы Syzygy; «Получить второе мнение» запускает подключённый дополнительный движок. У каждого режима есть пояснение. Установка пакетов и настройка моделей доступны через «Открыть настройки инструментов» или «Настройки → Дополнительные возможности анализа».
+
 ### Пройти дебют и проверить понимание
 
 1. В «Обучении» открой курс и прочитай идею и цену выбранного дебюта. Просмотр показывает объяснение после каждого хода; расширенная заметка разбирает ключевое решение.
@@ -29,6 +43,20 @@
 Локальный тренер использует анализ движка и работает без ключа. Облачный тренер необязателен: запрос отправляет выбранный шахматный контекст провайдеру и расходует локально учитываемый бюджет. Текст не заменяет проверку линии на доске. Ключи не включаются в экспорт профиля. Для полного переноса закрой приложение и следуй инструкции переноса в README; установленные `library-packs` и `engine-packs` копируются отдельно от экспорта профилей. Собственные движки/сети вне этих папок перенеси отдельно и выбери заново.
 
 ## English
+
+### Find a mode
+
+The main menu has four sections: Today, Play, Learn and Analysis. Learn contains lessons, puzzles, board vision and personal practice. Analysis contains your games, game review, studies, the position editor and the game database. Use the section buttons above the page heading to switch modes.
+
+### Try a variation during review
+
+Select a game move or open the best continuation, then move a piece on the board. Play either side, step backwards, try another move and ask Stockfish about the displayed position. Clicking a move in a returned line opens that position; step forward to see the rest. Return to game closes the temporary variation. Saved game moves, accuracy and explanations stay intact. Use Explore position to keep the current line as a study.
+
+Right-drag draws plans for either color, ignoring turn and occupied squares. For example, mark d2–d3 and c1–g5 before moving the pawn. Arrows keep the piece's movement shape: bishops diagonal, rooks straight and knights L-shaped. An arrow expresses a plan, not proof that the move is legal now. Left click or Escape clears marks.
+
+### Choose help for a position
+
+Standard review and position checks use Stockfish automatically. In Explore this position further, choose a question: human replies use Maia; historical games use local archive statistics; exact endgame outcomes use Syzygy tables; a second opinion uses your configured additional engine. Each choice explains when to use it. Open tool settings takes you to installation and configuration, also available under Settings → More analysis options.
 
 ### Learn an opening, then practise
 
