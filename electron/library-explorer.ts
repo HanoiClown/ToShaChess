@@ -92,6 +92,8 @@ export class OfflineOpeningExplorer {
       });
       this.worker = worker;
       let settled = false;
+      let completed = false;
+      let workerError: Error | undefined;
       const finish = (error?: Error) => {
         if (settled) return;
         settled = true;
@@ -112,14 +114,21 @@ export class OfflineOpeningExplorer {
           this.current = message.status as ExplorerStatus;
           this.notify();
         }
-        if (message.error) finish(Error(String(message.error)));
-        else if (message.done) finish();
+        if (message.error) workerError = Error(String(message.error));
+        else if (message.done) completed = true;
       });
-      worker.on("error", (error) =>
-        finish(error instanceof Error ? error : Error(String(error))),
-      );
+      worker.on("error", (error) => {
+        workerError = error instanceof Error ? error : Error(String(error));
+      });
       worker.on("exit", (code) => {
-        if (!settled) finish(Error(`Opening index worker exited (${code})`));
+        // Terminal messages precede finally/SQLite cleanup. Do not allow a
+        // retry to open the same index until the old worker releases it.
+        finish(
+          workerError ??
+            (!completed || code !== 0
+              ? Error(`Opening index worker exited (${code})`)
+              : undefined),
+        );
       });
     });
   }

@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, it, expect } from "vitest";
 import { DatabaseSync } from "node:sqlite";
-import { mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdtempSync, writeFileSync, mkdirSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import { resolve, join, sep } from "node:path";
 import { tmpdir } from "node:os";
@@ -8,6 +8,7 @@ import { build } from "esbuild";
 import { Chess } from "chess.js";
 import { OfflineOpeningExplorer } from "../../electron/library-explorer";
 let worker: string;
+let slowCleanupWorker: string;
 const cleanups: (() => void | Promise<void>)[] = [];
 beforeAll(async () => {
   const output = resolve(
@@ -21,11 +22,31 @@ beforeAll(async () => {
     outfile: output,
   });
   worker = output;
+  slowCleanupWorker = output.replace(".cjs", "-slow-cleanup.cjs");
+  writeFileSync(
+    slowCleanupWorker,
+    `
+    const { DatabaseSync } = require('node:sqlite');
+    const { parentPort, workerData } = require('node:worker_threads');
+    const { writeFileSync } = require('node:fs');
+    const closeDatabase = DatabaseSync.prototype.close;
+    DatabaseSync.prototype.close = function () {
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 200);
+      return closeDatabase.call(this);
+    };
+    const closePort = parentPort.close.bind(parentPort);
+    parentPort.close = () => {
+      writeFileSync(workerData.indexPath + '.closed', 'closed');
+      closePort();
+    };
+    require(${JSON.stringify(worker)});
+  `,
+  );
 });
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
 });
-function make() {
+function make(workerPath = worker) {
   const dir = mkdtempSync(join(tmpdir(), "ToSha explorer test "));
   cleanups.push(async () => {
     if (!resolve(dir).startsWith(resolve(tmpdir()) + sep))
@@ -82,11 +103,33 @@ function make() {
   const explorer = new OfflineOpeningExplorer({
     libraryDir: source,
     indexPath: join(dir, "index.sqlite"),
-    workerPath: worker,
+    workerPath,
   });
   cleanups.push(() => explorer.dispose());
-  return { explorer, source };
+  return { explorer, source, indexPath: join(dir, "index.sqlite") };
 }
+it.each([false, true])(
+  "waits for database cleanup before settling a build (failure: %s)",
+  async (failure) => {
+    const { explorer, indexPath } = make(slowCleanupWorker);
+    if (failure) {
+      const db = new DatabaseSync(indexPath);
+      db.exec(
+        "CREATE TABLE metadata(key TEXT PRIMARY KEY,value TEXT NOT NULL); INSERT INTO metadata VALUES('fingerprint','outdated')",
+      );
+      db.close();
+    }
+    const build = explorer.build({ maxGames: 2, maxPly: 8 });
+    if (failure)
+      await expect(build).rejects.toThrow("opening_library_changed_rebuild");
+    else expect((await build).indexedGames).toBe(2);
+    expect(existsSync(indexPath + ".closed")).toBe(true);
+    expect(
+      (await explorer.build({ maxGames: 4, maxPly: 8, rebuild: failure }))
+        .indexedGames,
+    ).toBe(3);
+  },
+);
 it("builds a resumable local position index without duplicate counting and with genuine rating filters", async () => {
   const { explorer } = make();
   expect(explorer.status().state).toBe("missing");

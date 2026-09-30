@@ -8,6 +8,7 @@
 - Group sound and opponent dialogue settings, align both checkboxes with their labels, and clarify that bot comments are text.
 - Add regression checks for panel reachability and checkbox behavior across all four themes.
 - Open each section at the top instead of retaining the previous section's page scroll.
+- Wait for the opening-index worker to close SQLite before allowing another build or retry, preventing intermittent database locks.
 
 ## 1.5.2 — Panel spacing
 
