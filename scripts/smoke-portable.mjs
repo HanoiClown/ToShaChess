@@ -71,6 +71,9 @@ try {
       ({ app }) => app.isPackaged && app.getAppPath().endsWith(".asar"),
     ),
   ).toBe(true);
+  expect(await app.evaluate(({ app }) => app.getVersion())).toBe(
+    JSON.parse(readFileSync(resolve("package.json"), "utf8")).version,
+  );
   const page = await app.firstWindow();
   const absent = await page.evaluate(() => window.chessApp.libraryStatus());
   expect(absent).toMatchObject({

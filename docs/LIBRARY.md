@@ -1,16 +1,20 @@
 # Большая офлайн-библиотека / Large offline library
 
-## Курсы 1.4 / Guided courses 1.4
+## Курсы 2.0 / Guided courses 2.0
 
-В приложение встроены 8 курсов (32 главы): гамбит Эванса, шотландский,
+В приложение встроены 8 курсов (48 глав): гамбит Эванса, шотландский,
 Гёринга, датский, венский, королевский, Морра и защита Каро-Канн.
 Просмотр показывает непрерывную учебную линию с пояснениями; практика
 проверяет ходы выбранной стороны. У основных линий есть ответвления,
 а справа можно перейти к следующему уроку. Просмотр и практика учитываются
 отдельно. Короткие варианты справочника остаются доступны внутри раздела.
+Курсы также содержат 48 эпизодов с ошибками, ловушками и защитой, а также
+16 реальных иллюстративных партий. Позиции можно исследовать самостоятельно
+и сохранять свои варианты.
 
-These eight bundled courses contain 32 chapters with continuous study lines,
-autoplay, branches and practice. They are introductory guides, not exhaustive
+These eight bundled courses contain 48 chapters, 48 trap/error and defence
+episodes, and 16 real illustrative games, with continuous study lines,
+autoplay, branches, explanations and practice. They are introductory guides, not exhaustive
 opening theory or a promise of an advantage against every reply. Their
 authored RU/EN explanations are part of ToShaChess under GPL-3.0-or-later;
 they do not copy paid lessons or videos. All lines are checked for legal moves.

@@ -2,6 +2,8 @@
 
 Open-source chess training for Windows, powered by local Stockfish. Russian and English UI, separate family profiles, no account required. Electron + React + TypeScript + chess.js. Licensed under GPL-3.0-or-later.
 
+**[Download ToShaChess 2.0 for Windows / Скачать для Windows](https://github.com/HanoiClown/ToShaChess/releases/tag/v2.0)** — portable app, source archive and release notes.
+
 ## Features
 
 - Four main sections: Today, Play, Learn and Analysis. Related training modes and analysis tools stay together, with optional engine setup in expandable settings.

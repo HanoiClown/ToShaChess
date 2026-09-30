@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.0.0 — ToShaChess 2.0
+
+Stable release collecting the training and analysis upgrades since the last published release, v1.3.3. The development entries below retain the detailed change history.
+
+- Play 12 bots with portraits, approximate difficulty ratings, styles and optional local dialogue. Review move-quality badges, accuracy for each side, remaining pieces and material balance.
+- Learn through eight guided courses with 48 chapters, 48 trap/error and defence episodes, and 16 real illustrative games. Use continuous playback, detailed RU/EN explanations, practice and direct chapter navigation.
+- Save personal studies with branching move trees, notes and PGN variations. Train saved positions with spaced review, recall, defence, human-move prediction, play-out and hand-and-brain practice.
+- Set up and validate positions manually or import 2D board screenshots offline. Crop and correct recognition, reconstruct an ordinary last move or capture, compare positions and explore continuations.
+- Try legal variations for both sides directly in game review, check the displayed position with Stockfish and return to the saved game without changing its moves or accuracy.
+- Add optional local Maia-3 models, Lc0/custom UCI analysis, Syzygy 3–5-piece outcomes and indexed opening statistics. Choose tools by the question they answer; installation and model details stay in expandable settings.
+- Group navigation into Today, Play, Learn and Analysis. Improve side-panel scrolling, layout spacing, move badges, lesson controls, audio settings and fullscreen startup while preserving both languages and all four themes.
+- Draw red opponent plans and orange own plans, chain arrows from virtual endpoints and branch alternatives. Knight arrows stay L-shaped; deleting a parent removes dependent continuations without affecting real moves.
+- Improve incorrect-puzzle feedback with animation and a possible engine refutation. Preserve profiles and practice progress, flush study edits on navigation and wait for SQLite cleanup before restarting an index build.
+- Ship a clean Windows portable archive with Stockfish, the core 30,048-puzzle library and offline screenshot recognition. Large library and optional engine/tablebase packages remain separate downloads. Public archives contain no personal profiles, private games or API keys.
+
 ## 1.6.1 — Colored plans and chained arrows
 
 - Draw opponent plans in red and your own in orange. During play the colors follow the player's side even after flipping the board; studies use the side at the bottom as the reference.
