@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -33,6 +33,7 @@ export function StudyWorkspace({
   onPlayFrom,
   orientation = "w",
   defaultDetailed = false,
+  analysisTools,
 }: {
   study: StudyDocument;
   onChange: (study: StudyDocument) => void;
@@ -42,6 +43,7 @@ export function StudyWorkspace({
   onPlayFrom?: (position: Position) => void;
   orientation?: Color;
   defaultDetailed?: boolean;
+  analysisTools?: ReactNode;
 }) {
   const ru = locale === "ru",
     node = study.nodes[study.selectedNodeId],
@@ -56,6 +58,23 @@ export function StudyWorkspace({
   const generation = useRef(0),
     mounted = useRef(true);
   const panelRef = usePanelHeight(study.id);
+  const resultsHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const heading = resultsHeading.current,
+      panel = panelRef.current;
+    if (!lines.length || !heading || !panel) return;
+    if (getComputedStyle(panel).overflowY === "auto") {
+      panel.scrollTo({
+        top:
+          panel.scrollTop +
+          heading.getBoundingClientRect().top -
+          panel.getBoundingClientRect().top -
+          20,
+      });
+    } else {
+      heading.scrollIntoView({ block: "start" });
+    }
+  }, [lines]);
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -172,11 +191,15 @@ export function StudyWorkspace({
             ? "Исследуй любые легальные ходы за обе стороны. Исходный урок и партия не меняются."
             : "Explore any legal move for either side. The original lesson and game stay unchanged."}
         </p>
-        <p role="status" className="study-status">
-          {status}
-        </p>
       </section>
-      <section className="side-panel study-panel" ref={panelRef}>
+      <section
+        className="side-panel study-panel scroll-panel"
+        ref={panelRef}
+        tabIndex={0}
+        aria-label={
+          ru ? "Ходы и анализ позиции" : "Position moves and analysis"
+        }
+      >
         <label>
           {ru ? "Название исследования" : "Study title"}
           <input
@@ -227,83 +250,100 @@ export function StudyWorkspace({
             </button>
           )}
         </div>
-        <ExplanationPanel
-          explanation={node.explanation}
-          locale={locale}
-          defaultDetailed={defaultDetailed}
-          heading={
-            board.history().at(-1) ??
-            (ru ? "Начальная позиция" : "Starting position")
-          }
-        />
-        <label>
-          {ru ? "Личная заметка" : "Personal note"}
-          <textarea
-            aria-label={ru ? "Личная заметка" : "Personal note"}
-            value={node.comment}
-            maxLength={10000}
-            rows={3}
-            onChange={(e) =>
-              apply(() =>
-                updateStudyNode(study, node.id, { comment: e.target.value }),
-              )
+        <p role="status" className="study-status">
+          {status}
+        </p>
+        <section
+          className="study-analysis"
+          aria-label={ru ? "Анализ позиции" : "Position analysis"}
+        >
+          <h3>{ru ? "Анализ позиции" : "Position analysis"}</h3>
+          {onAnalyze && (
+            <button
+              className="primary"
+              disabled={busy || board.isGameOver()}
+              onClick={() => void analyze()}
+            >
+              {busy
+                ? ru
+                  ? "Считаем…"
+                  : "Analyzing…"
+                : ru
+                  ? "Проверить Stockfish"
+                  : "Check with Stockfish"}
+            </button>
+          )}
+          {!!lines.length && (
+            <div className="study-engine-lines">
+              <h4 ref={resultsHeading}>
+                {ru
+                  ? "Лучшие найденные продолжения Stockfish"
+                  : "Best continuations found by Stockfish"}
+              </h4>
+              <p>
+                {ru
+                  ? "Оценка за белых. Нажми на продолжение, чтобы добавить его в список ходов и разобрать на доске."
+                  : "Evaluation from White’s side. Select a continuation to add it to the move list and explore it on the board."}
+              </p>
+              {lines.map((line, i) => {
+                const b = boardAt(position);
+                let sans: string[] = [];
+                try {
+                  sans = line.pv.slice(0, 20).map((u) => playUci(b, u).san);
+                } catch {
+                  return null;
+                }
+                return (
+                  <button
+                    className="study-engine-line"
+                    key={i}
+                    onClick={() =>
+                      apply(() => {
+                        let next = study,
+                          parent = node.id;
+                        for (const u of line.pv.slice(0, 20)) {
+                          next = addStudyMove(next, parent, u, "engine");
+                          parent = next.selectedNodeId;
+                        }
+                        return selectStudyNode(next, node.id);
+                      })
+                    }
+                  >
+                    <strong>{scoreText(line.score, locale)}</strong>
+                    <span>{sans.join(" ")}</span>
+                    <small>{ru ? "Добавить ветку" : "Add line"}</small>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {analysisTools}
+        </section>
+        <div className="study-commentary">
+          <ExplanationPanel
+            explanation={node.explanation}
+            locale={locale}
+            defaultDetailed={defaultDetailed}
+            heading={
+              board.history().at(-1) ??
+              (ru ? "Начальная позиция" : "Starting position")
             }
           />
-        </label>
-        {onAnalyze && (
-          <button
-            className="secondary"
-            disabled={busy || board.isGameOver()}
-            onClick={() => void analyze()}
-          >
-            {busy
-              ? ru
-                ? "Считаем…"
-                : "Analyzing…"
-              : ru
-                ? "Проверить Stockfish"
-                : "Check with Stockfish"}
-          </button>
-        )}
-        {!!lines.length && (
-          <div className="study-engine-lines">
-            <p>
-              {ru
-                ? "Лучшие найденные продолжения Stockfish"
-                : "Best continuations found by Stockfish"}
-            </p>
-            {lines.map((line, i) => {
-              const b = boardAt(position);
-              let sans: string[] = [];
-              try {
-                sans = line.pv.map((u) => playUci(b, u).san);
-              } catch {
-                return null;
+          <label>
+            {ru ? "Личная заметка" : "Personal note"}
+            <textarea
+              aria-label={ru ? "Личная заметка" : "Personal note"}
+              value={node.comment}
+              maxLength={10000}
+              rows={3}
+              onChange={(e) =>
+                apply(() =>
+                  updateStudyNode(study, node.id, { comment: e.target.value }),
+                )
               }
-              return (
-                <button
-                  className="study-engine-line"
-                  key={i}
-                  onClick={() =>
-                    apply(() => {
-                      let next = study,
-                        parent = node.id;
-                      for (const u of line.pv.slice(0, 20)) {
-                        next = addStudyMove(next, parent, u, "engine");
-                        parent = next.selectedNodeId;
-                      }
-                      return selectStudyNode(next, node.id);
-                    })
-                  }
-                >
-                  <strong>{scoreText(line.score)}</strong>
-                  <span>{sans.join(" ")}</span>
-                  <small>{ru ? "Добавить ветку" : "Add line"}</small>
-                </button>
-              );
-            })}
-          </div>
-        )}
+            />
+          </label>
+        </div>
         <details className="study-pgn">
           <summary>
             {ru ? "Импорт и экспорт PGN" : "Import and export PGN"}

@@ -17,7 +17,10 @@ import { saveSettingsPatch } from "../audio/settings";
 import "./settings-audio.css";
 import { EnginePacks } from "../ui/EnginePacks";
 import { AdvancedTools } from "../ui/AdvancedTools";
-import { LearningPreferences, defaultLearning } from "../ui/LearningPreferences";
+import {
+  LearningPreferences,
+  defaultLearning,
+} from "../ui/LearningPreferences";
 export function SettingsScreen() {
   const { snapshot, profile, locale, l, refresh, fail } = useApp();
   const [name, setName] = useState(profile.name),
@@ -32,7 +35,7 @@ export function SettingsScreen() {
     [status, setStatus] = useState(""),
     [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState(snapshot.database.settings);
-  const [learning,setLearning]=useState(profile.learning ?? defaultLearning);
+  const [learning, setLearning] = useState(profile.learning ?? defaultLearning);
   const settingsRef = useRef(settings),
     pendingWrites = useRef(0),
     volumeDirty = useRef(false),
@@ -117,7 +120,7 @@ export function SettingsScreen() {
       </div>
       <div className="settings-layout">
         <EnginePacks locale={locale} />
-        <AdvancedTools locale={locale} api={window.chessApp.advanced}/>
+        <AdvancedTools locale={locale} api={window.chessApp.advanced} />
         <section className="settings-section">
           <div className="section-title">
             <UserRound size={24} />
@@ -215,8 +218,17 @@ export function SettingsScreen() {
               {l("Сохранить профиль", "Save profile")}
             </button>
             <h3>{l("План занятий", "Practice plan")}</h3>
-            <LearningPreferences value={learning} onChange={setLearning} locale={locale}/>
-            <p className="field-help">{l("Сохраняется кнопкой «Сохранить профиль».", "Saved with the Save profile button.")}</p>
+            <LearningPreferences
+              value={learning}
+              onChange={setLearning}
+              locale={locale}
+            />
+            <p className="field-help">
+              {l(
+                "Сохраняется кнопкой «Сохранить профиль».",
+                "Saved with the Save profile button.",
+              )}
+            </p>
           </form>
           <fieldset className="theme-picker">
             <legend>{l("Тема приложения", "App theme")}</legend>
@@ -311,25 +323,39 @@ export function SettingsScreen() {
               "Runs locally for free, without an API key. Major mistakes are checked again at greater depth.",
             )}
           </p>
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={settings.sound}
-              onChange={(e) => changePreference({ sound: e.target.checked })}
-            />
-            {l("Звуки игры", "Game sounds")}
-          </label>
-          <div className="sound-settings">
-            <label className="check-label">
+          <div
+            className="sound-settings"
+            role="group"
+            aria-labelledby="sound-settings-heading"
+          >
+            <h3 id="sound-settings-heading">
+              {l("Звук и реплики", "Sound and dialogue")}
+            </h3>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={settings.sound}
+                onChange={(e) => changePreference({ sound: e.target.checked })}
+              />
+              {l("Звуки игры", "Game sounds")}
+            </label>
+            <label className="checkbox-label">
               <input
                 type="checkbox"
                 checked={settings.botQuips !== false}
+                aria-describedby="dialogue-help"
                 onChange={(e) =>
                   changePreference({ botQuips: e.target.checked })
                 }
               />
               {l("Реплики соперников", "Opponent dialogue")}
             </label>
+            <p id="dialogue-help" className="field-help">
+              {l(
+                "Текстовые фразы ботов во время игры. На звук не влияют.",
+                "Text comments from bots during play. This does not control sound.",
+              )}
+            </p>
             <div className="volume-heading">
               <label htmlFor="game-volume">{l("Громкость", "Volume")}</label>
               <output htmlFor="game-volume">{settings.volume}%</output>

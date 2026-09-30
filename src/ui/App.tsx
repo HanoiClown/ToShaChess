@@ -65,6 +65,7 @@ const routes: { id: Route; icon: typeof Home }[] = [
   { id: "training", icon: Target },
 ];
 export default function App() {
+  const workspaceRef = useRef<HTMLDivElement>(null);
   const [practicePosition, setPracticePosition] = useState<{
     position: Position;
     providerId?: "stockfish" | "maia";
@@ -173,6 +174,8 @@ export default function App() {
       if (route === "studies") await flushPendingChanges();
       if (next === "play" && id) setPlayLaunch(id);
       if (id) setReviewId(id);
+      // Reset before the next screen measures its panels against the viewport.
+      workspaceRef.current?.scrollTo({ top: 0, left: 0, behavior: "instant" });
       setRoute(next);
     })().catch(fail);
   };
@@ -435,7 +438,7 @@ export default function App() {
             </button>
           </div>
         </aside>
-        <div className="workspace">
+        <div className="workspace" ref={workspaceRef}>
           <header className="topbar">
             <div className="profile-chip">
               <span style={{ background: profile.color }}>

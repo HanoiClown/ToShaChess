@@ -1,5 +1,33 @@
 .sound-settings {
-  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.sound-settings h3,
+.sound-settings p {
+  margin: 0;
+}
+.sound-settings label.checkbox-label {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin: 0;
+  min-height: 36px;
+  cursor: pointer;
+}
+.sound-settings .checkbox-label input {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--green);
+}
+.sound-settings .field-help {
+  line-height: 1.5;
+}
+.sound-settings .sound-preview {
+  justify-self: start;
 }
 .volume-heading {
   display: flex;

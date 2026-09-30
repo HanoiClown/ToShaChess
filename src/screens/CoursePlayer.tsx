@@ -460,7 +460,8 @@ export function CoursePlayer({
               hintSquare={hint ? line[ply]?.slice(0, 2) : undefined}
             />
           </section>
-          <section className="side-panel course-chapters" ref={panelRef}>
+          <section className="side-panel course-chapters scroll-panel" ref={panelRef}
+            tabIndex={0} aria-label={l("Урок и объяснения", "Lesson and explanations")}>
             <h2>{base.title[locale]}</h2>
             <div className="segmented">
               <button

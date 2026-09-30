@@ -152,6 +152,29 @@ export function Studies() {
                 request.current = engineRequest();
                 return request.current.analyze(position);
               }}
+              analysisTools={
+                <div className="position-tools">
+                  <EngineComparison
+                    position={getStudyPosition(study)}
+                    locale={locale}
+                  />
+                  <AdvancedTools
+                    locale={locale}
+                    api={window.chessApp.advanced}
+                    position={getStudyPosition(study)}
+                    onPlayMove={(uci) =>
+                      change(
+                        addStudyMove(
+                          study,
+                          study.selectedNodeId,
+                          uci,
+                          "engine",
+                        ),
+                      )
+                    }
+                  />
+                </div>
+              }
             />
           </div>
           <div className="study-actions">
@@ -211,20 +234,6 @@ export function Studies() {
             </div>
           )}
           <p role="status">{status}</p>
-          <div className="position-tools">
-            <EngineComparison
-              position={getStudyPosition(study)}
-              locale={locale}
-            />
-            <AdvancedTools
-              locale={locale}
-              api={window.chessApp.advanced}
-              position={getStudyPosition(study)}
-              onPlayMove={(uci) =>
-                change(addStudyMove(study, study.selectedNodeId, uci, "engine"))
-              }
-            />
-          </div>
         </>
       ) : (
         <p className="empty-state">

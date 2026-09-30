@@ -27,12 +27,14 @@ import { AccuracySummary } from "../ui/AccuracySummary";
 import { MaterialPanel } from "../ui/MaterialPanel";
 import { gameAccuracy } from "../analysis/accuracy";
 import { materialSummary } from "../analysis/material-summary";
+import { usePanelHeight } from "../study/usePanelHeight";
 export function Review() {
   const { snapshot, profile, reviewId, nav, locale, l, t, fail } = useApp();
   const games = snapshot.database.games
     .filter((g) => g.profileId === profile.id)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const game = games.find((g) => g.id === reviewId) ?? games[0];
+  const panelRef = usePanelHeight(`${game?.id}|${game?.result}`);
   const [ply, setPly] = useState(1),
     [variant, setVariant] = useState<number | null>(null),
     [flipped, setFlipped] = useState(false),
@@ -40,7 +42,11 @@ export function Review() {
     [reply, setReply] = useState<CoachReply | null>(null),
     [asking, setAsking] = useState(false);
   useEffect(() => {
-    setPly(game?.moves.length ? Math.min(game.moves.length,(game.startPly ?? 0)+1) : 0);
+    setPly(
+      game?.moves.length
+        ? Math.min(game.moves.length, (game.startPly ?? 0) + 1)
+        : 0,
+    );
     setVariant(null);
     setReply(null);
     setQuestion("");
@@ -96,8 +102,10 @@ export function Review() {
   const a = game.analysis.find((a) => a.ply === ply),
     job = snapshot.analysisJobs.includes(game.id),
     locked = game.mode === "normal" && game.result === "*";
-  const displayedPosition=reviewPosition(game,ply,variant), totalToAnalyze=game.moves.length-(game.startPly??0);
-  const pre = boardAt(game, Math.max(0, ply - 1)), display=boardAt(displayedPosition);
+  const displayedPosition = reviewPosition(game, ply, variant),
+    totalToAnalyze = game.moves.length - (game.startPly ?? 0);
+  const pre = boardAt(game, Math.max(0, ply - 1)),
+    display = boardAt(displayedPosition);
   const orientation = flipped
     ? game.playerColor === "w"
       ? "b"
@@ -140,7 +148,22 @@ export function Review() {
           </p>
         </div>
         <div className="heading-actions">
-          <button className="secondary" disabled={locked} onClick={()=>void savePositionStudy(profile.id,displayedPosition,l("Исследование партии","Game study"),`game-${game.id}`).then(s=>nav("studies",s.id)).catch(fail)}>{l("Исследовать позицию","Explore position")}</button>
+          <button
+            className="secondary"
+            disabled={locked}
+            onClick={() =>
+              void savePositionStudy(
+                profile.id,
+                displayedPosition,
+                l("Исследование партии", "Game study"),
+                `game-${game.id}`,
+              )
+                .then((s) => nav("studies", s.id))
+                .catch(fail)
+            }
+          >
+            {l("Исследовать позицию", "Explore position")}
+          </button>
           <button
             className="icon-button"
             onClick={() => setFlipped(!flipped)}
@@ -162,18 +185,13 @@ export function Review() {
             {job ? <Square size={16} /> : <ChartNoAxesCombined size={18} />}{" "}
             {job
               ? l("Остановить", "Stop")
-                : game.analysis.length === game.moves.length - (game.startPly ?? 0)
+              : game.analysis.length ===
+                  game.moves.length - (game.startPly ?? 0)
                 ? l("Продолжить объяснения", "Continue explanations")
                 : l("Анализировать", "Analyze")}
           </button>
         </div>
       </div>
-      {!locked && (
-        <div className="position-tools">
-          <EngineComparison position={displayedPosition} locale={locale} />
-          <AdvancedTools locale={locale} api={window.chessApp.advanced} position={displayedPosition} />
-        </div>
-      )}
       {locked ? (
         <div className="notice">
           {l(
@@ -327,7 +345,12 @@ export function Review() {
               <strong>{a ? scoreText(a.after.score, locale) : "—"}</strong>
             </div>
           </section>
-          <section className="side-panel review-panel">
+          <section
+            className="side-panel review-panel scroll-panel"
+            ref={panelRef}
+            tabIndex={0}
+            aria-label={l("Разбор и объяснения", "Analysis and explanations")}
+          >
             <AccuracySummary locale={locale} accuracy={gameAccuracy(game)} />
             <div className="panel-title">
               <h2>{l("Ходы и объяснения", "Moves and explanations")}</h2>
@@ -459,6 +482,14 @@ export function Review() {
                         "Local explanations and variations work without an API key.",
                       )}
               </small>
+            </div>
+            <div className="position-tools">
+              <EngineComparison position={displayedPosition} locale={locale} />
+              <AdvancedTools
+                locale={locale}
+                api={window.chessApp.advanced}
+                position={displayedPosition}
+              />
             </div>
           </section>
         </div>

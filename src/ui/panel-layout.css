@@ -1,0 +1,99 @@
+/* Explicit specificity keeps shared card clipping from disabling panel scrolling. */
+.side-panel.scroll-panel {
+  min-height: 0;
+  max-height: calc(100dvh - 170px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scroll-padding-block: 16px;
+}
+.side-panel.scroll-panel > * {
+  flex-shrink: 0;
+}
+.side-panel.scroll-panel:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+.scroll-panel .explanation-detail,
+.scroll-panel .study-glossary dl {
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+.scroll-panel .variation-tree {
+  overscroll-behavior-y: auto;
+}
+.study-analysis,
+.study-commentary {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.study-analysis {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.study-analysis h3,
+.study-analysis h4 {
+  margin: 0;
+}
+.study-analysis h3 {
+  font-size: 18px;
+}
+.study-analysis h4 {
+  font-size: 15px;
+  scroll-margin-top: 90px;
+}
+.study-status:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.study-engine-lines > p {
+  line-height: 1.5;
+  margin: 4px 0 8px;
+}
+.side-panel .position-tools {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+.side-panel .position-tools > details {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+}
+.side-panel .position-tools > details > summary {
+  min-height: 44px;
+  padding-block: 12px;
+  font-size: 14px;
+}
+.side-panel .position-tools > details[open] {
+  padding-bottom: 16px;
+}
+.side-panel .position-tools table {
+  table-layout: fixed;
+  overflow-wrap: anywhere;
+}
+.review-panel .position-tools {
+  padding: 0 20px 20px;
+}
+.personal-study + .study-actions {
+  margin-top: 20px;
+}
+/* One page scroll in a stacked layout: no trapped inner panel on small windows. */
+@media (max-width: 950px) {
+  .side-panel.scroll-panel {
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
+    scrollbar-gutter: auto;
+  }
+}

@@ -16,6 +16,8 @@
 
 Панель Stockfish показывает оценку и продолжение. Maia показывает вероятные человеческие ответы при выбранном уровне, а не доказательство силы хода. Можно доиграть текущую позицию против нужного соперника. Не путай оценку Stockfish, вероятность Maia и частоту хода в местном архиве: это разные вопросы.
 
+Ходы, анализ Stockfish, Maia и дополнительные инструменты собраны в правой панели. Прокручивай её колёсиком; с клавиатуры перейди в панель клавишей Tab и используй Page Up / Page Down. В небольшом окне панель располагается под доской и прокручивается вместе со страницей. Новый результат Stockfish появляется выше заметок. Нажми на продолжение, чтобы добавить до 20 полуходов в дерево и разобрать их на доске.
+
 ### Повторять с интервалами
 
 В «Личной практике» выбери исследование и добавь позицию с продолжением в очередь. Повторяй карточки, когда наступает срок. Доступны вспоминание продолжения, поиск защиты, прогноз ответа Maia, доигрывание и «Рука и мозг». Режим Maia требует установленного пакета. Карточку можно отложить на день или убрать из очереди; исследования и очередь принадлежат активному профилю. Смена профиля не переносит его задания другому пользователю.
@@ -39,6 +41,8 @@ Choose a trap episode: the first move demonstrates the opponent's mistake and yo
 Open a study from a course, game or editor. Make legal moves for either side, navigate the tree, add branches and comments, then save to the active profile. The original course/game remains intact. PGN import accepts one game with comments and variations up to 1 MB and creates a new study; save current changes before importing. Generate PGN to export your tree.
 
 Stockfish supplies evaluation and calculated lines. Maia supplies likely human replies for a selected skill level. Local archive frequency reports what occurred in that archive. None is interchangeable with the others. Play out the current position to test a plan.
+
+Moves, Stockfish analysis, Maia and advanced tools share the right panel. Scroll with the wheel, or Tab into the panel and use Page Up / Page Down. In a narrow window the panel sits below the board and scrolls with the page. New Stockfish results appear above notes. Select a continuation to add up to 20 plies to the tree and explore them on the board.
 
 In Personal practice, select a study and add a position with a continuation. Work through due cards using recall, defence, Maia prediction, play-out or hand-and-brain mode. Maia prediction needs its installed pack. Postpone or remove a card as needed. Studies and repetition progress stay with the active profile.
 

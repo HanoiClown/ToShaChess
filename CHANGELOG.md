@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.3 — Reachable analysis and clearer panels
+
+- Restore wheel and keyboard scrolling in study, game-review and lesson panels; keep one page scroll in narrow windows.
+- Bring Stockfish analysis above personal notes and group Maia and advanced tools inside the same side panel. Scroll new analysis into view and explain how to add a continuation to the move tree.
+- Keep long explanations in the panel's main scroll area and let move-list scrolling continue into the panel at its edges.
+- Group sound and opponent dialogue settings, align both checkboxes with their labels, and clarify that bot comments are text.
+- Add regression checks for panel reachability and checkbox behavior across all four themes.
+- Open each section at the top instead of retaining the previous section's page scroll.
+
 ## 1.5.2 — Panel spacing
 
 - Separate human/engine comparison and advanced tools in Review and Studies, with consistent spacing before the board and accuracy summary.

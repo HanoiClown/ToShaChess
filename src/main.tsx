@@ -9,6 +9,7 @@ import "./ui/styles.css";
 import "./ui/themes.css";
 import "./ui/fullscreen.css";
 import "./ui/menus.css";
+import "./ui/panel-layout.css";
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
