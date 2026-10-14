@@ -17,7 +17,8 @@
     "test:ui": "playwright test",
     "verify:content": "tsx scripts/verify-content.ts",
     "package:win": "npm run build && electron-builder --win dir",
-    "setup:engine": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-stockfish.ps1",
+    "package:linux": "npm run build && electron-builder --linux",
+    "setup:engine": "node scripts/setup-stockfish.mjs",
     "prepare:github": "node scripts/prepare-github.mjs"
   },
   "build": {
@@ -86,6 +87,13 @@
     "win": {
       "target": "dir",
       "signAndEditExecutable": false
+    },
+    "linux": {
+      "target": [
+        "dir",
+        "AppImage"
+      ],
+      "category": "Game"
     }
   },
   "dependencies": {

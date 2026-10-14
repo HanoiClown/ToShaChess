@@ -53,6 +53,8 @@ When API credits run out, offline features and cached explanations remain availa
 
 ## Build from source
 
+### Windows
+
 Windows x64, Node.js 24+, npm, and PowerShell are required. Python is only needed to refresh the dataset/theme generator, not to build or run the app.
 
 ```powershell
@@ -68,6 +70,21 @@ npm run package:win
 ```
 
 The engine setup downloads the official Stockfish 19 Windows universal ZIP and checks a pinned SHA-256. Keep its included source and license when distributing the engine. Builds appear in `release/win-unpacked`. `node scripts/smoke-portable.mjs` checks a copied packaged app, engine play/analysis and restart persistence. The Windows GitHub Actions workflow runs these checks and uploads a build artifact; it does not publish a release automatically.
+
+### Linux
+
+Linux x64 (arm64 and riscv64 also supported for the engine), Node.js 24+ and npm are required. `npm run setup:engine` downloads the official Stockfish 19 Linux universal build and checks its pinned SHA-256.
+
+```bash
+npm ci
+node node_modules/electron/install.js   # only if npm skipped install scripts (npm 11+ allowScripts)
+npm run setup:engine
+npm run build
+npm start
+npm run package:linux                   # release/linux-unpacked and an AppImage
+```
+
+The packaged app keeps `data`, `library-packs` and `engine-packs` next to the AppImage (or the `toshachess` binary in `linux-unpacked`). The one-click Maia and Lc0 installers are Windows-only; on Linux, select your own UCI engine (for example a system `lc0`) and network in Settings. Storing an OpenAI key needs a working Secret Service keyring (GNOME Keyring or KWallet).
 
 Refresh the Lichess subset with Python 3.14 and `python-chess`: `py scripts/import-library.py`. Existing IDs are retained. The script streams the database instead of storing the full archive. Recreate palette overrides with `py scripts/generate-themes.py`.
 

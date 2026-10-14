@@ -50,6 +50,7 @@ for (const p of [
   "import-library.py",
   "generate-themes.py",
   "setup-stockfish.ps1",
+  "setup-stockfish.mjs",
   "prepare-github.mjs",
   "smoke-portable.mjs",
   "download-big-library.py",

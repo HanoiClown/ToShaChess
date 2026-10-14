@@ -4,8 +4,9 @@ import { UciEngine } from "../../../electron/engine/uci";
 import { resolve } from "node:path";
 import { writeFileSync } from "node:fs";
 import { Chess } from "chess.js";
+import { stockfishBinary } from "../../../electron/engine/stockfish-path";
 const engine = new UciEngine(
-  resolve("stockfish/stockfish-windows-x86-64-universal.exe"),
+  resolve("stockfish", stockfishBinary()),
 );
 const result = [];
 try {

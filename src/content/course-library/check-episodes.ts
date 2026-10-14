@@ -3,6 +3,7 @@ import { Chess } from "chess.js";
 import { UciEngine } from "../../../electron/engine/uci";
 import { resolve } from "node:path";
 import { writeFileSync } from "node:fs";
+import { stockfishBinary } from "../../../electron/engine/stockfish-path";
 const candidates: Record<string, [string, string, string][]> = {
   kings: [
     ["king-diagonal", "e4 e5 f4 exf4", "g4"],
@@ -134,7 +135,7 @@ const candidates: Record<string, [string, string, string][]> = {
   ],
 };
 const engine = new UciEngine(
-  resolve("stockfish/stockfish-windows-x86-64-universal.exe"),
+  resolve("stockfish", stockfishBinary()),
 );
 const result: any[] = [];
 try {

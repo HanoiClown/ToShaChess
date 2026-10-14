@@ -45,6 +45,7 @@ export function errorText(error: unknown, locale: Locale) {
   const messages: Record<string, [string, string]> = {
     maia_pack_missing: ["Сначала установи Maia в настройках → Движки и модели.", "Install Maia in Settings → Engines & models first."],
     maia_rating_range: ["Для Maia выбери целый уровень от 600 до 2600 по шкале Lichess.", "Choose an integer Maia level from 600 to 2600 on the Lichess scale."],
+    pack_windows_only: ["Этот пакет устанавливается только в Windows. В Linux выбери свой движок или сеть в настройках.", "This pack installs on Windows only. On Linux, choose your own engine or network in Settings."],
     pack_busy: ["Дождись окончания установки или отмени её.", "Wait for the installation to finish or cancel it."],
     insufficient_disk_space: ["Недостаточно свободного места для пакета и временных файлов. Освободи место и повтори.", "Not enough free space for the pack and temporary files. Free some space and retry."],
     download_checksum_mismatch: ["Проверка загрузки не прошла. Повтори установку: повреждённый файл будет загружен заново.", "Download verification failed. Retry the installation to download the damaged file again."],

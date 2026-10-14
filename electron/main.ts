@@ -19,6 +19,7 @@ import {
 import { Store } from "./storage/store";
 import { mergeBackup } from "./storage/schema";
 import { AppService } from "./service";
+import { stockfishBinary } from "./engine/stockfish-path";
 import { PackManager } from "./packs/manager";
 import { AdvancedHost } from "./advanced-host";
 import { OfflineLibrary } from "./library";
@@ -27,9 +28,11 @@ import { exportGame } from "../src/chess/game";
 let win: BrowserWindow | null = null,
   service: AppService;
 const root = app.isPackaged ? process.resourcesPath : app.getAppPath();
-const dataPath =
-  process.env.CHESS_HOME_DATA ??
-  join(app.isPackaged ? dirname(app.getPath("exe")) : app.getAppPath(), "data");
+// Portable folder for data and packs; an AppImage runs from a read-only mount, so use its own location.
+const home = app.isPackaged
+  ? dirname(process.env.APPIMAGE ?? app.getPath("exe"))
+  : app.getAppPath();
+const dataPath = process.env.CHESS_HOME_DATA ?? join(home, "data");
 // Test/alternate installations must not share Chromium cache or the instance lock.
 if (process.env.CHESS_HOME_DATA)
   app.setPath("userData", join(dataPath, "chromium"));
@@ -46,10 +49,7 @@ if (!app.requestSingleInstanceLock()) {
       const store = new Store(dataPath);
       const libraryPath =
         process.env.TOSHACHESS_LIBRARY ??
-        join(
-          app.isPackaged ? dirname(app.getPath("exe")) : app.getAppPath(),
-          "library-packs",
-        );
+        join(home, "library-packs");
       const library = new OfflineLibrary(libraryPath),
         libraryWorker = new LibraryClient(libraryPath);
       app.on("will-quit", () => {
@@ -61,16 +61,13 @@ if (!app.requestSingleInstanceLock()) {
       };
       service = new AppService(
         store,
-        join(root, "stockfish", "stockfish-windows-x86-64-universal.exe"),
+        join(root, "stockfish", stockfishBinary()),
         notify,
       );
       const secret = join(dataPath, "api-key.enc");
       const packs = new PackManager(
         process.env.TOSHACHESS_ENGINES ??
-          join(
-            app.isPackaged ? dirname(app.getPath("exe")) : app.getAppPath(),
-            "engine-packs",
-          ),
+          join(home, "engine-packs"),
         join(root, "scripts"),
         () => {
           if (win && !win.isDestroyed()) win.webContents.send("packs-changed");
@@ -97,7 +94,12 @@ if (!app.requestSingleInstanceLock()) {
                   properties: ["openFile"],
                   filters:
                     kind === "engine"
-                      ? [{ name: "UCI engine", extensions: ["exe"] }]
+                      ? [
+                          {
+                            name: "UCI engine",
+                            extensions: process.platform === "win32" ? ["exe"] : ["*"],
+                          },
+                        ]
                       : [
                           {
                             name: "Lc0 network",

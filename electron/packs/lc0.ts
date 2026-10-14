@@ -179,6 +179,8 @@ export class Lc0Pack {
     return files;
   }
   async install() {
+    if (process.platform !== "win32" && !this.dependencies.extract)
+      throw Error("pack_windows_only");
     const controller = this.begin(),
       staging = safePackPath(this.root, "lc0-cpu.staging");
     try {

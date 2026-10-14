@@ -9,7 +9,7 @@ import {
   realpath,
   statfs,
 } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join, resolve, sep } from "node:path";
 import { safePackPath, sha256, verifiedDownload, type Artifact } from "./files";
 import { lock, models, modelAsset, maiaVersion } from "./manifest";
 import type { PackId, PackState } from "../../src/shared/packs";
@@ -310,7 +310,7 @@ export class PackManager {
       if ((await lstat(target)).isSymbolicLink())
         throw Error("invalid_pack_path");
       const checked = await realpath(target);
-      if (!checked.toLowerCase().startsWith(resolve(base).toLowerCase() + "\\"))
+      if (!checked.toLowerCase().startsWith(resolve(base).toLowerCase() + sep))
         throw Error("invalid_pack_path");
       await rm(checked, { recursive: id === "maia-cpu", force: true });
     }

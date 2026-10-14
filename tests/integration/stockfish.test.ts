@@ -2,6 +2,7 @@ import { it, expect } from "vitest";
 import { resolve } from "node:path";
 import { Chess } from "chess.js";
 import { UciEngine, parseInfo } from "../../electron/engine/uci";
+import { stockfishBinary } from "../../electron/engine/stockfish-path";
 it("parses scores and rejects bounds as exact evaluations", () => {
   expect(parseInfo("info depth 12 score cp -37 pv e7e5", "b")?.score.cp).toBe(
     37,
@@ -15,7 +16,7 @@ it("parses scores and rejects bounds as exact evaluations", () => {
 });
 it("runs the supplied engine and returns legal PV, cancellation does not contaminate next search", async () => {
   const e = new UciEngine(
-    resolve("stockfish/stockfish-windows-x86-64-universal.exe"),
+    resolve("stockfish", stockfishBinary()),
   );
   try {
     const c = new Chess();
